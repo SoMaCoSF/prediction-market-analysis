@@ -52,28 +52,28 @@ def to_signed(u128: int) -> tuple[int, int]:
     return hi, lo
 
 
-def mint_trade_uuid(market_id: str, trade_id: str, ts: int, price: float):
+def mint_trade_uuid(old_uuid: str, market_id: str, trade_id: str, ts: int, price: float):
     ns = fnv1a12(market_id)
     signal = max(0.0, min(1.0, price / 100.0)) if price else 0.0
     t24 = ts & 0xFFFFFF
     fractal = ((1 & 0xF) << 8) | ((DOMAIN_MARKET & 0xF) << 4) | (0 & 0xF)
     high = ((TYPE_TRADE & 0xFFF) << 52) | ((ns & 0xFFF) << 40) | (t24 << 16) | (8 << 12) | fractal
     sig_q = int(max(0.0, min(1.0, signal)) * 0xFFFF)
-    r42 = det_random(market_id, trade_id, str(ts), str(price))
+    r42 = det_random(old_uuid, market_id, trade_id, str(ts), str(price))
     low = (2 << 62) | (PROV_POLY << 58) | (sig_q << 42) | r42
     u128 = (high << 64) | low
     hx = f"{u128:032x}"
     return f"{hx[0:8]}-{hx[8:12]}-{hx[12:16]}-{hx[16:20]}-{hx[20:]}", to_signed(u128)
 
 
-def mint_quote_uuid(market_id: str, ts: int, price: float):
+def mint_quote_uuid(old_uuid: str, market_id: str, ts: int, price: float):
     ns = fnv1a12(market_id)
     signal = max(0.0, min(1.0, price / 100.0)) if price else 0.0
     t24 = ts & 0xFFFFFF
     fractal = ((1 & 0xF) << 8) | ((DOMAIN_MARKET & 0xF) << 4) | (0 & 0xF)
     high = ((TYPE_QUOTE & 0xFFF) << 52) | ((ns & 0xFFF) << 40) | (t24 << 16) | (8 << 12) | fractal
     sig_q = int(max(0.0, min(1.0, signal)) * 0xFFFF)
-    r42 = det_random(market_id, "quote", str(ts), str(price))
+    r42 = det_random(old_uuid, market_id, "quote", str(ts), str(price))
     low = (2 << 62) | (PROV_POLY << 58) | (sig_q << 42) | r42
     u128 = (high << 64) | low
     hx = f"{u128:032x}"
@@ -136,9 +136,9 @@ def run(batch: int = 200_000):
             if market_id not in seen_markets:
                 seen_markets.add(market_id)
                 market_rows.append((parent, market_id, phi, plo))
-            tu, (thi, tlo) = mint_trade_uuid(market_id, trade_id, ts, price)
+            tu, (thi, tlo) = mint_trade_uuid(_old_uuid, market_id, trade_id, ts, price)
             trade_rows.append((tu, thi, tlo, trade_id, market_id, parent, price, amount, ts))
-            qu, (qhi, qlo) = mint_quote_uuid(market_id, ts, price)
+            qu, (qhi, qlo) = mint_quote_uuid(_old_uuid, market_id, ts, price)
             quote_rows.append((qu, qhi, qlo, market_id, parent, price, ts))
         execute_values(cur,
             "INSERT INTO uuid_markets (uuid, market_id, uuid_hi, uuid_lo) VALUES %s "
