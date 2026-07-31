@@ -1,0 +1,15 @@
+{
+  "phase": "A->B pipe (compliant spawn model build)",
+  "updated_at": "2026-07-30T17:40:00Z",
+  "actions": [
+    {"t": "2026-07-30T16:31:00Z", "label": "Vercel deploy uuid.somacosf.com (live, passkey-gated)", "status": "done"},
+    {"t": "2026-07-30T17:00:00Z", "label": "FABLE_HANDOFF.md + Kalshi UUID bet scaffold committed", "status": "done"},
+    {"t": "2026-07-30T17:20:00Z", "label": "Private repo pushed (102 gists indexed, VERIFICATION.md truth ledger)", "status": "done"},
+    {"t": "2026-07-30T17:40:00Z", "label": "A->B pipe launched: build compliant spawn-model (B) from flat A; A untouched", "status": "running"}
+  ],
+  "source_of_truth": {
+    "A_flat_table": "uuid_trades (52,770,500 rows, immutable audit ledger)",
+    "B_spawn_tables": "uuid_markets(0x3A0) + uuid_quotes(0x3A1) + uuid_trades_b(0x3A2, parent_uuid) — building"
+  },
+  "compliance": "B mints per GYST spec v2.0.0: deterministic random (sha256), fractalDomain=MARKET(0x1), parent_uuid spawn tree"
+}
