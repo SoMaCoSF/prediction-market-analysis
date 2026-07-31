@@ -64,12 +64,31 @@ treat ALL of these as UUID-addressable nodes on the same GYST substrate:
 | **somacosf.com** (+ `uuid.somacosf.com` now live) | protocol/engine surface | this engine | the UUID control plane for the network |
 | **popsoc.vercel.app** | social event templates (6 templates) | frozen at v0.1.0-full | events minted as GYST UUIDs; sentiment roll-up |
 | **sgw.somacosf.com** (planned) | central landing for ALL says.coms | not built | aggregate global + per-city UUID feeds, tenant switcher |
+| **KALSHI** (near-term revenue/activity) | regulated US prediction market | SDK installed (`kalshi_python` 2.1.4) + `src/indexers/kalshi/` + 18 analysis scripts | **mint every Kalshi order as a GYST UUID and submit fast** — see §3.1 |
 
 **Reference infra to port (do not reinvent):** `D:/outputs/austinsays-platform`
 (`app/pulse/kiosk` portal pattern + `UUID_engine/gyst_uuid.ts` encoder) and
 `D:/somacosf/outputs/somacosf-platform` (`app/uuid` 8-tab LCARS harness).
 
 **Known crash to avoid:** R3F v8 + Next 15 → `ReactCurrentOwner` undefined. Fix = React 19 + R3F v9.
+
+### 3.1 Kalshi — the near-term activity path (MUST scaffold)
+Kalshi is the fastest way to show the UUID framework *doing* something: a bet is a transaction,
+and a transaction is a UUID. Existing assets:
+- **SDK:** `kalshi_python` v2.1.4 (`portfolio_api.create_order`, `batch_create_orders`,
+  `amend_order`, `batch_cancel_orders` → `POST /portfolio/orders`). `CreateOrderRequest`
+  fields: `ticker`, `client_order_id`, `side` (yes/no), `action`, `count`, `type`,
+  `yes_price`/`no_price` (1–99¢), `expiration_ts`.
+- **Local indexer:** `src/indexers/kalshi/` (`client.py` httpx-based, `markets.py`, `trades.py`,
+  `models.py`) — reads markets/trades, NO order submission yet.
+- **Analytics:** `src/analysis/kalshi/` — 18 scripts (EV yes/no, calibration, maker/taker,
+  mispricing, win-rate by price, etc.) — the *signal* layer already exists.
+
+**What Fable must build (the gap):** `scripts/kalshi_uuid_bot.py` — mint a GYST UUID per Kalshi
+order (new type **0x3A4 = KALSHI_BET**, or reuse 0x3A2 with `prov=KALSHI`), pack `client_order_id`
+into the 42-bit random slot, and submit via `portfolio_api.create_order` / `batch_create_orders`
+(full batch = fast multi-bet). The UUID makes the bet **addressable + routable + rollable**
+exactly like a Polymarket trade. Native MFA (device-bound, §5) gates who can fire orders.
 
 ---
 
