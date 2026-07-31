@@ -1,3 +1,5 @@
+<!-- =============================================================================== file_id: SOM-DOC-2776-v1.0.0 name: SCHEMAS.md description:  project_id: OLIGARCHOLOGY category: doc tags: [] created: 2026-06-08 modified: 2026-06-08 version: 1.0.0 agent_id: AGENT-PRIME-002 =============================================================================== -->
+
 # Data Schemas
 
 Data is stored as Parquet files in `data/{kalshi,polymarket}/`.

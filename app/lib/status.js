@@ -19,9 +19,11 @@ function pool() {
 }
 
 export async function collectStatus() {
+  const cloud = !!process.env.PG_CONNECTION_STRING;
+  const table = cloud ? "uuid_trades_subset" : "uuid_trades";
   const out = {
     generated_at: new Date().toISOString(),
-    source: process.env.PG_CONNECTION_STRING ? "cloud-postgres" : "local-postgres",
+    source: cloud ? "cloud-postgres" : "local-postgres",
     trades: null,
     markets_turso: null,
     wirespeed: null,
@@ -29,12 +31,12 @@ export async function collectStatus() {
   };
   try {
     const p = pool();
-    const t = await p.query("SELECT count(*)::bigint AS n FROM uuid_trades");
+    const t = await p.query(`SELECT count(*)::bigint AS n FROM ${table}`);
     out.trades = Number(t.rows[0].n);
 
     // wirespeed bitmask proof: ((uuid_hi >> 52) & 4095) = 0x3A2
     const w = await p.query(
-      "SELECT count(*)::bigint AS m FROM uuid_trades WHERE ((uuid_hi >> 52) & 4095) = 930"
+      `SELECT count(*)::bigint AS m FROM ${table} WHERE ((uuid_hi >> 52) & 4095) = 930`
     );
     out.wirespeed = {
       sql: "((uuid_hi >> 52) & 4095) = 0x3A2",

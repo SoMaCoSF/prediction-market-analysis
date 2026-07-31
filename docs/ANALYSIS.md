@@ -1,3 +1,5 @@
+<!-- =============================================================================== file_id: SOM-DOC-0782-v1.0.0 name: ANALYSIS.md description:  project_id: OLIGARCHOLOGY category: doc tags: [] created: 2026-06-08 modified: 2026-06-08 version: 1.0.0 agent_id: AGENT-PRIME-002 =============================================================================== -->
+
 # Writing Analysis Scripts
 
 Analysis scripts live in `src/analysis/{kalshi,polymarket}/` and extend the `Analysis` base class.
