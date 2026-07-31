@@ -1,17 +1,5 @@
 {
   "version": 2,
   "buildCommand": "node scripts/collect_status.js && next build",
-  "framework": "nextjs",
-  "env": {
-    "STATUS_SALT": "@status_salt"
-  },
-  "build": {
-    "env": {
-      "PGHOST": "127.0.0.1",
-      "PGPORT": "5432",
-      "PGDATABASE": "postgres",
-      "PGUSER": "postgres",
-      "PGPASSWORD": "hermes_pg_2026"
-    }
-  }
+  "framework": "nextjs"
 }
