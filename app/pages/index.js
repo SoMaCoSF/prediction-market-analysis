@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-// The expected passkey is derived from OMEN-01's MAC. We compute it in-browser
-// (same algorithm as lib/auth.js) so the page itself is gated without exposing
-// a server round-trip on the unlock screen. Replace SALT if you set STATUS_SALT.
-const SALT = "somacosf-2026";
+// Passkey derived from OMEN-01 MAC + hostname + salt (same salt the server uses).
+// The salt comes from NEXT_PUBLIC_STATUS_SALT (set on Vercel = same value as
+// STATUS_SALT). Falls back to the dev default only if unset.
+const SALT = process.env.NEXT_PUBLIC_STATUS_SALT || "somacosf-2026";
 function derive(mac, host, salt) {
   // minimal SHA-256 in browser via SubtleCrypto
   return crypto.subtle
