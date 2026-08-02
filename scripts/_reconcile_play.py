@@ -1,6 +1,10 @@
 # full reconcile: exchange positions + open orders vs our ledger, after the parallel play
-import base64, json, os, sys, time
+import base64
+import os
+import sys
+import time
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import httpx
 import sb
