@@ -1,0 +1,262 @@
+# ==== file_id: SOM-EXT-1608-v1.0.0 name: uuid_service_turboquant.py date: 2026-06-08 ====
+"""
+file_id: SOM-SCR-0042-v1.0.0
+name: uuid_service_turboquant
+description: Python mirror of the canonical TypeScript GYST UUIDv8 encoder
+             with TurboQuant + prediction-market lattice helpers. Bit layout
+             matches app/api/lib/gyst.ts exactly so Python agents (Dexter,
+             poly_trader, TurboQuant kernels) emit the same address space
+             as the Next.js side.
+project_id: SOMACOSF-PLATFORM
+category: SCR
+tags: [gyst, uuidv8, turboquant, polymarket, lattice, python]
+created: 2026-04-22
+version: 1.0.0
+"""
+from __future__ import annotations
+
+import hashlib
+import os
+import time
+from dataclasses import dataclass
+from typing import Dict
+
+
+# ---- Provenance codes (mirrors gyst.ts PROVENANCE) ----
+PROV_UNKNOWN      = 0x0
+PROV_DEXTER       = 0x1
+PROV_CLI          = 0x2
+PROV_CLAUDE       = 0x3
+PROV_DASHBOARD    = 0x4
+PROV_REGISTRY     = 0x5
+PROV_AGENT        = 0x6
+PROV_POLY_MAKER   = 0x7
+PROV_TURBO_QUANT  = 0x8
+PROV_ENCRYPTED    = 0xF
+
+
+# ---- 12-bit FNV-1a namespace hash (mirrors gyst.ts hashNamespace12) ----
+def fnv1a12(label: str) -> int:
+    h = 0x811c9dc5
+    for ch in label.encode("utf-8"):
+        h ^= ch
+        h = (h * 0x01000193) & 0xFFFFFFFF
+    return (h ^ ((h >> 12) & 0xFFF)) & 0xFFF
+
+
+def _content42(*parts) -> int:
+    """Deterministic 42-bit content address from the structured fields.
+
+    The low-42 is NEVER random: identical structured inputs mint the same
+    UUID (free dedup + the client_order_id = UUID-tail reconciliation thesis).
+    """
+    seed = "|".join(str(p) for p in parts).encode("utf-8")
+    return int.from_bytes(hashlib.sha256(seed).digest()[:6], "big") & ((1 << 42) - 1)
+
+
+# ---- Core encoder — byte-exact with encodeGYST in TS ----
+def encode_gyst(
+    *,
+    type_code: int,
+    namespace: int,
+    timestamp_sec: int | None = None,
+    fractal_depth: int = 0,
+    fractal_domain: int = 0,
+    fractal_generation: int = 0,
+    forecast_signal: float = 0.0,
+    provenance: int = 0,
+) -> str:
+    """Encode a 128-bit GYST UUIDv8 string. Matches app/api/lib/gyst.ts."""
+    ts = (timestamp_sec if timestamp_sec is not None else int(time.time())) & 0xFFFFFF
+    fractal = (
+        ((fractal_depth & 0xF) << 8)
+        | ((fractal_domain & 0xF) << 4)
+        | (fractal_generation & 0xF)
+    )
+
+    high = (
+        ((type_code & 0xFFF) << 52)
+        | ((namespace & 0xFFF) << 40)
+        | (ts << 16)
+        | (8 << 12)
+        | fractal
+    )
+
+    sig_q = max(0, min(0xFFFF, int(max(0.0, min(1.0, forecast_signal)) * 0xFFFF)))
+    prov = provenance & 0xF
+    # deterministic low-42 from the structured fields (never random)
+    r42 = _content42(type_code, namespace, ts, fractal, sig_q, prov)
+    low = (2 << 62) | (prov << 58) | (sig_q << 42) | r42
+
+    u128 = (high << 64) | low
+    hex_ = f"{u128:032x}"
+    return f"{hex_[0:8]}-{hex_[8:12]}-{hex_[12:16]}-{hex_[16:20]}-{hex_[20:]}"
+
+
+# ---- Core decoder ----
+@dataclass
+class DecodedGYST:
+    type_code: int
+    namespace: int
+    timestamp_sec: int
+    version: int
+    fractal_depth: int
+    fractal_domain: int
+    fractal_generation: int
+    variant: int
+    provenance: int
+    signal: int               # raw 0..65535
+    signal_normalized: float  # signal / 65535
+    random: int
+
+
+def decode_gyst(uuid: str) -> DecodedGYST:
+    hex_ = uuid.replace("-", "").lower()
+    if len(hex_) != 32:
+        raise ValueError("decode_gyst: invalid UUID length")
+    u128 = int(hex_, 16)
+    high = u128 >> 64
+    low = u128 & ((1 << 64) - 1)
+
+    type_code = (high >> 52) & 0xFFF
+    namespace = (high >> 40) & 0xFFF
+    ts_sec = (high >> 16) & 0xFFFFFF
+    version = (high >> 12) & 0xF
+    fractal = high & 0xFFF
+    depth = (fractal >> 8) & 0xF
+    domain = (fractal >> 4) & 0xF
+    generation = fractal & 0xF
+
+    variant = (low >> 62) & 0x3
+    provenance = (low >> 58) & 0xF
+    sig = (low >> 42) & 0xFFFF
+    random = low & ((1 << 42) - 1)
+
+    return DecodedGYST(
+        type_code=type_code,
+        namespace=namespace,
+        timestamp_sec=ts_sec,
+        version=version,
+        fractal_depth=depth,
+        fractal_domain=domain,
+        fractal_generation=generation,
+        variant=variant,
+        provenance=provenance,
+        signal=sig,
+        signal_normalized=sig / 0xFFFF,
+        random=random,
+    )
+
+
+# =============================================================================
+# TurboQuant — UUID = direct addressable KV slot
+# =============================================================================
+
+def encode_turbo_kv_uuid(model_id: str, layer: int, quality: float, *, timestamp_sec: int | None = None) -> str:
+    """
+    TURBO_KV_STATE (0x200).
+    namespace = fnv1a12(f"turboquant:{model_id}:layer{layer}")
+    signal(16) = int(clamp(quality) * 65535) — Lloyd-Max compression quality.
+    provenance = 0x8 TURBO_QUANT.
+    """
+    ns = fnv1a12(f"turboquant:{model_id}:layer{layer}")
+    return encode_gyst(
+        type_code=0x200,
+        namespace=ns,
+        timestamp_sec=timestamp_sec,
+        fractal_depth=0,
+        fractal_domain=0x6,  # TECH
+        fractal_generation=0,
+        forecast_signal=quality,
+        provenance=PROV_TURBO_QUANT,
+    )
+
+
+def decode_turbo_kv_uuid(uuid: str) -> Dict[str, float | int]:
+    d = decode_gyst(uuid)
+    if d.type_code != 0x200:
+        raise ValueError(f"decode_turbo_kv_uuid: expected 0x200, got {hex(d.type_code)}")
+    return {
+        "quality": d.signal_normalized,
+        "timestamp_sec": d.timestamp_sec,
+        "depth": d.fractal_depth,
+        "generation": d.fractal_generation,
+        "namespace_hash": d.namespace,
+    }
+
+
+# =============================================================================
+# Prediction-market lattice helpers (T9a)
+# =============================================================================
+
+def encode_poly_market_uuid(market_id: str, confidence: float = 1.0, *, timestamp_sec: int | None = None) -> str:
+    """POLY_MARKET (0x3A0) — identity signal for a Polymarket market."""
+    return encode_gyst(
+        type_code=0x3A0,
+        namespace=fnv1a12(f"polymarket:{market_id}"),
+        timestamp_sec=timestamp_sec,
+        fractal_depth=0,
+        fractal_domain=0x1,  # MARKET
+        fractal_generation=0,
+        forecast_signal=confidence,
+        provenance=PROV_POLY_MAKER,
+    )
+
+
+def encode_poly_trade_uuid(
+    trade_id: str,
+    price: float,
+    size_ratio: float = 1.0,
+    *,
+    timestamp_sec: int | None = None,
+    market_uuid: str | None = None,
+) -> str:
+    """
+    POLY_TRADE (0x3A2) — Identity signal for an executed Polymarket trade.
+
+    Packs trade price into the 16-bit forecast signal slot [0.0 - 1.0].
+    Namespace is derived from the parent market UUID when available so that
+    trades group under their market address space; otherwise from the trade id.
+    """
+    ns_seed = f"poly:trade:{market_uuid}" if market_uuid else f"poly:trade:{trade_id}"
+    return encode_gyst(
+        type_code=0x3A2,
+        namespace=fnv1a12(ns_seed),
+        timestamp_sec=timestamp_sec,
+        fractal_depth=1,      # Observation/Execution over Market identity
+        fractal_domain=0x1,  # MARKET domain
+        fractal_generation=0,
+        forecast_signal=price,
+        provenance=PROV_POLY_MAKER,
+    )
+
+
+def encode_poly_outcome_quote_uuid(
+    market_id: str,
+    probability: float,
+    *,
+    timestamp_sec: int | None = None,
+) -> str:
+    """POLY_OUTCOME_QUOTE (0x3A1) — observation of crowd probability at time t."""
+    return encode_gyst(
+        type_code=0x3A1,
+        namespace=fnv1a12(f"polymarket:quote:{market_id}"),
+        timestamp_sec=timestamp_sec,
+        fractal_depth=1,  # observation over identity
+        fractal_domain=0x1,
+        fractal_generation=0,
+        forecast_signal=probability,
+        provenance=PROV_POLY_MAKER,
+    )
+
+
+if __name__ == "__main__":
+    # Smoke test — emit one of each, decode, print.
+    tq = encode_turbo_kv_uuid("llama3-70b", 7, 0.84)
+    pm = encode_poly_market_uuid("trump-2028", 1.0)
+    pq = encode_poly_outcome_quote_uuid("trump-2028", 0.17)
+
+    print("TURBO_KV_STATE ", tq, decode_turbo_kv_uuid(tq))
+    print("POLY_MARKET    ", pm, decode_gyst(pm))
+    print("POLY_QUOTE     ", pq, decode_gyst(pq))
+
