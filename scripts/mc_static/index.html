@@ -1,0 +1,247 @@
+<!-- =============================================================================== file_id: SOM-APP-0919-v1.0.0 name: mc_static/index.html description: SOMACO TRADE CONTROL — terminal-UX mission control for the UUID trader: corpus stats, live Kalshi markets, ledger tables, passkey-gated PAPER/FIRE ticket, kill switch project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [mission-control, terminal, dashboard, trading, uuid] created: 2026-08-02 modified: 2026-08-02 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOMACO // TRADE CONTROL</title>
+<style>
+  :root{
+    --bg:#05070a; --panel:#0a0e14; --panel2:#0e131c; --line:#1e2836;
+    --cyan:#06b6d4; --green:#39ff14; --mag:#ff10f0; --amber:#ffb020; --red:#ff4d4d;
+    --txt:#c9d4e3; --dim:#6b7a8f; --mono:'Consolas','SF Mono','Cascadia Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.45;
+    background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px)}
+  header{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .hex{width:16px;height:18px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+  h1{font-size:15px;letter-spacing:3px;color:#fff}
+  h1 .a{color:var(--cyan)}
+  .pill{padding:2px 10px;border-radius:3px;font-size:10px;letter-spacing:1px;font-weight:bold;border:1px solid var(--line)}
+  .ok{color:var(--green);border-color:rgba(57,255,20,.4);background:rgba(57,255,20,.08)}
+  .bad{color:var(--red);border-color:rgba(255,77,77,.4);background:rgba(255,77,77,.08)}
+  .warn{color:var(--amber);border-color:rgba(255,176,32,.4);background:rgba(255,176,32,.08)}
+  .spacer{flex:1}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:12px 18px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px 12px}
+  .stat h4{font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
+  .stat .v{font-size:20px;font-weight:bold;color:#fff}
+  .stat .v small{font-size:11px;color:var(--dim);font-weight:normal}
+  main{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;padding:0 18px 12px}
+  @media(max-width:1100px){main{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px}
+  .card h3{font-size:11px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{color:var(--dim);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+  td{padding:4px 6px;border-bottom:1px solid rgba(30,40,54,.5);vertical-align:top;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+  tr.mrow{cursor:pointer}
+  tr.mrow:hover td{background:rgba(6,182,212,.08)}
+  .c-cyan{color:var(--cyan)} .c-green{color:var(--green)} .c-mag{color:var(--mag)} .c-amber{color:var(--amber)} .c-red{color:var(--red)} .c-dim{color:var(--dim)}
+  .field{display:flex;gap:6px;margin-bottom:8px}
+  .field label{width:64px;font-size:10px;color:var(--dim);align-self:center;letter-spacing:1px;text-transform:uppercase}
+  input,select{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:3px;outline:none}
+  input:focus,select:focus{border-color:var(--cyan)}
+  .btns{display:flex;gap:8px;margin-top:10px}
+  button{flex:1;font-family:var(--mono);font-size:12px;letter-spacing:2px;font-weight:bold;padding:9px 0;border-radius:3px;border:1px solid;cursor:pointer;background:transparent}
+  .b-paper{color:var(--cyan);border-color:var(--cyan)}
+  .b-paper:hover{background:rgba(6,182,212,.12)}
+  .b-fire{color:var(--red);border-color:var(--red)}
+  .b-fire:hover{background:rgba(255,77,77,.12)}
+  .b-kill{color:var(--amber);border-color:var(--amber)}
+  .b-kill:hover{background:rgba(255,176,32,.12)}
+  .b-kill.engaged{background:rgba(255,77,77,.2);color:var(--red);border-color:var(--red)}
+  #logbox{margin:0 18px 16px;background:#030507;border:1px solid var(--line);border-radius:4px;padding:10px;height:190px;overflow-y:auto;font-size:11px}
+  #logbox .l{margin:1px 0;white-space:pre-wrap;word-break:break-all}
+  #logbox .t{color:var(--dim);margin-right:8px}
+  .lk{color:var(--red)} .lw{color:var(--amber)} .lp{color:var(--cyan)} .ll{color:var(--mag)} .le{color:var(--red)} .li{color:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 18px 12px}
+  @media(max-width:1100px){.grid2{grid-template-columns:1fr}}
+  .mono-sm{font-size:10px;color:var(--dim)}
+  ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hex" style="background:var(--cyan)"></div>
+  <div class="hex" style="background:var(--green)"></div>
+  <div class="hex" style="background:var(--mag)"></div>
+  <h1>SOMACO <span class="a">// TRADE CONTROL</span></h1>
+  <span class="pill" id="p-corpus">CORPUS …</span>
+  <span class="pill" id="p-keys">KEYS …</span>
+  <span class="pill" id="p-kill">KILL …</span>
+  <div class="spacer"></div>
+  <span class="mono-sm" id="clock"></span>
+</header>
+
+<div class="stats">
+  <div class="stat"><h4>Corpus trades</h4><div class="v" id="s-trades">—</div></div>
+  <div class="stat"><h4>Wirespeed decode</h4><div class="v c-cyan" id="s-ops">—</div></div>
+  <div class="stat"><h4>Ledger orders</h4><div class="v" id="s-orders">—</div></div>
+  <div class="stat"><h4>Ledger fills</h4><div class="v" id="s-fills">—</div></div>
+  <div class="stat"><h4>Realized P&amp;L</h4><div class="v c-green" id="s-pnl">—</div></div>
+  <div class="stat"><h4>Open contracts</h4><div class="v c-amber" id="s-exp">—</div></div>
+</div>
+
+<main>
+  <div class="card">
+    <h3>Live Kalshi Markets (top volume)</h3>
+    <table id="markets"><thead><tr><th>Ticker</th><th>Title</th><th>Bid</th><th>Ask</th><th>Vol</th></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="card">
+    <h3>Order Ticket</h3>
+    <div class="field"><label>Ticker</label><input id="f-ticker" placeholder="KX…"></div>
+    <div class="field"><label>Side</label><select id="f-side"><option value="yes">YES</option><option value="no">NO</option></select></div>
+    <div class="field"><label>Price ¢</label><input id="f-price" type="number" min="1" max="99" value="42"></div>
+    <div class="field"><label>Count</label><input id="f-count" type="number" min="1" max="5" value="1"></div>
+    <div class="field"><label>Mode</label><select id="f-mode"><option value="paper">PAPER</option><option value="live">LIVE</option></select></div>
+    <div class="field"><label>Passkey</label><input id="f-pass" type="password" placeholder="passkey"></div>
+    <div class="field" id="confirm-row" style="display:none"><label>Confirm</label><input id="f-confirm" placeholder="type FIRE"></div>
+    <div class="btns">
+      <button class="b-paper" id="btn-go">EXECUTE</button>
+    </div>
+    <div class="btns">
+      <button class="b-kill" id="btn-kill">ENGAGE KILL SWITCH</button>
+    </div>
+    <div class="mono-sm" style="margin-top:8px">caps: ≤5 contracts · ≤$5 notional · client_order_id = UUID low-42 tail · every event minted on the substrate</div>
+  </div>
+  <div class="card">
+    <h3>Positions &amp; P&amp;L</h3>
+    <table id="positions"><thead><tr><th>Ticker</th><th>Side</th><th>Net</th><th>Avg¢</th><th>Realized¢</th></tr></thead><tbody></tbody></table>
+    <h3 style="margin-top:12px">P&amp;L by market (spawn-tree)</h3>
+    <table id="pnl"><thead><tr><th>Ticker</th><th>Orders</th><th>Filled</th><th>Notional¢</th><th>Fees¢</th></tr></thead><tbody></tbody></table>
+  </div>
+</main>
+
+<div class="grid2">
+  <div class="card">
+    <h3>Orders</h3>
+    <table id="orders"><thead><tr><th>UUID</th><th>COI</th><th>Ticker</th><th>Side</th><th>¢</th><th>x</th><th>Status</th><th>Mode</th></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="card">
+    <h3>Fills</h3>
+    <table id="fills"><thead><tr><th>UUID</th><th>Parent order</th><th>¢</th><th>x</th><th>Fee¢</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<div id="logbox"></div>
+
+<script>
+const $ = (id)=>document.getElementById(id);
+const esc = (s)=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const short = (u)=>u?esc(u.slice(0,13))+"…":"—";
+sessionStorage.pk = sessionStorage.pk || "";
+$("f-pass").value = sessionStorage.pk;
+$("f-pass").addEventListener("input", e=>sessionStorage.pk = e.target.value);
+
+async function j(url, opts){
+  const r = await fetch(url, opts);
+  return r.json();
+}
+
+async function refreshStats(){
+  const s = await j("/api/stats");
+  $("s-trades").textContent = s.corpus.online ? s.corpus.trades.toLocaleString() : "offline";
+  $("s-ops").innerHTML = s.corpus.decode_ops ? (s.corpus.decode_ops/1e6).toFixed(2)+"M <small>ops/s</small>" : "—";
+  $("s-orders").textContent = s.ledger.orders;
+  $("s-fills").textContent = s.ledger.fills;
+  $("s-pnl").textContent = s.ledger.realized_pnl_cents+"¢";
+  $("s-exp").textContent = s.ledger.open_contracts;
+  setPill("p-corpus", s.corpus.online, s.corpus.online?"CORPUS ONLINE":"CORPUS DOWN");
+  setPill("p-keys", s.keys, s.keys?"KEYS ARMED":"NO KEYS");
+  setPill("p-kill", !s.kill, s.kill?"KILL ENGAGED":"ARMED", s.kill?"bad":"ok");
+  $("btn-kill").textContent = s.kill ? "DISENGAGE KILL" : "ENGAGE KILL SWITCH";
+  $("btn-kill").classList.toggle("engaged", s.kill);
+}
+function setPill(id, good, txt, force){
+  const el = $(id); el.textContent = txt;
+  el.className = "pill " + (force ? force : (good?"ok":"warn"));
+}
+
+async function refreshMarkets(){
+  const d = await j("/api/markets");
+  const tb = $("markets").querySelector("tbody"); tb.innerHTML="";
+  (d.markets||[]).forEach(m=>{
+    const tr = document.createElement("tr"); tr.className="mrow";
+    tr.innerHTML = `<td class="c-cyan">${esc(m.ticker)}</td><td>${esc(m.title)}</td><td class="c-green">${m.yes_bid??"—"}</td><td class="c-amber">${m.yes_ask??"—"}</td><td>${(m.volume||0).toLocaleString()}</td>`;
+    tr.onclick = ()=>{ $("f-ticker").value = m.ticker; if(m.yes_ask) $("f-price").value = m.yes_ask; };
+    tb.appendChild(tr);
+  });
+}
+
+async function refreshTables(){
+  const [o,f,p,pn] = await Promise.all([j("/api/orders"), j("/api/fills"), j("/api/positions"), j("/api/pnl")]);
+  let tb = $("orders").querySelector("tbody"); tb.innerHTML="";
+  (o.orders||[]).forEach(r=>{
+    const tr=document.createElement("tr");
+    const sc = r.status==="submitted"?"c-green":(r.status==="rejected"||r.status==="error")?"c-red":r.status==="filled"?"c-cyan":"c-dim";
+    tr.innerHTML = `<td>${short(r.uuid)}</td><td class="c-dim">${esc(r.client_order_id)}</td><td>${esc(r.ticker)}</td><td>${esc(r.side)}</td><td>${r.price_cents}</td><td>${r.count}</td><td class="${sc}">${esc(r.status)}</td><td class="${r.mode==="live"?"c-mag":"c-dim"}">${esc(r.mode)}</td>`;
+    tb.appendChild(tr);
+  });
+  tb = $("fills").querySelector("tbody"); tb.innerHTML="";
+  (f.fills||[]).forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td>${short(r.uuid)}</td><td>${short(r.parent_uuid)}</td><td>${r.price_cents}</td><td>${r.count}</td><td>${r.fee_cents}</td>`;
+    tb.appendChild(tr);
+  });
+  tb = $("positions").querySelector("tbody"); tb.innerHTML="";
+  (p.positions||[]).forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td>${esc(r.ticker)}</td><td>${esc(r.side)}</td><td>${r.net_count}</td><td>${Number(r.avg_price_cents).toFixed(1)}</td><td class="${r.realized_pnl_cents>=0?"c-green":"c-red"}">${r.realized_pnl_cents}</td>`;
+    tb.appendChild(tr);
+  });
+  tb = $("pnl").querySelector("tbody"); tb.innerHTML="";
+  (pn.pnl||[]).forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td>${esc(r.ticker)}</td><td>${r.orders}</td><td>${r.filled_contracts}</td><td>${r.notional_cents}</td><td>${r.fees_cents}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+async function refreshLog(){
+  const d = await j("/api/log");
+  const box = $("logbox"); box.innerHTML="";
+  (d.log||[]).forEach(e=>{
+    const div = document.createElement("div"); div.className="l";
+    const t = new Date(e.ts*1000).toLocaleTimeString();
+    const cls = {kill:"lk",warn:"lw",paper:"lp",live:"ll",error:"le"}[e.kind]||"li";
+    div.innerHTML = `<span class="t">${t}</span><span class="${cls}">${esc(e.msg)}</span>`;
+    box.appendChild(div);
+  });
+}
+
+$("f-mode").addEventListener("change", e=>{
+  $("confirm-row").style.display = e.target.value==="live" ? "flex":"none";
+  $("btn-go").textContent = e.target.value==="live" ? "FIRE (LIVE)" : "EXECUTE (PAPER)";
+  $("btn-go").className = e.target.value==="live" ? "b-fire" : "b-paper";
+});
+
+$("btn-go").onclick = async ()=>{
+  const body = {
+    ticker: $("f-ticker").value.trim(), side: $("f-side").value,
+    price: +$("f-price").value, count: +$("f-count").value,
+    mode: $("f-mode").value, passkey: $("f-pass").value,
+    confirm: $("f-confirm").value
+  };
+  if(!body.ticker) return alert("ticker required");
+  const r = await fetch("/api/order", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+  const d = await r.json();
+  if(!r.ok) alert("REJECTED: " + (d.error||r.status) + (d.resp?("\n"+JSON.stringify(d.resp).slice(0,300)):""));
+  refreshStats(); refreshTables(); refreshLog();
+};
+
+$("btn-kill").onclick = async ()=>{
+  const engaging = $("btn-kill").textContent.includes("ENGAGE");
+  const r = await fetch("/api/kill", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({on: engaging, passkey: $("f-pass").value})});
+  if(r.status===403) alert("bad passkey");
+  refreshStats(); refreshLog();
+};
+
+setInterval(()=>{ $("clock").textContent = new Date().toLocaleTimeString(); }, 1000);
+async function tick(){ await Promise.all([refreshStats(), refreshTables(), refreshLog()]); }
+refreshMarkets(); tick();
+setInterval(tick, 2500);
+setInterval(refreshMarkets, 20000);
+</script>
+</body>
+</html>
