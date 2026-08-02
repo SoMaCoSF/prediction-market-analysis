@@ -10,6 +10,11 @@ const nextConfig = {
           destination: '/trade/index.html',
           has: [{ type: 'host', value: 'trade.somacosf.com' }],
         },
+        {
+          source: '/about',
+          destination: '/trade/about.html',
+          has: [{ type: 'host', value: 'trade.somacosf.com' }],
+        },
       ],
       afterFiles: [
         { source: '/thesis', destination: '/thesis/index.html' },
