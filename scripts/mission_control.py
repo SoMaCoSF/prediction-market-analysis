@@ -238,6 +238,11 @@ async def index():
     return (STATIC / "index.html").read_text(encoding="utf-8")
 
 
+@app.get("/about", response_class=HTMLResponse)
+async def about():
+    return (STATIC / "about.html").read_text(encoding="utf-8")
+
+
 @app.get("/api/stats")
 async def api_stats():
     con, cur = sb_cur()
