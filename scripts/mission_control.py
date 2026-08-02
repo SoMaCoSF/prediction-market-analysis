@@ -97,8 +97,31 @@ def kalshi_sign(method: str, path: str, ts_ms: str, key_path: str) -> str:
 
 
 def kalshi_post_order(req_body: dict):
+    """Kalshi Create Order V2 — POST /portfolio/events/orders.
+
+    req_body (v1-style, internal): {ticker, side: yes|no, action, count, type,
+    yes_price|no_price (cents), client_order_id}
+    Translated to V2 wire shape: side=bid/ask on the YES contract, price as a
+    dollar string, count as a fixed-point string. (Buying YES = 'bid'.)
+    """
     kid, kpath = kalshi_keys()
-    path = "/trade-api/v2/portfolio/orders"
+    path = "/trade-api/v2/portfolio/events/orders"
+    side_v1 = req_body["side"].lower()
+    price_cents = req_body.get("yes_price", req_body.get("no_price"))
+    v2 = {
+        "ticker": req_body["ticker"],
+        "client_order_id": req_body["client_order_id"],
+        "side": "bid" if side_v1 == "yes" else "ask",
+        "count": f"{int(req_body['count']):.2f}",
+        "price": f"{price_cents / 100.0:.4f}",
+        "time_in_force": "good_till_canceled",
+        "self_trade_prevention_type": "taker_at_cross",
+        "post_only": False,
+        "cancel_order_on_pause": False,
+        "reduce_only": False,
+        "subaccount": 0,
+        "exchange_index": -1,   # auto-route shard by ticker
+    }
     ts = str(int(time.time() * 1000))
     headers = {
         "KALSHI-ACCESS-KEY": kid,
@@ -106,7 +129,7 @@ def kalshi_post_order(req_body: dict):
         "KALSHI-ACCESS-TIMESTAMP": ts,
         "Content-Type": "application/json",
     }
-    r = httpx.post(f"{KALSHI_HOST}/portfolio/orders", json=req_body, headers=headers, timeout=20)
+    r = httpx.post(f"{KALSHI_HOST}/portfolio/events/orders", json=v2, headers=headers, timeout=20)
     try:
         return r.status_code, r.json()
     except Exception:
@@ -158,18 +181,40 @@ def corpus_stats():
 _mkt_cache = {"ts": 0, "data": None}
 
 
+def _cents(v) -> int | None:
+    """dollar-string ('0.4200') -> cents int; legacy int cents pass through."""
+    if v is None:
+        return None
+    try:
+        f = float(v)
+        return int(round(f * 100)) if f <= 1.0 else int(round(f))
+    except (TypeError, ValueError):
+        return None
+
+
 async def live_markets():
     if time.time() - _mkt_cache["ts"] < 20 and _mkt_cache["data"] is not None:
         return _mkt_cache["data"]
     async with httpx.AsyncClient(timeout=20) as cx:
-        r = await cx.get(f"{KALSHI_HOST}/markets", params={"limit": 50, "status": "open"})
+        r = await cx.get(f"{KALSHI_HOST}/markets", params={"limit": 200, "status": "open"})
         rows = []
         for m in r.json().get("markets", []):
+            yes_bid = _cents(m.get("yes_bid_dollars", m.get("yes_bid")))
+            yes_ask = _cents(m.get("yes_ask_dollars", m.get("yes_ask")))
+            try:
+                vol = float(m.get("volume_fp", m.get("volume") or 0))
+            except (TypeError, ValueError):
+                vol = 0.0
+            try:
+                ask_size = float(m.get("yes_ask_size_fp") or 0)
+            except (TypeError, ValueError):
+                ask_size = 0.0
             rows.append({
                 "ticker": m.get("ticker"),
                 "title": (m.get("title") or m.get("subtitle") or "")[:80],
-                "yes_bid": m.get("yes_bid"), "yes_ask": m.get("yes_ask"),
-                "volume": m.get("volume") or 0,
+                "yes_bid": yes_bid, "yes_ask": yes_ask,
+                "ask_size": ask_size,
+                "volume": vol,
                 "close_time": m.get("close_time"),
             })
         rows.sort(key=lambda x: -x["volume"])
@@ -340,12 +385,29 @@ async def api_order(req: Request):
         log(f"LIVE submit exception: {repr(e)[:160]}", "error")
         return JSONResponse({"error": repr(e)[:200]}, status_code=502)
     if code in (200, 201):
-        oid = (resp.get("order") or {}).get("order_id")
+        oid = resp.get("order_id") or (resp.get("order") or {}).get("order_id")
+        fills = resp.get("fill_count")
+        # mint + record the ACK child UUID (0x3A6): exchange order_id reconciles by low-42
+        avg_px_c = None
+        if resp.get("average_fill_price") is not None:
+            try:
+                avg_px_c = float(resp["average_fill_price"]) * 100.0
+            except (TypeError, ValueError):
+                avg_px_c = None
+        try:
+            ack = L.mint_ack(o["uuid"], str(oid), avg_px_c, ts_ms=resp.get("ts_ms"))
+            L.record_ack(cur, ack,
+                         fill_count=float(resp.get("fill_count") or 0),
+                         remaining_count=float(resp.get("remaining_count") or 0),
+                         avg_price_cents=avg_px_c)
+            log(f"ACK uuid={ack['uuid'][:13]}… minted for exchange order_id (0x3A6 child)", "live")
+        except Exception as e:
+            log(f"ack mint warn: {repr(e)[:120]}", "warn")
         cur.execute("UPDATE uuid_orders SET status='submitted', exchange_order_id=%s WHERE uuid=%s",
                     (oid, o["uuid"]))
         con.commit()
         con.close()
-        log(f"LIVE ACK order_id={oid}  coi={o['client_order_id']}  (reconciles by low-42 bitmask)", "live")
+        log(f"LIVE ACK order_id={oid} fill_count={fills} coi={o['client_order_id']}  (reconciles by low-42 bitmask)", "live")
         return {"ok": True, "mode": "live", "uuid": o["uuid"],
                 "client_order_id": o["client_order_id"], "exchange_order_id": oid, "ack": resp}
     cur.execute("UPDATE uuid_orders SET status='rejected' WHERE uuid=%s", (o["uuid"],))

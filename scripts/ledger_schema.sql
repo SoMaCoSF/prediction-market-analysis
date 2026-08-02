@@ -22,6 +22,22 @@ CREATE INDEX IF NOT EXISTS idx_orders_lo42   ON uuid_orders ((uuid_lo & 43980465
 CREATE INDEX IF NOT EXISTS idx_orders_parent ON uuid_orders (parent_uuid);
 CREATE INDEX IF NOT EXISTS idx_orders_ticker ON uuid_orders (ticker);
 
+-- Exchange acknowledgments: 0x3A6 child of the order; low-42 = content42(order_id).
+CREATE TABLE IF NOT EXISTS uuid_acks (
+    uuid              TEXT PRIMARY KEY,
+    uuid_hi           BIGINT NOT NULL,
+    uuid_lo           BIGINT NOT NULL,
+    parent_uuid       TEXT NOT NULL REFERENCES uuid_orders(uuid),
+    exchange_order_id TEXT,
+    fill_count        DOUBLE PRECISION NOT NULL DEFAULT 0,
+    remaining_count   DOUBLE PRECISION NOT NULL DEFAULT 0,
+    avg_price_cents   DOUBLE PRECISION,
+    ts                BIGINT NOT NULL,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_acks_parent ON uuid_acks (parent_uuid);
+CREATE INDEX IF NOT EXISTS idx_acks_lo42   ON uuid_acks ((uuid_lo & 4398046511103));
+
 -- Fills: each fill is a CHILD UUID (0x3A7) spawned under its order UUID.
 CREATE TABLE IF NOT EXISTS uuid_fills (
     uuid              TEXT PRIMARY KEY,

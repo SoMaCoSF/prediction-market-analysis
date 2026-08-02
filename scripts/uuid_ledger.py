@@ -30,7 +30,9 @@ from uuid_service_turboquant import decode_gyst, encode_gyst, fnv1a12  # noqa: E
 
 # ---- Trading type codes (single registry for the money path) ----
 TYPE_KALSHI_MARKET = 0x3B0
-TYPE_KALSHI_BET    = 0x3A4   # order
+TYPE_KALSHI_BET    = 0x3A4   # order BID (buy YES)
+TYPE_KALSHI_ASK    = 0x3A5   # order ASK (sell YES / reduce)
+TYPE_KALSHI_ACK    = 0x3A6   # exchange acknowledgment (child of order)
 TYPE_KALSHI_FILL   = 0x3A7   # fill (child of order)
 TYPE_KALSHI_SETTLE = 0x3A9   # settlement (child of market)
 TYPE_KALSHI_MARK   = 0x3AA   # mark-to-market (child of market)
@@ -67,15 +69,17 @@ def mint_market_uuid(ticker: str, *, ts: int | None = None) -> str:
 
 def mint_order(ticker: str, side: str, price_cents: int, count: int,
                *, parent_uuid: str | None = None, ts: int | None = None) -> dict:
-    """Mint an order UUID (0x3A4) as a child of its market.
+    """Mint an order UUID as a child of its market.
 
-    Returns dict with uuid, signed hi/lo, and client_order_id (= low-42 hex tail).
+    side 'yes' (buy YES) -> 0x3A4 ORDER_BID; side 'no' -> 0x3A5 ORDER_ASK, so the
+    side is routable by the type bitmask alone. client_order_id = low-42 hex tail.
     Deterministic per logical order payload -> idempotent retries are safe.
     """
     parent = parent_uuid or mint_market_uuid(ticker, ts=ts)
+    tc = TYPE_KALSHI_BET if side.lower() == "yes" else TYPE_KALSHI_ASK
     seed = f"order|{ticker}|{side}|{price_cents}|{count}|{ts or int(time.time())}"
     u = encode_gyst(
-        type_code=TYPE_KALSHI_BET, namespace=fnv1a12(parent),
+        type_code=tc, namespace=fnv1a12(parent),
         timestamp_sec=ts, fractal_depth=1, fractal_domain=0x1, fractal_generation=1,
         forecast_signal=price_cents / 100.0, provenance=PROV_KALSHI,
         content_seed=seed,
@@ -90,11 +94,38 @@ def mint_order(ticker: str, side: str, price_cents: int, count: int,
     }
 
 
-def mint_fill(order_uuid: str, price_cents: int, count: int,
-              *, ts: int | None = None, fill_seq: int = 0) -> dict:
-    """Mint a fill UUID (0x3A7) as a child of its order."""
+def mint_ack(order_uuid: str, exchange_order_id: str, avg_fill_price_cents: float | None,
+             *, ts_ms: int | None = None) -> dict:
+    """Mint an ACK UUID (0x3A6) as a child of its order.
+
+    low-42 = content42(exchange_order_id) -> the exchange's own ack id reconciles
+    to this UUID by the same bitmask. signal = average fill price when present.
+    """
     d = decode_gyst(order_uuid)
-    seed = f"fill|{order_uuid}|{price_cents}|{count}|{fill_seq}|{ts or int(time.time())}"
+    ts_sec = (ts_ms // 1000) if ts_ms else int(time.time())
+    sig = (avg_fill_price_cents / 100.0) if avg_fill_price_cents is not None else d.signal_normalized
+    u = encode_gyst(
+        type_code=TYPE_KALSHI_ACK, namespace=d.namespace,
+        timestamp_sec=ts_sec, fractal_depth=2, fractal_domain=d.fractal_domain,
+        fractal_generation=d.fractal_generation + 1,
+        forecast_signal=sig, provenance=PROV_KALSHI,
+        content_seed=f"ack|{exchange_order_id}",
+    )
+    hi, lo = hi_lo(u)
+    return {"uuid": u, "uuid_hi": hi, "uuid_lo": lo, "parent_uuid": order_uuid,
+            "exchange_order_id": exchange_order_id, "ts": ts_sec}
+
+
+def mint_fill(order_uuid: str, price_cents: int, count: int,
+              *, ts: int | None = None, fill_seq: int = 0,
+              exchange_fill_id: str | None = None) -> dict:
+    """Mint a fill UUID (0x3A7) as a child of its order.
+
+    When exchange_fill_id is given it becomes the content seed, so the exchange
+    fill reconciles by the same low-42 bitmask."""
+    d = decode_gyst(order_uuid)
+    seed = (f"xf|{exchange_fill_id}" if exchange_fill_id
+            else f"fill|{order_uuid}|{price_cents}|{count}|{fill_seq}|{ts or int(time.time())}")
     u = encode_gyst(
         type_code=TYPE_KALSHI_FILL, namespace=d.namespace,
         timestamp_sec=ts, fractal_depth=2, fractal_domain=d.fractal_domain,
@@ -154,6 +185,16 @@ def record_fill(cur, f: dict, *, fee_cents: int = 0, exchange_fill_id: str | Non
            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (uuid) DO NOTHING""",
         (f["uuid"], f["uuid_hi"], f["uuid_lo"], f["parent_uuid"], f["price_cents"],
          f["count"], fee_cents, exchange_fill_id, f["ts"]))
+
+
+def record_ack(cur, a: dict, *, fill_count: float = 0.0, remaining_count: float = 0.0,
+               avg_price_cents: float | None = None):
+    cur.execute(
+        """INSERT INTO uuid_acks (uuid, uuid_hi, uuid_lo, parent_uuid, exchange_order_id,
+                                  fill_count, remaining_count, avg_price_cents, ts)
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (uuid) DO NOTHING""",
+        (a["uuid"], a["uuid_hi"], a["uuid_lo"], a["parent_uuid"], a["exchange_order_id"],
+         fill_count, remaining_count, avg_price_cents, a["ts"]))
 
 
 def reconcile(cur, client_order_id: str) -> dict | None:
