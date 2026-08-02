@@ -30,13 +30,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
-try:  # load KALSHI_KEY_ID / KALSHI_PRIVATE_KEY from gitignored .env
-    from dotenv import load_dotenv
-    load_dotenv(PROJECT_ROOT / ".env")
-except Exception:
-    pass
 from uuid_service_turboquant import encode_gyst, fnv1a12  # noqa: E402
-import uuid_ledger as L  # noqa: E402  — single mint authority + tracking
 
 TYPE_KALSHI_BET = 0x3A4
 PROV_KALSHI = 0x2  # provenance slot for Kalshi (vs 0x1 Polymarket)
@@ -63,13 +57,13 @@ def bet_uuid(ticker: str, side: str, price_cents: int, client_order_id: str | No
     return f"{hex_[0:8]}-{hex_[8:12]}-{hex_[12:16]}-{hex_[16:20]}-{hex_[20:]}"
 
 
-def build_request(ticker, side, price_cents, count, client_order_id=None, action="buy") -> dict:
-    """Exact CreateOrderRequest body the SDK expects (keys match model fields 1:1)."""
+def build_request(ticker, side, price_cents, count, client_order_id=None) -> dict:
+    """Exact CreateOrderRequest body the SDK expects."""
     price_key = "yes_price" if side.lower() == "yes" else "no_price"
     req = {
         "ticker": ticker,
         "side": side.lower(),
-        "action": action,            # kalshi: 'buy' | 'sell'  (scaffold's 'create' was invalid)
+        "action": "create",
         "count": int(count),
         "type": "limit",
         price_key: int(price_cents),
@@ -79,63 +73,29 @@ def build_request(ticker, side, price_cents, count, client_order_id=None, action
 
 
 def submit(requests: list[dict], dry_run: bool = True):
-    """Submit one or many Kalshi orders. dry_run => mint UUIDs + print payload, no network.
-
-    Every order is minted via the canonical ledger encoder (0x3A4, child of its
-    market) and its client_order_id IS the UUID's low-42 tail — so exchange acks
-    reconcile to the ledger by bitmask with no lookup table. Every mint is
-    recorded to uuid_orders (mode=paper on dry-run, live on real submit).
-    """
+    """Submit one or many Kalshi orders. dry_run => mint UUIDs + print payload, no network."""
     results = []
-    con = cur = None
-    try:
-        con = L.local_conn(); cur = con.cursor()
-    except Exception as e:
-        print(f"[ledger] offline — tracking skipped: {repr(e)[:120]}")
     for req in requests:
-        px = req.get("yes_price", req.get("no_price"))
-        o = L.mint_order(req["ticker"], req["side"], px, req["count"])
-        req["client_order_id"] = o["client_order_id"]   # the tail IS the id
-        results.append({"uuid": o["uuid"], "request": req})
-        print(f"[bet] uuid={o['uuid']}  coi={o['client_order_id']}  ->  "
-              f"{req['side']} {px}¢ x{req['count']} {req['ticker']}")
-        if cur:
-            try:
-                L.record_order(cur, o, mode=("paper" if dry_run else "live"),
-                               status=("minted" if dry_run else "submitted"))
-            except Exception as e:
-                print(f"[ledger] warn: {repr(e)[:120]}")
-    if con:
-        con.commit(); con.close()
+        coi = req.get("client_order_id")
+        uid = bet_uuid(req["ticker"], req["side"], req.get("yes_price", req.get("no_price")), coi)
+        results.append({"uuid": uid, "request": req})
+        print(f"[bet] uuid={uid}  ->  {req['side']} {req.get('yes_price', req.get('no_price'))}¢ x{req['count']} {req['ticker']}")
     if dry_run:
-        print(f"\n[DRY-RUN] {len(results)} order(s) minted as UUIDs + recorded to ledger (mode=paper). Set KALSHI_KEY_ID + "
+        print(f"\n[DRY-RUN] {len(results)} order(s) minted as UUIDs. Set KALSHI_KEY_ID + "
               f"KALSHI_PRIVATE_KEY to submit for real. Payload sample:")
         print(json.dumps(results[0]["request"], indent=2))
         return results
-    # ---- real submit (verified against kalshi_python 2.1.x on disk) ----
+    # real submit
     key_id = os.getenv("KALSHI_KEY_ID")
-    key_path = os.getenv("KALSHI_PRIVATE_KEY_PATH")
-    key_pem = os.getenv("KALSHI_PRIVATE_KEY")
-    if key_pem and not key_path:
-        # PEM content in env -> materialize to a gitignored file the SDK can read
-        key_path = str(PROJECT_ROOT / ".kalshi_key.pem")
-        if not Path(key_path).exists():
-            Path(key_path).write_text(key_pem)
-    if not (key_id and key_path):
-        print("[ABORT] set KALSHI_KEY_ID + KALSHI_PRIVATE_KEY_PATH (or KALSHI_PRIVATE_KEY) in .env — cannot submit.")
-        return results
-    from kalshi_python import Configuration, ApiClient, CreateOrderRequest, BatchCreateOrdersRequest  # noqa: E402
-    from kalshi_python.api.portfolio_api import PortfolioApi  # noqa: E402
-    cfg = Configuration(host=os.getenv("KALSHI_HOST", "https://api.elections.kalshi.com/trade-api/v2"))
-    client = ApiClient(cfg)
-    client.set_kalshi_auth(key_id, key_path)
-    api = PortfolioApi(client)
+    priv = os.getenv("KALSHI_PRIVATE_KEY")
+    if not (key_id and priv):
+        print("[ABORT] KALSHI_KEY_ID / KALSHI_PRIVATE_KEY not set — cannot submit."); return results
+    from kalshi_python import Kalshi  # noqa: E402
+    client = Kalshi(key_id=key_id, private_key=priv)
     if len(results) == 1:
-        resp = api.create_order(create_order_request=CreateOrderRequest(**results[0]["request"]))
+        resp = client.portfolio_api.create_order(build_request(**results[0]["request"]))
     else:
-        resp = api.batch_create_orders(
-            batch_create_orders_request=BatchCreateOrdersRequest(
-                orders=[CreateOrderRequest(**r["request"]) for r in results]))
+        resp = client.portfolio_api.batch_create_orders([build_request(**r["request"]) for r in results])
     print(f"[SUBMITTED] {resp}")
     return results
 

@@ -65,17 +65,8 @@ def encode_gyst(
     fractal_generation: int = 0,
     forecast_signal: float = 0.0,
     provenance: int = 0,
-    content_seed: str | None = None,
 ) -> str:
-    """Encode a 128-bit GYST UUIDv8 string. Matches app/api/lib/gyst.ts.
-
-    content_seed: optional extra entropy mixed into the deterministic low-42.
-    Same seed -> same UUID (reproducible); distinct seeds -> distinct UUIDs.
-    Use it for entities that must be unique despite identical structured fields
-    (e.g. two orders on the same ticker/price in the same second). The seed is
-    NOT recoverable from the UUID (SHA-256 is one-way) — reconciliation uses the
-    decoded low-42 value itself as the key.
-    """
+    """Encode a 128-bit GYST UUIDv8 string. Matches app/api/lib/gyst.ts."""
     ts = (timestamp_sec if timestamp_sec is not None else int(time.time())) & 0xFFFFFF
     fractal = (
         ((fractal_depth & 0xF) << 8)
@@ -94,10 +85,7 @@ def encode_gyst(
     sig_q = max(0, min(0xFFFF, int(max(0.0, min(1.0, forecast_signal)) * 0xFFFF)))
     prov = provenance & 0xF
     # deterministic low-42 from the structured fields (never random)
-    parts = [type_code, namespace, ts, fractal, sig_q, prov]
-    if content_seed is not None:
-        parts.append(content_seed)
-    r42 = _content42(*parts)
+    r42 = _content42(type_code, namespace, ts, fractal, sig_q, prov)
     low = (2 << 62) | (prov << 58) | (sig_q << 42) | r42
 
     u128 = (high << 64) | low
