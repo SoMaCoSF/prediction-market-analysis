@@ -1,9 +1,11 @@
 # pre-launch probe: MC up+keys, spot feed, momentum, KXBTC15M discovery (no fires)
-import sys, time
+import sys
+import time
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import httpx
 import btc15_bot as B
+import httpx
 
 s = httpx.get(f"{B.MC}/api/stats", timeout=10).json()
 print("MC:", "UP", "| keys:", s["keys"], "| kill:", s["kill"], "| corpus:", s["corpus"]["online"])

@@ -1,6 +1,7 @@
 # get project region, construct + TEST pooler connection strings (password never printed)
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import httpx
 import psycopg2

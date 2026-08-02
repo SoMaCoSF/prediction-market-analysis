@@ -18,6 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import httpx  # noqa: E402
+import runlog  # noqa: E402
 import sb  # noqa: E402
 
 MC = "http://127.0.0.1:8420"
@@ -32,6 +33,7 @@ BAND_LO, BAND_HI = 1, 5  # tail price band
 
 def log(m):
     print(f"[{time.strftime('%H:%M:%S')}] {m}", flush=True)
+    runlog.log_event("chaos", m)
 
 
 def fire(ticker, side, price):
@@ -104,6 +106,7 @@ def main():
                 if round_spent >= ROUND_MAX or spent >= TOTAL_BUDGET:
                     break
             log(f"round done: spent {round_spent}c | total {spent}/{TOTAL_BUDGET}c")
+            runlog.assert_event(spent <= TOTAL_BUDGET, "chaos", f"budget invariant: spent {spent}c <= {TOTAL_BUDGET}c", spent=spent, cap=TOTAL_BUDGET)
             if spent >= TOTAL_BUDGET:
                 break
             time.sleep(ROUND_EVERY)

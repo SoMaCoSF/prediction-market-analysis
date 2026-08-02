@@ -115,21 +115,21 @@ spawn:   namespace = fnv1a12(parent_uuid)   = the tree IS the roll-up</div>
   <h2><span class="n">4</span>The algos — live now, honestly labeled</h2>
   <div class="grid2">
     <div class="card">
-      <h3 class="c-cyan" style="font-size:11px;letter-spacing:1px">A · CRYPTO 15M MOMENTUM <span class="tag t-unproven">UNPROVEN EDGE</span></h3>
-      <p>Spot momentum (±4bps / 180s window, Coinbase feed) vs the 15-min binary's lag. When spot breaks and Kalshi hasn't repriced, take the cheap side taker, 1 contract.</p>
+      <h3 class="c-cyan" style="font-size:11px;letter-spacing:1px">A · MOMENTUM SCALP ENGINE <span class="tag t-unproven">FIRST BATCH 4/4</span></h3>
+      <p>The speed run. Early-window drift entries (Kraken 24h drift ≥ ±0.20%, price ≤ 60¢, ttl ≥ 540s), then <b>reprice exits at +15¢</b> — profit locked mid-window instead of waiting for settlement. State rebuilt from exchange truth every 5s cycle; guards: cash floor $20, session stop −$3, one position per series, MC kill switch honored.</p>
       <table>
-        <tr><td>markets</td><td>KXBTC15M · KXETH15M · KXSOL15M · KXXRP15M · KXDOGE15M</td></tr>
-        <tr><td>entry</td><td>taker at ask ≤ 55–60¢ · no entries in final 2 min</td></tr>
-        <tr><td>size</td><td>1 contract · max 3 open · session stop −$3</td></tr>
-        <tr><td>thesis</td><td>binary lags spot by seconds–minutes (co-move follow-through)</td></tr>
-        <tr><td>status</td><td class="c-amber">live, hunting. 1 resting order lost to a price-mirror bug (fixed + proven). 0 settled trades yet — edge UNPROVEN.</td></tr>
+        <tr><td>markets</td><td>KXBTC/ETH/SOL/XRP/DOGE 15M</td></tr>
+        <tr><td>batch 1 (12:45 win)</td><td class="c-green">4/4 settled YES: XRP +75¢ · DOGE +58¢ · SOL +56¢ · ETH +53¢ = <b>+$2.42 realized</b></td></tr>
+        <tr><td>batch 2 (13:00 win)</td><td class="c-red">0/5 — drift reversed intrawindow, settle-held positions expired: <b>−$4.51</b>. Lesson enforced: reprice exits (+15¢), not settle-holding.</td></tr>
+        <tr><td>execution</td><td>fills landed 1–21¢ inside the quoted ask (taker crossed resting liquidity)</td></tr>
+        <tr><td>status</td><td class="c-amber">4/8 across two batches; the exit discipline is the edge hypothesis under test now</td></tr>
       </table>
     </div>
     <div class="card">
-      <h3 class="c-mag" style="font-size:11px;letter-spacing:1px">B · LONGSHOT BASKET <span class="tag t-negev">−EV BY DESIGN</span></h3>
-      <p>Cheap YES longshots (2–12¢) across liquid sports futures. Pure variance: most expire worthless, one hit pays 10–50×. Corpus research says longshots are <i>overpriced</i> — this sleeve is entertainment/variance, sized at cents, and labeled as such.</p>
-      <h3 class="c-green" style="font-size:11px;letter-spacing:1px;margin-top:10px">C · MID-LIQUID <span class="tag t-unproven">HOLD</span></h3>
-      <p>Deep tight books (LAD 40/41¢, NYY 12¢). Near-fair prices, minimal spread cost. The "park capital in liquid positions" sleeve.</p>
+      <h3 class="c-mag" style="font-size:11px;letter-spacing:1px">B · CHAOS MONKEY <span class="tag t-negev">−EV BY DESIGN</span></h3>
+      <p>Pure variance engine, hard-capped at <b>$1.00</b>. Scans ~1000 open markets for price tails (YES ask 1–5¢ or the cheap NO side of ≥95¢ books), shuffles, fires 1 contract per tail, ~25¢/round. Most expire worthless; one 30–100× pays the batch. Corpus research says these are overpriced — it knows, it's labeled, it's capped.</p>
+      <h3 class="c-green" style="font-size:11px;letter-spacing:1px;margin-top:10px">C · HELD BOOK <span class="tag t-unproven">HOLD</span></h3>
+      <p>Sports futures from the parallel play (LAD ×3, NYY ×2, SEA/MIL/CWS/MIA/GSW lotto) + MVE combo tails — long-dated, riding to resolution.</p>
     </div>
   </div>
 </section>
@@ -155,10 +155,21 @@ spawn:   namespace = fnv1a12(parent_uuid)   = the tree IS the roll-up</div>
       <tr><td>Ledger: order/ack/fill/settle as spawn tree</td><td><span class="tag t-proven">PROVEN</span> 15-check proof + live fill reconciled</td></tr>
       <tr><td>client_order_id = UUID tail reconciliation</td><td><span class="tag t-proven">PROVEN</span> on a real exchange fill</td></tr>
       <tr><td>First real money moved (MLB YES 40.9¢, executed)</td><td><span class="tag t-proven">DONE</span> 2026-08-02</td></tr>
-      <tr><td>Momentum edge on 15-min crypto binaries</td><td><span class="tag t-unproven">UNPROVEN</span> — needs 30–60 settled trades</td></tr>
-      <tr><td>Self-funding loop (winnings pay model costs)</td><td><span class="tag t-unproven">UNPROVEN</span> — bankroll $22, fee drag is real</td></tr>
+      <tr><td>Momentum edge on 15-min crypto binaries</td><td><span class="tag t-unproven">4/8 TWO BATCHES</span> batch 1 +$2.42 · batch 2 −$4.51 (reversed) — exit-discipline variant under test</td></tr>
+      <tr><td>Self-funding loop (winnings pay model costs)</td><td><span class="tag t-unproven">UNPROVEN</span> — account $18.40 (from $24.98), fee drag + batch-2 loss are real</td></tr>
     </table>
-    <div class="note">Is the algo unique yet? The <b>substrate</b> is — nobody else's order id reconciles to a self-describing address by construction, and nobody routes a trade lifecycle by bitmask. The <b>alpha</b> is not — momentum taker and longshot baskets are standard. The moat is the address space; the strategy layer is v0 and earns its uniqueness only if the data says so.</div>
+    <div class="note">Is the algo unique yet? The <b>substrate</b> is — nobody else's order id reconciles to a self-describing address by construction, and nobody routes a trade lifecycle by bitmask. The <b>alpha</b> is not — momentum taker and tail baskets are standard. The moat is the address space; the strategy layer is v0 and earns its uniqueness only if the data says so.</div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">7</span>Observability — the run narrates itself (zero tokens)</h2>
+  <div class="card">
+    <p>Every daemon (mission control, scalp engine, chaos monkey, tape ingest) writes <b>structured JSONL events + inline assertions</b> to <span class="c-cyan">logs/run_YYYYMMDD.jsonl</span> as it goes. Invariants are asserted inline (fill_count==1 on taker entries, exit profit &gt; 0, chaos budget ≤ $1) — a broken invariant is greppable forever.</p>
+    <div class="mono-block">PYTHONPATH= .venv311/Scripts/python.exe scripts/run_report.py
+  → full reconstruction: event timeline + assertion ledger + Supabase ledger
+    + exchange truth (balance/positions) + UUID stream counts. No model tokens.</div>
+    <p style="margin-top:8px">The trading loops are pure Python — they cost <span class="c-green">zero model tokens to run</span>. Watch them free on this dashboard; the report call answers "what happened" in detail without waking the model.</p>
   </div>
 </section>
 

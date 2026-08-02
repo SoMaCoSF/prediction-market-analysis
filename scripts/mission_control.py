@@ -37,6 +37,7 @@ except Exception:
     pass
 
 import httpx  # noqa: E402
+import runlog  # noqa: E402
 import sb  # noqa: E402
 import uuid_ledger as L  # noqa: E402
 import uvicorn  # noqa: E402
@@ -54,6 +55,7 @@ LOG: deque = deque(maxlen=300)
 def log(msg: str, kind: str = "info"):
     LOG.appendleft({"ts": int(time.time()), "kind": kind, "msg": msg})
     print(f"[mc:{kind}] {msg}", flush=True)
+    runlog.log_event("mc", msg, kind=kind)
 
 
 # ---------------- auth / gates ----------------

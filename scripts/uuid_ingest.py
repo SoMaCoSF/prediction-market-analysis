@@ -22,6 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import httpx  # noqa: E402
+import runlog  # noqa: E402
 import uuid_ledger as L  # noqa: E402
 from uuid_service_turboquant import encode_gyst, fnv1a12  # noqa: E402
 
@@ -108,7 +109,9 @@ def main():
             con.commit()
             if ts % 60 < POLL_S:
                 cur.execute("SELECT count(*) FROM stream")
-                print(f"[ingest] {time.strftime('%H:%M:%S')} stream_rows={cur.fetchone()[0]} (+{n} new)", flush=True)
+                total = cur.fetchone()[0]
+                print(f"[ingest] {time.strftime('%H:%M:%S')} stream_rows={total} (+{n} new)", flush=True)
+                runlog.log_event("ingest", f"stream_rows={total} (+{n} new)", rows=total, new=n)
                 n = 0
             time.sleep(POLL_S)
 

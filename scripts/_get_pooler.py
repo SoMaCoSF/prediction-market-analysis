@@ -1,6 +1,7 @@
 # fetch Supabase POOLER connection string via management API (never prints the password)
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import httpx
 import sb

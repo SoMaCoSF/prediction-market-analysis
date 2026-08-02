@@ -39,3 +39,4 @@ fig
 output
 .tmp
 .vercel
+logs/

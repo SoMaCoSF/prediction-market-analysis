@@ -25,6 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import httpx  # noqa: E402
+import runlog  # noqa: E402
 import sb  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 
@@ -47,6 +48,7 @@ session_pnl = 0.0
 
 def log(m):
     print(f"[{time.strftime('%H:%M:%S')}] {m}", flush=True)
+    runlog.log_event("scalp", m)
 
 
 def _sign(method, path, ts):
@@ -166,6 +168,7 @@ def main():
                     if r["ok"] and r["filled"] > 0:
                         profit = (bid - pos["entry_c"]) * pos["fp"] / 100.0
                         session_pnl += profit
+                        runlog.assert_event(profit > 0, "scalp", f"exit profit positive: bid {bid} > entry {pos['entry_c']}", ticker=t, profit_usd=round(profit, 4))
                         log(f"SCALP-OUT {t[:38]} sold x{pos['fp']:g} @ {bid}c (entry {pos['entry_c']}c) "
                             f"+${profit:.2f} | session ${session_pnl:+.2f}")
                     elif r["ok"]:
@@ -194,6 +197,7 @@ def main():
                             continue
                         r = fire(m["ticker"], side, price, 1)
                         if r["ok"] and r["filled"] > 0:
+                            runlog.assert_event(float(r["filled"]) == 1.0, "scalp", "entry fill_count==1 (taker)", ticker=m["ticker"], side=side, price=price)
                             log(f"ENTRY {side.upper()} x1 @ {price}c {series} drift {d:+.2f}% ttl {m['ttl']:.0f}s | FILLED avg={r['avg']}")
                         elif r["ok"]:
                             log(f"entry resting {series} {side} {price}c")
