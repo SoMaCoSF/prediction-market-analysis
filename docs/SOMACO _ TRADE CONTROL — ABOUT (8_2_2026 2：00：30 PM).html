@@ -1,0 +1,133 @@
+<!DOCTYPE html> <html lang=en style><!--
+ Page saved with SingleFile 
+ url: https://trade.somacosf.com/about 
+ saved date: Sun Aug 02 2026 14:00:30 GMT-0700 (Pacific Daylight Time)
+--><meta charset=utf-8>
+<meta name=viewport content="width=device-width, initial-scale=1.0">
+<title>SOMACO // TRADE CONTROL — ABOUT</title>
+<style>:root{--bg:#05070a;--panel:#0a0e14;--panel2:#0e131c;--line:#1e2836;--cyan:#06b6d4;--green:#39ff14;--mag:#ff10f0;--amber:#ffb020;--red:#ff4d4d;--txt:#c9d4e3;--dim:#6b7a8f;--mono:"Consolas","SF Mono","Cascadia Mono",monospace}*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.55;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.012)0 1px,transparent 1px 3px)}.wrap{max-width:1100px;margin:0 auto;padding:18px}header{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:16px}.hex{width:16px;height:18px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}h1{font-size:15px;letter-spacing:3px;color:#fff}h1 .a{color:var(--cyan)}a.back{color:var(--cyan);text-decoration:none;font-size:11px;letter-spacing:1px;border:1px solid var(--cyan);padding:3px 10px;border-radius:3px}a.back:hover{background:rgba(6,182,212,.12)}.spacer{flex:1}section{margin-bottom:22px}h2{font-size:12px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px}h2 .n{color:var(--mag);margin-right:8px}.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px 14px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:900px){.grid2{grid-template-columns:1fr}}table{width:100%;border-collapse:collapse;font-size:11.5px}th{color:var(--dim);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px;text-transform:uppercase}td{padding:5px 6px;border-bottom:1px solid rgba(30,40,54,.5);vertical-align:top}.c-cyan{color:var(--cyan)}.c-green{color:var(--green)}.c-mag{color:var(--mag)}.c-amber{color:var(--amber)}.c-red{color:var(--red)}.mono-block{background:#030507;border:1px solid var(--line);border-radius:4px;padding:10px;font-size:11px;color:var(--cyan);overflow-x:auto;white-space:pre;margin-top:8px}.tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;letter-spacing:1px;font-weight:bold}.t-proven{background:rgba(57,255,20,.12);color:var(--green);border:1px solid rgba(57,255,20,.35)}.t-unproven{background:rgba(255,176,32,.12);color:var(--amber);border:1px solid rgba(255,176,32,.35)}.t-negev{background:rgba(255,77,77,.12);color:var(--red);border:1px solid rgba(255,77,77,.35)}.bits{display:flex;width:100%;height:52px;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin:8px 0}.bf{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9.5px;border-right:1px solid rgba(0,0,0,.5);color:#000;font-weight:bold;text-align:center;min-width:0;overflow:hidden}.bf span{font-size:8.5px;font-weight:normal;opacity:.75}.note{font-size:11px;color:var(--dim);margin-top:8px;border-left:2px solid var(--line);padding-left:10px}p{margin:6px 0;font-size:12.5px}</style>
+<meta name=referrer content=no-referrer><link rel=canonical href=https://trade.somacosf.com/about><meta http-equiv=content-security-policy content="default-src 'none'; font-src 'self' data:; img-src 'self' data:; style-src 'unsafe-inline'; media-src 'self' data:; script-src 'unsafe-inline' data:; object-src 'self' data:; frame-src 'self' data:;"></head>
+<body>
+<div class=wrap>
+<header>
+ <div class=hex style=background:var(--cyan)></div>
+ <div class=hex style=background:var(--green)></div>
+ <div class=hex style=background:var(--mag)></div>
+ <h1>SOMACO <span class=a>// TRADE CONTROL — ABOUT</span></h1>
+ <div class=spacer></div>
+ <a class=back href=https://trade.somacosf.com/>← TERMINAL</a>
+</header>
+<section>
+ <h2><span class=n>1</span>The Substrate — what a bet IS</h2>
+ <div class=card>
+ <p>Every market event — order, ack, fill, settlement — is a <span class=c-cyan>self-describing 128-bit GYST UUIDv8</span>. Type, namespace, time, fractal lineage, a 16-bit probability signal, and provenance live <b>in the bits</b>, not in a lookup table. Routing, filtering, and roll-up become <span class=c-green>O(1) bitmask operations</span>; the JSON dies at the exchange edge and everything downstream is wirespeed.</p>
+ <div style=font-size:10px;color:var(--dim);margin-top:8px>HIGH 64</div>
+ <div class=bits>
+ <div class=bf style=flex:12;background:var(--cyan)>TYPE<span>12b</span></div>
+ <div class=bf style=flex:12;background:#3ec9a7>NAMESPACE<span>12b fnv1a</span></div>
+ <div class=bf style=flex:24;background:var(--amber)>TIMESTAMP<span>24b sec</span></div>
+ <div class=bf style=flex:4;background:#8899aa>VER<span>8</span></div>
+ <div class=bf style=flex:12;background:var(--mag)>FRACTAL<span>depth·dom·gen</span></div>
+ </div>
+ <div style=font-size:10px;color:var(--dim)>LOW 64</div>
+ <div class=bits>
+ <div class=bf style=flex:2;background:#8899aa>VAR</div>
+ <div class=bf style=flex:4;background:#c96be0>PROV<span>4b</span></div>
+ <div class=bf style=flex:16;background:var(--green)>SIGNAL<span>16b price 1/65535</span></div>
+ <div class=bf style=flex:42;background:#26506a>CONTENT 42<span>deterministic sha256 — never random</span></div>
+ </div>
+ <div class=mono-block>route:   (uuid_hi &gt;&gt; 52) &amp; 4095        = type        (no parse, no join)
+recon:   (uuid_lo &amp; (2^42 - 1))           = client_order_id (exchange ack echoes it back)
+spawn:   namespace = fnv1a12(parent_uuid)   = the tree IS the roll-up</div>
+ </div>
+</section>
+<section>
+ <h2><span class=n>2</span>Kalshi field map — JSON in, UUIDs out</h2>
+ <div class=card>
+ <table>
+ <tbody><tr><th>Kalshi V2 field<th>UUID home<th>Why it's wirespeed</tr>
+ <tr><td>ticker<td>namespace = fnv1a12(market UUID)<td>per-market filtering by mask</tr>
+ <tr><td>side bid/ask<td><span class=c-cyan>type</span> 0x3A4 ORDER_BID / 0x3A5 ORDER_ASK<td>side routable by type mask alone</tr>
+ <tr><td>price<td>16-bit signal (1/65535, finer than 0.1¢ tick)<td>price-band filters = integer compares</tr>
+ <tr><td>client_order_id<td><span class=c-green>low-42 tail</span><td>ack reconciles with ONE AND — no lookup table</tr>
+ <tr><td>order_id (ack)<td><span class=c-mag>0x3A6 ACK child</span>, low-42 = content42(order_id)<td>exchange's own id bit-matches too</tr>
+ <tr><td>fill_id / fee<td><span class=c-mag>0x3A7 FILL child</span>, low-42 = content42(fill_id)<td>fills join by mask</tr>
+ <tr><td>ts_ms<td>24-bit timestamp<td>time-window filters = shifts</tr>
+ <tr><td>count, tif, flags<td>payload columns (keyed by UUID)<td>not routable — correctly NOT in bits</tr>
+ </table>
+ <div class=note>V2 note: the unified book trades the YES contract — buying NO at P¢ is sent as ask @ (100−P)/100. A mirror bug here cost us one phantom fill (caught by exchange-truth reconcile, fixed, proof committed).</div>
+ </div>
+</section>
+<section>
+ <h2><span class=n>3</span>The spawn tree — the ledger audits itself</h2>
+ <div class=card>
+ <div class=mono-block>market 0x3B0 depth0  (root: KXMLB-26-LAD)
+ └─ order 0x3A4 depth1  sig=0.4100   client_order_id = 1e14743d7d7
+     ├─ ack  0x3A6 depth2  sig=0.4090   (= avg fill price, from exchange)
+     └─ fill 0x3A7 depth2  sig=0.4100   (exchange fill_id seeded)
+ └─ settle 0x3A9 depth1  sig=1.0000   (result)</div>
+ <p style=margin-top:8px>Every fill/settlement is a <b>child UUID</b> (fractal_depth+1, generation+1, namespace=fnv1a12(parent)). P&amp;L is a walk of the tree — <span class=c-green>no joins, no orphaned rows possible</span>. A stream consumer can reconstruct any position from the UUIDs alone.</p>
+ </div>
+</section>
+<section>
+ <h2><span class=n>4</span>The algos — live now, honestly labeled</h2>
+ <div class=grid2>
+ <div class=card>
+ <h3 class=c-cyan style=font-size:11px;letter-spacing:1px>A · MOMENTUM SCALP ENGINE <span class="tag t-unproven">FIRST BATCH 4/4</span></h3>
+ <p>The speed run. Early-window drift entries (Kraken 24h drift ≥ ±0.20%, price ≤ 60¢, ttl ≥ 540s), then <b>reprice exits at +15¢</b> — profit locked mid-window instead of waiting for settlement. State rebuilt from exchange truth every 5s cycle; guards: cash floor $20, session stop −$3, one position per series, MC kill switch honored.</p>
+ <table>
+ <tbody><tr><td>markets<td>KXBTC/ETH/SOL/XRP/DOGE 15M</tr>
+ <tr><td>batch 1 (12:45 win)<td class=c-green>4/4 settled YES: XRP +75¢ · DOGE +58¢ · SOL +56¢ · ETH +53¢ = <b>+$2.42 realized</b></tr>
+ <tr><td>batch 2 (13:00 win)<td class=c-red>0/5 — drift reversed intrawindow, settle-held positions expired: <b>−$4.51</b>. Lesson enforced: reprice exits (+15¢), not settle-holding.</tr>
+ <tr><td>execution<td>fills landed 1–21¢ inside the quoted ask (taker crossed resting liquidity)</tr>
+ <tr><td>status<td class=c-amber>4/8 across two batches; the exit discipline is the edge hypothesis under test now</tr>
+ </table>
+ </div>
+ <div class=card>
+ <h3 class=c-mag style=font-size:11px;letter-spacing:1px>B · CHAOS MONKEY <span class="tag t-negev">−EV BY DESIGN</span></h3>
+ <p>Pure variance engine, hard-capped at <b>$1.00</b>. Scans ~1000 open markets for price tails (YES ask 1–5¢ or the cheap NO side of ≥95¢ books), shuffles, fires 1 contract per tail, ~25¢/round. Most expire worthless; one 30–100× pays the batch. Corpus research says these are overpriced — it knows, it's labeled, it's capped.</p>
+ <h3 class=c-green style=font-size:11px;letter-spacing:1px;margin-top:10px>C · HELD BOOK <span class="tag t-unproven">HOLD</span></h3>
+ <p>Sports futures from the parallel play (LAD ×3, NYY ×2, SEA/MIL/CWS/MIA/GSW lotto) + MVE combo tails — long-dated, riding to resolution.</p>
+ </div>
+ </div>
+</section>
+<section>
+ <h2><span class=n>5</span>Risk gates (hard-coded)</h2>
+ <div class=card>
+ <table>
+ <tbody><tr><td>per-order<td>≤ 5 contracts · ≤ $5 notional</tr>
+ <tr><td>live fire<td>passkey + confirm=FIRE + kill switch disengaged</tr>
+ <tr><td>kill switch<td>instant block (HTTP 423), one click from the terminal</tr>
+ <tr><td>vault (planned)<td>bankroll split: locked long_game reserve vs HFT allowance — the bot can never eat the reserve</tr>
+ </table>
+ </div>
+</section>
+<section>
+ <h2><span class=n>6</span>The honest ledger</h2>
+ <div class=card>
+ <table>
+ <tbody><tr><th>Claim<th>State</tr>
+ <tr><td>UUID engine: deterministic, decodable, RFC 9562<td><span class="tag t-proven">PROVEN</span> 14-check + 3000/3000 on 52.77M rows</tr>
+ <tr><td>Ledger: order/ack/fill/settle as spawn tree<td><span class="tag t-proven">PROVEN</span> 15-check proof + live fill reconciled</tr>
+ <tr><td>client_order_id = UUID tail reconciliation<td><span class="tag t-proven">PROVEN</span> on a real exchange fill</tr>
+ <tr><td>First real money moved (MLB YES 40.9¢, executed)<td><span class="tag t-proven">DONE</span> 2026-08-02</tr>
+ <tr><td>Momentum edge on 15-min crypto binaries<td><span class="tag t-unproven">4/8 TWO BATCHES</span> batch 1 +$2.42 · batch 2 −$4.51 (reversed) — exit-discipline variant under test</tr>
+ <tr><td>Self-funding loop (winnings pay model costs)<td><span class="tag t-unproven">UNPROVEN</span> — account $18.40 (from $24.98), fee drag + batch-2 loss are real</tr>
+ </table>
+ <div class=note>Is the algo unique yet? The <b>substrate</b> is — nobody else's order id reconciles to a self-describing address by construction, and nobody routes a trade lifecycle by bitmask. The <b>alpha</b> is not — momentum taker and tail baskets are standard. The moat is the address space; the strategy layer is v0 and earns its uniqueness only if the data says so.</div>
+ </div>
+</section>
+<section>
+ <h2><span class=n>7</span>Observability — the run narrates itself (zero tokens)</h2>
+ <div class=card>
+ <p>Every daemon (mission control, scalp engine, chaos monkey, tape ingest) writes <b>structured JSONL events + inline assertions</b> to <span class=c-cyan>logs/run_YYYYMMDD.jsonl</span> as it goes. Invariants are asserted inline (fill_count==1 on taker entries, exit profit &gt; 0, chaos budget ≤ $1) — a broken invariant is greppable forever.</p>
+ <div class=mono-block>PYTHONPATH= .venv311/Scripts/python.exe scripts/run_report.py
+  → full reconstruction: event timeline + assertion ledger + Supabase ledger
+    + exchange truth (balance/positions) + UUID stream counts. No model tokens.</div>
+ <p style=margin-top:8px>The trading loops are pure Python — they cost <span class=c-green>zero model tokens to run</span>. Watch them free on this dashboard; the report call answers "what happened" in detail without waking the model.</p>
+ </div>
+</section>
+<footer style="color:var(--dim);font-size:10px;border-top:1px solid var(--line);padding-top:10px">
+ SOM-APP-0934 · GYST UUIDv8 v3.0.0 · source: uuid-trader (private) · 2026-08-02
+</footer>
+</div>
