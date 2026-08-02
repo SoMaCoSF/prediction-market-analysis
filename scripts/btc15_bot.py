@@ -141,7 +141,8 @@ def settle_closed(cx: httpx.Client):
         con.commit()
         cur.execute("SELECT realized_pnl_cents FROM uuid_positions WHERE ticker=%s AND side=%s",
                     (ticker, pos["side"]))
-        pnl = cur.fetchone()[0]
+        row = cur.fetchone()
+        pnl = row[0] if row else 0
         con.close()
         session_pnl_cents += pnl
         won = (result == pos["side"])
@@ -212,10 +213,15 @@ def main() -> int:
                 continue
             if resp.get("ok"):
                 traded_tickers.add(mkt["ticker"])
-                open_positions[mkt["ticker"]] = {"side": side, "entry": price, "uuid": resp.get("uuid")}
                 ack = resp.get("ack") or {}
-                log(f"FILLED {side} x{CONTRACTS} @ {ack.get('average_fill_price', price)} "
-                    f"fee={ack.get('average_fee_paid')} uuid={str(resp.get('uuid'))[:13]}… coi={resp.get('client_order_id')}")
+                filled = float(ack.get("fill_count") or 0)
+                if filled > 0:
+                    open_positions[mkt["ticker"]] = {"side": side, "entry": price, "uuid": resp.get("uuid")}
+                    log(f"FILLED {side} x{filled:g} @ {ack.get('average_fill_price', price)} "
+                        f"fee={ack.get('average_fee_paid')} uuid={str(resp.get('uuid'))[:13]}… coi={resp.get('client_order_id')}")
+                else:
+                    log(f"RESTING (unfilled) {side} x{CONTRACTS} @ {price}c — exchange will cancel at close if untouched; "
+                        f"coi={resp.get('client_order_id')}")
             else:
                 log(f"FIRE REJECTED: HTTP {resp.get('http')} {json.dumps(resp)[:200]}")
                 traded_tickers.add(mkt["ticker"])  # don't hammer a rejecting market

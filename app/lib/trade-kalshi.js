@@ -41,14 +41,17 @@ async function call(method, apiPath, body) {
   return { status: res.status, json };
 }
 
-/** Create Order V2: buy YES = side "bid". priceCents int 1..99 -> dollar string. */
+/** Create Order V2: YES contract book. Buy YES at P¢ = bid @ P/100.
+ *  Buy NO at P¢ = ask @ (100-P)/100 (mirror!). */
 export async function createOrderV2({ ticker, side, priceCents, count, clientOrderId }) {
+  const v2Side = side === "yes" ? "bid" : "ask";
+  const v2Price = side === "yes" ? priceCents / 100 : (100 - priceCents) / 100;
   return call("POST", "/portfolio/events/orders", {
     ticker,
     client_order_id: clientOrderId,
-    side: side === "yes" ? "bid" : "ask",
+    side: v2Side,
     count: `${Number(count).toFixed(2)}`,
-    price: (priceCents / 100).toFixed(4),
+    price: v2Price.toFixed(4),
     time_in_force: "good_till_canceled",
     self_trade_prevention_type: "taker_at_cross",
     post_only: false,

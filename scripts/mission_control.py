@@ -108,12 +108,18 @@ def kalshi_post_order(req_body: dict):
     path = "/trade-api/v2/portfolio/events/orders"
     side_v1 = req_body["side"].lower()
     price_cents = req_body.get("yes_price", req_body.get("no_price"))
+    # V2 unified book trades the YES contract. Buying NO at P¢ is selling YES
+    # at (100-P)¢ — the price MUST be mirrored for the no side.
+    if side_v1 == "yes":
+        v2_side, v2_price = "bid", price_cents / 100.0
+    else:
+        v2_side, v2_price = "ask", (100 - price_cents) / 100.0
     v2 = {
         "ticker": req_body["ticker"],
         "client_order_id": req_body["client_order_id"],
-        "side": "bid" if side_v1 == "yes" else "ask",
+        "side": v2_side,
         "count": f"{int(req_body['count']):.2f}",
-        "price": f"{price_cents / 100.0:.4f}",
+        "price": f"{v2_price:.4f}",
         "time_in_force": "good_till_canceled",
         "self_trade_prevention_type": "taker_at_cross",
         "post_only": False,

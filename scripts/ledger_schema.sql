@@ -22,6 +22,20 @@ CREATE INDEX IF NOT EXISTS idx_orders_lo42   ON uuid_orders ((uuid_lo & 43980465
 CREATE INDEX IF NOT EXISTS idx_orders_parent ON uuid_orders (parent_uuid);
 CREATE INDEX IF NOT EXISTS idx_orders_ticker ON uuid_orders (ticker);
 
+-- Mission-control state (serverless kill switch + event log)
+CREATE TABLE IF NOT EXISTS mc_state (
+    k TEXT PRIMARY KEY,
+    v TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS mc_log (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ts BIGINT NOT NULL,
+    kind TEXT NOT NULL,
+    msg TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Exchange acknowledgments: 0x3A6 child of the order; low-42 = content42(order_id).
 CREATE TABLE IF NOT EXISTS uuid_acks (
     uuid              TEXT PRIMARY KEY,
