@@ -60,13 +60,16 @@ def _sign(method, path, ts):
 
 
 def kget(path):
-    ts = str(int(time.time() * 1000))
-    full = "/trade-api/v2" + path.split("?")[0]
-    h = {"KALSHI-ACCESS-KEY": os.getenv("KALSHI_KEY_ID"),
-         "KALSHI-ACCESS-SIGNATURE": _sign("GET", full, ts),
-         "KALSHI-ACCESS-TIMESTAMP": ts}
-    r = httpx.get(KALSHI + path, headers=h, timeout=15)
-    return r.json() if "json" in r.headers.get("content-type", "") else {}
+    try:
+        ts = str(int(time.time() * 1000))
+        full = "/trade-api/v2" + path.split("?")[0]
+        h = {"KALSHI-ACCESS-KEY": os.getenv("KALSHI_KEY_ID"),
+             "KALSHI-ACCESS-SIGNATURE": _sign("GET", full, ts),
+             "KALSHI-ACCESS-TIMESTAMP": ts}
+        r = httpx.get(KALSHI + path, headers=h, timeout=15)
+        return r.json() if "json" in r.headers.get("content-type", "") else {}
+    except Exception:
+        return {}   # transient network failure -> empty truth, cycle retries
 
 
 def cash() -> float:
@@ -114,18 +117,29 @@ def window_market(cx, series):
 
 
 def fire(ticker, side, price, count=1):
-    r = httpx.post(f"{MC}/api/order", json={"ticker": ticker, "side": side, "price": price,
-                   "count": count, "mode": "live", "passkey": PK, "confirm": "FIRE"}, timeout=30)
-    d = r.json()
-    ack = d.get("ack") or {}
-    return {"ok": bool(d.get("ok")), "filled": float(ack.get("fill_count") or 0),
-            "avg": ack.get("average_fill_price"), "uuid": d.get("uuid"), "err": d.get("error")}
+    try:
+        r = httpx.post(f"{MC}/api/order", json={"ticker": ticker, "side": side, "price": price,
+                       "count": count, "mode": "live", "passkey": PK, "confirm": "FIRE"}, timeout=30)
+        d = r.json()
+        ack = d.get("ack") or {}
+        return {"ok": bool(d.get("ok")), "filled": float(ack.get("fill_count") or 0),
+                "avg": ack.get("average_fill_price"), "uuid": d.get("uuid"), "err": d.get("error")}
+    except Exception as e:
+        return {"ok": False, "filled": 0.0, "avg": None, "uuid": None, "err": f"net:{repr(e)[:60]}"}
 
 
 def main():
     global session_pnl
     log(f"SCALP start | entry<=60c drift>={DRIFT_MIN}% exit@+{SCALP_C}c floor=${CASH_FLOOR} poll={POLL}s")
-    s = httpx.get(f"{MC}/api/stats", timeout=10).json()
+    for _ in range(10):
+        try:
+            s = httpx.get(f"{MC}/api/stats", timeout=10).json()
+            break
+        except Exception:
+            time.sleep(3)
+    else:
+        log("MC unreachable after retries — exiting")
+        return 1
     assert s.get("keys") and not s.get("kill"), "MC not armed"
     log("MC armed; speed run live")
     with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:

@@ -35,12 +35,15 @@ def log(m):
 
 
 def fire(ticker, side, price):
-    r = httpx.post(f"{MC}/api/order", json={"ticker": ticker, "side": side, "price": price,
-                   "count": 1, "mode": "live", "passkey": PK, "confirm": "FIRE"}, timeout=30)
-    d = r.json()
-    ack = d.get("ack") or {}
-    return {"ok": bool(d.get("ok")), "filled": float(ack.get("fill_count") or 0),
-            "avg": ack.get("average_fill_price"), "uuid": d.get("uuid"), "err": d.get("error")}
+    try:
+        r = httpx.post(f"{MC}/api/order", json={"ticker": ticker, "side": side, "price": price,
+                       "count": 1, "mode": "live", "passkey": PK, "confirm": "FIRE"}, timeout=30)
+        d = r.json()
+        ack = d.get("ack") or {}
+        return {"ok": bool(d.get("ok")), "filled": float(ack.get("fill_count") or 0),
+                "avg": ack.get("average_fill_price"), "uuid": d.get("uuid"), "err": d.get("error")}
+    except Exception as e:
+        return {"ok": False, "filled": 0.0, "avg": None, "uuid": None, "err": f"net:{repr(e)[:60]}"}
 
 
 def tails(cx):
@@ -66,7 +69,15 @@ def tails(cx):
 def main():
     spent = 0
     log(f"chaos_monkey start | budget ${TOTAL_BUDGET/100:.2f} | band {BAND_LO}-{BAND_HI}c | round<= {ROUND_MAX}c/{ROUND_EVERY}s")
-    s = httpx.get(f"{MC}/api/stats", timeout=10).json()
+    for _ in range(10):
+        try:
+            s = httpx.get(f"{MC}/api/stats", timeout=10).json()
+            break
+        except Exception:
+            time.sleep(3)
+    else:
+        log("MC unreachable after retries — exiting")
+        return 1
     assert s.get("keys") and not s.get("kill"), "MC not armed"
     with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:
         while spent < TOTAL_BUDGET:
