@@ -1,6 +1,10 @@
 # settle check: 15M positions from the play + balance + resting order fates
-import base64, os, sys, time
+import base64
+import os
+import sys
+import time
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import httpx
 from dotenv import load_dotenv
