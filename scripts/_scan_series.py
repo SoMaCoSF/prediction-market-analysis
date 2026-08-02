@@ -30,5 +30,5 @@ with httpx.Client(timeout=30, headers={"Accept-Encoding": "identity"}) as cx:
 
 print("\n=== best candidates (vol desc) ===")
 rows.sort(key=lambda x: -x[0])
-for vol, spread, t, yb, ya, sz, bsz, title in rows[:12]:
+for vol, spread, t, yb, ya, sz, _bsz, title in rows[:12]:
     print(f"{t[:48]:48s} bid {yb:5.2f} ask {ya:5.2f} sprd {spread:4.2f} asz {sz:6.0f} vol {vol:9.0f}  {title}")
