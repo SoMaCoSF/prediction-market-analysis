@@ -2,9 +2,20 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
-    return [
-      { source: '/thesis', destination: '/thesis/index.html' },
-    ];
+    return {
+      beforeFiles: [
+        // trade.somacosf.com root serves the mission-control terminal UI
+        {
+          source: '/',
+          destination: '/trade/index.html',
+          has: [{ type: 'host', value: 'trade.somacosf.com' }],
+        },
+      ],
+      afterFiles: [
+        { source: '/thesis', destination: '/thesis/index.html' },
+      ],
+      fallback: [],
+    };
   },
 };
 module.exports = nextConfig;
