@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-6080-v1.0.0 name: test_compile.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-BC3ABB-v1.0.0 name: test_compile.py date: 2026-06-08 ====
 """Verify all source modules compile, import cleanly, and can be instantiated."""
 
 from __future__ import annotations

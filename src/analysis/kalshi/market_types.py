@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-7008-v1.0.0 name: market_types.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-80CE3D-v1.0.0 name: market_types.py date: 2026-06-08 ====
 """Analyze distribution of market types by volume with hierarchical groupings."""
 
 from __future__ import annotations

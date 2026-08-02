@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-3967-v1.0.0 name: polymarket_trades_over_time.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-0012E8-v1.0.0 name: polymarket_trades_over_time.py date: 2026-06-08 ====
 """Analyze Polymarket trade counts over time at block-level granularity."""
 
 from __future__ import annotations

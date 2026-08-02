@@ -1,3 +1,5 @@
+<!-- =============================================================================== file_id: SOM-DOC-3486-v1.0.0 name: CONTRIBUTING.md description:  project_id: OLIGARCHOLOGY category: doc tags: [] created: 2026-06-08 modified: 2026-06-08 version: 1.0.0 agent_id: AGENT-PRIME-002 =============================================================================== -->
+
 Thank you for your interest in contributing to prediction-market-analysis!
 
 These guidelines will help guide you through the contributing process to make it as easy as possible for you to contribute to prediction-market-analysis, and for the community to review your PR.

@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-7192-v1.0.0 name: trades.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-5F223A-v1.0.0 name: trades.py date: 2026-06-08 ====
 """Indexer for Kalshi trades data."""
 
 from concurrent.futures import ThreadPoolExecutor, as_completed

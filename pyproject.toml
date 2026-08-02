@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-3379-v1.0.0 name: pyproject.toml date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-522ADF-v1.0.0 name: pyproject.toml date: 2026-06-08 ====
 [project]
 name = "prediction-market-data"
 version = "0.1.0"
@@ -22,6 +24,9 @@ dependencies = [
     "web3>=6.0.0",
     "simple-term-menu>=1.6.0",
     "python-dotenv>=1.2.1",
+    "zstandard>=0.25.0",
+    "fastapi>=0.128.8",
+    "uvicorn>=0.39.0",
 ]
 
 [dependency-groups]

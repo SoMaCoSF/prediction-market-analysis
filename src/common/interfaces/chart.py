@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-9463-v1.0.0 name: chart.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-4C4194-v1.0.0 name: chart.py date: 2026-06-08 ====
 """
 Python types for generating valid ResearchChart configurations.
 

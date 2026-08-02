@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-1064-v1.0.0 name: test_analysis_run.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-9FA695-v1.0.0 name: test_analysis_run.py date: 2026-06-08 ====
 """Test that every analysis run() produces valid output."""
 
 from __future__ import annotations

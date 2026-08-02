@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-9454-v1.0.0 name: ci.yml date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-5E0F93-v1.0.0 name: ci.yml date: 2026-06-08 ====
 name: CI
 
 on:

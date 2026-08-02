@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-1865-v1.0.0 name: download.sh date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-800DA5-v1.0.0 name: download.sh date: 2026-06-08 ====
 #!/bin/bash
 set -e
 

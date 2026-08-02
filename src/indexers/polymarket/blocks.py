@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-4547-v1.0.0 name: blocks.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-05B82B-v1.0.0 name: blocks.py date: 2026-06-08 ====
 """Indexer for block timestamps from the Polygon blockchain."""
 
 import concurrent.futures

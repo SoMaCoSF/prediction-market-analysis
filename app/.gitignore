@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+public/status.json
+.env
+.env.local
+*.log
+
+.vercel
+.env*

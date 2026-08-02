@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-9175-v1.0.0 name: test_analysis_save.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-50F937-v1.0.0 name: test_analysis_save.py date: 2026-06-08 ====
 """Test Analysis.save() in isolation with mock outputs."""
 
 from __future__ import annotations

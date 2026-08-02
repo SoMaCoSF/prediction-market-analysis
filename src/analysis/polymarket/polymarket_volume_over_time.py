@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-5373-v1.0.0 name: polymarket_volume_over_time.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-3EC4F6-v1.0.0 name: polymarket_volume_over_time.py date: 2026-06-08 ====
 """Analyze Polymarket notional trading volume over time."""
 
 from __future__ import annotations

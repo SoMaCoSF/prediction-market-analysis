@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-0316-v1.0.0 name: statistical_tests.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-EF4F5B-v1.0.0 name: statistical_tests.py date: 2026-06-08 ====
 """Comprehensive statistical tests for paper claims.
 
 Tests the following claims:

@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-5940-v1.0.0 name: QUESTION-FORM.yml date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-BEA6C4-v1.0.0 name: QUESTION-FORM.yml date: 2026-06-08 ====
 name: Question
 description: Ask a general question about this project
 labels: ["T-question"]

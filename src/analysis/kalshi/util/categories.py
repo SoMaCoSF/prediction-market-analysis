@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-5552-v1.0.0 name: categories.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-417E11-v1.0.0 name: categories.py date: 2026-06-08 ====
 """Category grouping utilities for market analysis with hierarchical structure."""
 
 # Hierarchical category structure:

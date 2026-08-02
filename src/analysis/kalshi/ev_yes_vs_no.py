@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-2749-v1.0.0 name: ev_yes_vs_no.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-6C3A1E-v1.0.0 name: ev_yes_vs_no.py date: 2026-06-08 ====
 """Compare expected value of YES vs NO bets at each price level.
 
 Analyzes whether there's an EV advantage to betting YES vs NO at different price points.

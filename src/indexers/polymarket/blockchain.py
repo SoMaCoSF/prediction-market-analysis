@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-0870-v1.0.0 name: blockchain.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-7CA358-v1.0.0 name: blockchain.py date: 2026-06-08 ====
 """Fetch Polymarket trades directly from the Polygon blockchain."""
 
 import concurrent.futures

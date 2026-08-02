@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-4441-v1.0.0 name: storage.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-80F992-v1.0.0 name: storage.py date: 2026-06-08 ====
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path

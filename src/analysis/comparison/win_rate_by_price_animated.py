@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-9626-v1.0.0 name: win_rate_by_price_animated.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-6369B3-v1.0.0 name: win_rate_by_price_animated.py date: 2026-06-08 ====
 """Animated side-by-side calibration comparison between Kalshi and Polymarket."""
 
 from __future__ import annotations

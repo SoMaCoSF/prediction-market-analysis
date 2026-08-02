@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-7947-v1.0.0 name: vwap_by_hour.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-AA4EC0-v1.0.0 name: vwap_by_hour.py date: 2026-06-08 ====
 """Analyze volume-weighted average price by hour of day (ET).
 
 Examines whether trading patterns vary by time of day, potentially

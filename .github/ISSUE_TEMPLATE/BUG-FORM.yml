@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-6983-v1.0.0 name: BUG-FORM.yml date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-00A13B-v1.0.0 name: BUG-FORM.yml date: 2026-06-08 ====
 name: Bug report
 description: File a bug report
 labels: ["T-bug"]

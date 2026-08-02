@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-3967-v1.0.0 name: client.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-2D5864-v1.0.0 name: client.py date: 2026-06-08 ====
 import logging
 
 import httpx

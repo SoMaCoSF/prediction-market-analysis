@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-8040-v1.0.0 name: kalshi_calibration_deviation_over_time.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-FBA91A-v1.0.0 name: kalshi_calibration_deviation_over_time.py date: 2026-06-08 ====
 """Plot Kalshi calibration deviation over time."""
 
 from __future__ import annotations

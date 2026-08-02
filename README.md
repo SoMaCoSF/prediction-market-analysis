@@ -1,3 +1,5 @@
+<!-- =============================================================================== file_id: SOM-DOC-8727-v1.0.0 name: README.md description:  project_id: OLIGARCHOLOGY category: doc tags: [] created: 2026-06-08 modified: 2026-06-08 version: 1.0.0 agent_id: AGENT-PRIME-002 =============================================================================== -->
+
 # Prediction Market Analysis
 
 A framework for analyzing prediction market data, including the largest publicly available dataset of Polymarket and Kalshi market and trade data. Provides tools for data collection, storage, and running analysis scripts that generate figures and statistics.

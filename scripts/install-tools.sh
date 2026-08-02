@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-9778-v1.0.0 name: install-tools.sh date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-977329-v1.0.0 name: install-tools.sh date: 2026-06-08 ====
 #!/bin/bash
 set -e
 

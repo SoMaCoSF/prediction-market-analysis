@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-2723-v1.0.0 name: package.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-0C1BF2-v1.0.0 name: package.py date: 2026-06-08 ====
 import subprocess
 from pathlib import Path
 

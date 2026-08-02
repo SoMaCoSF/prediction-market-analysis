@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-5057-v1.0.0 name: markets.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-3DED3E-v1.0.0 name: markets.py date: 2026-06-08 ====
 """Indexer for Kalshi markets data."""
 
 from pathlib import Path

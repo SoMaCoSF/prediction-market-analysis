@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-9013-v1.0.0 name: maker_taker_returns_by_category.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-BBCC7D-v1.0.0 name: maker_taker_returns_by_category.py date: 2026-06-08 ====
 """Analyze maker vs taker returns by market category.
 
 Tests whether the maker/taker gap varies by market category. Hypothesis:

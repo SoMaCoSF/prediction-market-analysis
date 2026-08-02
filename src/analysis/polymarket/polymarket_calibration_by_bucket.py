@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-3466-v1.0.0 name: polymarket_calibration_by_bucket.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-4BC848-v1.0.0 name: polymarket_calibration_by_bucket.py date: 2026-06-08 ====
 """Polymarket calibration analysis grouped by probability buckets.
 
 Groups resolved Polymarket trades into decile probability buckets (0-10%,

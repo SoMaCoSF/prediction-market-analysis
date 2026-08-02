@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-0476-v1.0.0 name: yes_vs_no_by_price.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-DEAE02-v1.0.0 name: yes_vs_no_by_price.py date: 2026-06-08 ====
 """Analyze YES/NO preference by price, comparing takers vs makers."""
 
 from __future__ import annotations

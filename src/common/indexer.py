@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-2664-v1.0.0 name: indexer.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-68549C-v1.0.0 name: indexer.py date: 2026-06-08 ====
 """
 Base class for data indexers that fetch and store market data.
 

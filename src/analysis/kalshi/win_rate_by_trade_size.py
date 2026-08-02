@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-9240-v1.0.0 name: win_rate_by_trade_size.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-95A15E-v1.0.0 name: win_rate_by_trade_size.py date: 2026-06-08 ====
 """Analyze win rate by trade size with confidence intervals.
 
 Examines whether larger trades are more informed (higher excess win rate),

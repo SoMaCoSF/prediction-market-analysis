@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-1945-v1.0.0 name: returns_by_hour.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-55AA97-v1.0.0 name: returns_by_hour.py date: 2026-06-08 ====
 """Analyze excess returns by hour of day (ET).
 
 Examines whether trading performance varies by time of day, potentially

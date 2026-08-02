@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-8108-v1.0.0 name: maker_win_rate_by_direction.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-2B719C-v1.0.0 name: maker_win_rate_by_direction.py date: 2026-06-08 ====
 """Analyze maker win rate by position direction (YES vs NO).
 
 Focused analysis for Section 6.4 of the paper. Tests whether makers who

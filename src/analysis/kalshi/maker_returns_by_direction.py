@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-8083-v1.0.0 name: maker_returns_by_direction.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-4859AB-v1.0.0 name: maker_returns_by_direction.py date: 2026-06-08 ====
 """Analyze maker returns by position direction (YES vs NO).
 
 Tests whether maker profits are purely spread compensation or reflect

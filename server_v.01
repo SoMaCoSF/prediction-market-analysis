@@ -1,0 +1,233 @@
+import io
+import os
+import sys
+import glob
+import subprocess
+import threading
+from pathlib import Path
+
+from fastapi import FastAPI, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+import duckdb
+import pandas as pd
+
+# Add project root to sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.common.gyst import GYSTUUID, encode_poly_market_uuid, encode_kalshi_market_uuid
+
+app = FastAPI(title="GYST Prediction Market Control Center")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Global Minting State
+mint_status = {
+    "is_running": False,
+    "current_file": None,
+    "processed_count": 0,
+    "last_log": "Idle",
+    "error": None
+}
+
+@app.get("/api/status")
+def get_status():
+    minted_files = glob.glob("data/minted_parquet/*.parquet")
+    return {
+        "mint_status": mint_status,
+        "minted_file_count": len(minted_files),
+        "total_minted_bytes": sum(os.path.getsize(f) for f in minted_files) if minted_files else 0
+    }
+
+@app.post("/api/parse-uuid")
+def parse_uuid(payload: dict):
+    uuid_str = payload.get("uuid", "")
+    try:
+        parsed = GYSTUUID.parse(uuid_str)
+        return {"success": True, "parsed": parsed}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/explore-minted")
+def explore_minted(limit: int = 20):
+    minted_files = glob.glob("data/minted_parquet/*.parquet")
+    if not minted_files:
+        return {"success": True, "data": []}
+    
+    con = duckdb.connect()
+    try:
+        df = con.execute(f"""
+            SELECT * FROM read_parquet('data/minted_parquet/*.parquet') 
+            LIMIT {limit}
+        """).df()
+        # Convert non-serializable columns to string
+        df = df.astype(str)
+        return {"success": True, "columns": list(df.columns), "data": df.to_dict(orient="records")}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.get("/", response_class=HTMLResponse)
+def serve_ui():
+    return HTML_UI
+
+HTML_UI = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYST Protocol · Prediction Market Control Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0b0f17; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif; }
+        .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.15); }
+    </style>
+</head>
+<body class="p-6 max-w-7xl mx-auto space-y-6">
+
+    <header class="glass p-6 rounded-2xl flex justify-between items-center glow">
+        <div class="flex items-center space-x-4">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow-lg">⚡</div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">GYST Protocol Control Center</h1>
+                <p class="text-xs text-slate-400">Prediction Market Analysis & Streaming Minter</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span id="badge-status" class="px-3 py-1 text-xs rounded-full bg-slate-800 text-slate-300 font-mono border border-slate-700">Checking...</span>
+            <button onclick="refreshData()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"><i class="fa-solid fa-rotate"></i></button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass p-5 rounded-2xl">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Minted Parquet Files</p>
+            <p id="stat-files" class="text-3xl font-extrabold text-blue-400 mt-2">0</p>
+        </div>
+        <div class="glass p-5 rounded-2xl">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Output Size</p>
+            <p id="stat-size" class="text-3xl font-extrabold text-emerald-400 mt-2">0 MB</p>
+        </div>
+        <div class="glass p-5 rounded-2xl">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Protocol Domain</p>
+            <p class="text-3xl font-extrabold text-purple-400 mt-2">0x3A0 / 0x3B0</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-2 glass p-6 rounded-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-database text-blue-400"></i> Minted Dataset Preview</h2>
+                <button onclick="loadExplorer()" class="text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition">Run Query</button>
+            </div>
+            
+            <div class="overflow-x-auto max-h-[400px] border border-slate-800 rounded-xl">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead class="bg-slate-900 text-slate-400 sticky top-0 border-b border-slate-800">
+                        <tr id="table-head">
+                            <th class="p-3">Click 'Run Query' to load DuckDB output</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-800/50 text-slate-300">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass p-6 rounded-2xl space-y-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-microchip text-purple-400"></i> GYST Bitfield Inspector</h2>
+            <p class="text-xs text-slate-400">Paste any RFC 9562 GYST UUIDv8 to extract bitfield parameters.</p>
+            
+            <div class="space-y-3">
+                <input id="input-uuid" type="text" placeholder="e.g. 3a000123-4567-8000-a000-0123456789ab" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-purple-500">
+                <button onclick="inspectUUID()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs py-2 rounded-xl transition">Inspect Bitfields</button>
+            </div>
+
+            <div id="inspector-output" class="hidden bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2 font-mono text-xs">
+                <div class="flex justify-between"><span class="text-slate-500">Type Name:</span><span id="inspect-type" class="text-purple-400 font-bold"></span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Type Code:</span><span id="inspect-code" class="text-blue-400"></span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Namespace Hash:</span><span id="inspect-ns" class="text-slate-300"></span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Forecast Signal:</span><span id="inspect-signal" class="text-emerald-400"></span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Version / Variant:</span><span id="inspect-vv" class="text-slate-400"></span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        async function refreshData() {
+            const res = await fetch('/api/status');
+            const data = await res.json();
+            
+            document.getElementById('stat-files').innerText = data.minted_file_count;
+            document.getElementById('stat-size').innerText = (data.total_minted_bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            
+            const badge = document.getElementById('badge-status');
+            badge.innerText = data.minted_file_count > 0 ? "Ready / Active" : "Idle";
+            badge.className = "px-3 py-1 text-xs rounded-full font-mono border bg-emerald-950 text-emerald-400 border-emerald-800";
+        }
+
+        async function loadExplorer() {
+            const res = await fetch('/api/explore-minted?limit=15');
+            const data = await res.json();
+            
+            if (!data.success || !data.data.length) {
+                document.getElementById('table-head').innerHTML = `<th class="p-3">No data available in data/minted_parquet/</th>`;
+                document.getElementById('table-body').innerHTML = ``;
+                return;
+            }
+
+            const cols = data.columns;
+            document.getElementById('table-head').innerHTML = cols.map(c => `<th class="p-3 uppercase tracking-wider">${c}</th>`).join('');
+            
+            document.getElementById('table-body').innerHTML = data.data.map(row => {
+                return `<tr>${cols.map(c => `<td class="p-3 truncate max-w-[200px]">${row[c] || ''}</td>`).join('')}</tr>`;
+            }).join('');
+        }
+
+        async function inspectUUID() {
+            const uuid = document.getElementById('input-uuid').value.trim();
+            if(!uuid) return;
+
+            const res = await fetch('/api/parse-uuid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uuid })
+            });
+            const data = await res.json();
+
+            if(data.success) {
+                const p = data.parsed;
+                document.getElementById('inspect-type').innerText = p.type_name;
+                document.getElementById('inspect-code').innerText = p.type_code;
+                document.getElementById('inspect-ns').innerText = '0x' + p.namespace_hash.toString(16);
+                document.getElementById('inspect-signal').innerText = p.forecast_signal;
+                document.getElementById('inspect-vv').innerText = `v${p.version} / var ${p.variant}`;
+                document.getElementById('inspector-output').classList.remove('hidden');
+            } else {
+                alert("Error parsing UUID: " + data.error);
+            }
+        }
+
+        // Auto Refresh on Load
+        refreshData();
+    </script>
+</body>
+</html>
+"""
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=True)

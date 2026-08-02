@@ -72,34 +72,43 @@ def run(subset_rows: int):
     sc = supabase_conn()
     ensure_schema(sc)
 
-    # pull latest N rows from local
+    # pull a deterministic slice (no full-table sort — ts is near-constant in the
+    # snapshot so physical order == freshest available; LIMIT alone avoids the
+    # expensive ORDER BY over 37M rows)
     with lc.cursor() as cur:
         cur.execute(
             "SELECT uuid, uuid_hi, uuid_lo, trade_id, market_id, price, amount, ts "
-            f"FROM uuid_trades ORDER BY ts DESC, uuid DESC LIMIT {int(subset_rows)}"
+            f"FROM uuid_trades LIMIT {int(subset_rows)}"
         )
         rows = cur.fetchall()
     lc.close()
     print(f"[*] pulled {len(rows):,} rows from local (subset={subset_rows:,})", flush=True)
 
-    # bulk load via COPY (10-50x faster than executemany on Supabase free tier)
+    # bulk load via COPY, CHUNKED into small batches. Supabase free tier has a
+    # statement-timeout that cancels a single long COPY (we saw it die at ~1.25M
+    # rows). Chunking keeps each COPY well under the timeout.
     import io
-    buf = io.StringIO()
-    for r in rows:
-        # tab-separated, no header; NULL-safe
-        buf.write("\t".join(str(x) for x in r) + "\n")
-    buf.seek(0)
+    CHUNK = 50_000
+    n = len(rows)
     with sc.cursor() as cur:
-        cur.copy_expert(
-            "COPY uuid_trades_subset (uuid, uuid_hi, uuid_lo, trade_id, market_id, price, amount, ts) "
-            "FROM STDIN WITH (FORMAT text, NULL '')",
-            buf,
-        )
-        sc.commit()
+        for start in range(0, n, CHUNK):
+            chunk = rows[start:start + CHUNK]
+            buf = io.StringIO()
+            for r in chunk:
+                buf.write("\t".join(str(x) for x in r) + "\n")
+            buf.seek(0)
+            cur.copy_expert(
+                "COPY uuid_trades_subset (uuid, uuid_hi, uuid_lo, trade_id, market_id, price, amount, ts) "
+                "FROM STDIN WITH (FORMAT text, NULL '')",
+                buf,
+            )
+            sc.commit()
+            if (start // CHUNK) % 4 == 0:
+                print(f"[*] copied {min(start + CHUNK, n):,}/{n:,} to Supabase", flush=True)
     sc.close()
 
     el = time.perf_counter() - t0
-    print(f"[*] synced {len(rows):,} rows to Supabase in {el:,.1f}s", flush=True)
+    print(f"[*] synced {n:,} rows to Supabase in {el:,.1f}s", flush=True)
 
 
 if __name__ == "__main__":

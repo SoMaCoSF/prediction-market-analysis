@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-8611-v1.0.0 name: analysis.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-490908-v1.0.0 name: analysis.py date: 2026-06-08 ====
 """
 Base class for analyses that generate figures and data outputs.
 

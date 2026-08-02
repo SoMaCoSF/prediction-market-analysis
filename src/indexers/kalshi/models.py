@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-4558-v1.0.0 name: models.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-F219BF-v1.0.0 name: models.py date: 2026-06-08 ====
 import re
 from dataclasses import dataclass
 from datetime import datetime

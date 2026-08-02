@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-1857-v1.0.0 name: win_rate_by_price.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-B13F74-v1.0.0 name: win_rate_by_price.py date: 2026-06-08 ====
 """Analyze win rate by price to assess market calibration."""
 
 from __future__ import annotations

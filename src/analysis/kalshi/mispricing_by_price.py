@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-0176-v1.0.0 name: mispricing_by_price.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-C1FD79-v1.0.0 name: mispricing_by_price.py date: 2026-06-08 ====
 """Analyze mispricing percentage by contract price for takers, makers, and combined."""
 
 from __future__ import annotations

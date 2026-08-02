@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-4902-v1.0.0 name: trade_size_by_role.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-4F336C-v1.0.0 name: trade_size_by_role.py date: 2026-06-08 ====
 """Analyze trade size distribution by role (maker vs taker).
 
 Tests whether makers place larger trades than takers on average,

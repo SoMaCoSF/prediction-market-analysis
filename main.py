@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-6651-v1.0.0 name: main.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-5BC02C-v1.0.0 name: main.py date: 2026-06-08 ====
 from __future__ import annotations
 
 import sys

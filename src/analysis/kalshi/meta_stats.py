@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-6621-v1.0.0 name: meta_stats.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-90F245-v1.0.0 name: meta_stats.py date: 2026-06-08 ====
 """Generate meta statistics for the dataset."""
 
 from __future__ import annotations

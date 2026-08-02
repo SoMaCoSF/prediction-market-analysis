@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-4334-v1.0.0 name: polymarket_win_rate_by_price.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-AF1C33-v1.0.0 name: polymarket_win_rate_by_price.py date: 2026-06-08 ====
 """Analyze Polymarket win rate by price to assess market calibration."""
 
 from __future__ import annotations

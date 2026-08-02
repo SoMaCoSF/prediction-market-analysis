@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-4776-v1.0.0 name: test_backfill_cursor.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-4E7077-v1.0.0 name: test_backfill_cursor.py date: 2026-06-08 ====
 """Test that backfill can be interrupted with Ctrl+C and resumed."""
 
 from __future__ import annotations

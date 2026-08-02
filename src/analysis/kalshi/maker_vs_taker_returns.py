@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-2725-v1.0.0 name: maker_vs_taker_returns.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-328583-v1.0.0 name: maker_vs_taker_returns.py date: 2026-06-08 ====
 """Analyze maker vs taker returns.
 
 Compares performance of passive liquidity providers (makers) against

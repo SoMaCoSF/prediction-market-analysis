@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-5227-v1.0.0 name: maker_taker_gap_over_time.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-57730A-v1.0.0 name: maker_taker_gap_over_time.py date: 2026-06-08 ====
 """Analyze maker-taker gap evolution over time.
 
 Computes quarterly maker and taker excess returns to assess whether

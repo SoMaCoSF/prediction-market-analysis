@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-0098-v1.0.0 name: fpmm_trades.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-CDD80C-v1.0.0 name: fpmm_trades.py date: 2026-06-08 ====
 """Indexer for Polymarket FPMM trades from the Polygon blockchain."""
 
 import concurrent.futures

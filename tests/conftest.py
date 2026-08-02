@@ -1,3 +1,5 @@
+# ==== file_id: SOM-EXT-3435-v1.0.0 name: conftest.py date: 2026-06-08 ====
+# ==== file_id: SOM-EXT-C9B030-v1.0.0 name: conftest.py date: 2026-06-08 ====
 """Shared fixtures for analysis tests."""
 
 from __future__ import annotations
