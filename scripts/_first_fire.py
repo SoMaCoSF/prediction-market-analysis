@@ -1,7 +1,12 @@
 # FIRST REAL TRADE: pick liquid market -> FIRE 1 YES at ask -> track ack/fill/ledger
 # Prints order/ack/fill data only. Never prints key material.
-import base64, hashlib, json, sys, time
+import base64
+import hashlib
+import json
+import sys
+import time
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import httpx
 import sb
@@ -23,6 +28,7 @@ def sign(method, path, ts):
 
 def kget(path):
     import os
+
     from dotenv import load_dotenv
     load_dotenv(ROOT / ".env")
     kid = os.getenv("KALSHI_KEY_ID")

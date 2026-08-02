@@ -1,10 +1,15 @@
 # fetch the real fill via V2, mint+record the 0x3A7 fill child + position, show spawn tree
-import base64, hashlib, json, os, sys, time
+import base64
+import json
+import os
+import sys
+import time
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import httpx
-import uuid_ledger as L
 import sb
+import uuid_ledger as L
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -37,7 +42,7 @@ code, o = kget(f"/portfolio/orders/{OID}")
 print("V2 order status:", code)
 print(json.dumps(o, indent=2)[:800])
 
-code, f = kget(f"/portfolio/fills?ticker=KXMLB-26-LAD&limit=5")
+code, f = kget("/portfolio/fills?ticker=KXMLB-26-LAD&limit=5")
 print("\nfills:", code)
 print(json.dumps(f, indent=2)[:900])
 
