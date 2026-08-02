@@ -16,11 +16,8 @@ version: 1.0.0
 from __future__ import annotations
 
 import hashlib
-import os
 import time
 from dataclasses import dataclass
-from typing import Dict
-
 
 # ---- Provenance codes (mirrors gyst.ts PROVENANCE) ----
 PROV_UNKNOWN      = 0x0
@@ -184,7 +181,7 @@ def encode_turbo_kv_uuid(model_id: str, layer: int, quality: float, *, timestamp
     )
 
 
-def decode_turbo_kv_uuid(uuid: str) -> Dict[str, float | int]:
+def decode_turbo_kv_uuid(uuid: str) -> dict[str, float | int]:
     d = decode_gyst(uuid)
     if d.type_code != 0x200:
         raise ValueError(f"decode_turbo_kv_uuid: expected 0x200, got {hex(d.type_code)}")

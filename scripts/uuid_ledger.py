@@ -26,7 +26,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
-from uuid_service_turboquant import encode_gyst, decode_gyst, fnv1a12  # noqa: E402
+from uuid_service_turboquant import decode_gyst, encode_gyst, fnv1a12  # noqa: E402
 
 # ---- Trading type codes (single registry for the money path) ----
 TYPE_KALSHI_MARKET = 0x3B0

@@ -24,7 +24,12 @@ Usage:
   .venv311/Scripts/python scripts/kalshi_uuid_bot.py --batch bets.json        # real submit if creds set
 """
 from __future__ import annotations
-import os, sys, json, argparse, hashlib
+
+import argparse
+import hashlib
+import json
+import os
+import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -35,8 +40,8 @@ try:  # load KALSHI_KEY_ID / KALSHI_PRIVATE_KEY from gitignored .env
     load_dotenv(PROJECT_ROOT / ".env")
 except Exception:
     pass
-from uuid_service_turboquant import encode_gyst, fnv1a12  # noqa: E402
 import uuid_ledger as L  # noqa: E402  — single mint authority + tracking
+from uuid_service_turboquant import fnv1a12  # noqa: E402
 
 TYPE_KALSHI_BET = 0x3A4
 PROV_KALSHI = 0x2  # provenance slot for Kalshi (vs 0x1 Polymarket)
@@ -89,7 +94,8 @@ def submit(requests: list[dict], dry_run: bool = True):
     results = []
     con = cur = None
     try:
-        con = L.local_conn(); cur = con.cursor()
+        con = L.local_conn()
+        cur = con.cursor()
     except Exception as e:
         print(f"[ledger] offline — tracking skipped: {repr(e)[:120]}")
     for req in requests:
@@ -106,7 +112,8 @@ def submit(requests: list[dict], dry_run: bool = True):
             except Exception as e:
                 print(f"[ledger] warn: {repr(e)[:120]}")
     if con:
-        con.commit(); con.close()
+        con.commit()
+        con.close()
     if dry_run:
         print(f"\n[DRY-RUN] {len(results)} order(s) minted as UUIDs + recorded to ledger (mode=paper). Set KALSHI_KEY_ID + "
               f"KALSHI_PRIVATE_KEY to submit for real. Payload sample:")
@@ -124,7 +131,7 @@ def submit(requests: list[dict], dry_run: bool = True):
     if not (key_id and key_path):
         print("[ABORT] set KALSHI_KEY_ID + KALSHI_PRIVATE_KEY_PATH (or KALSHI_PRIVATE_KEY) in .env — cannot submit.")
         return results
-    from kalshi_python import Configuration, ApiClient, CreateOrderRequest, BatchCreateOrdersRequest  # noqa: E402
+    from kalshi_python import ApiClient, BatchCreateOrdersRequest, Configuration, CreateOrderRequest  # noqa: E402
     from kalshi_python.api.portfolio_api import PortfolioApi  # noqa: E402
     cfg = Configuration(host=os.getenv("KALSHI_HOST", "https://api.elections.kalshi.com/trade-api/v2"))
     client = ApiClient(cfg)

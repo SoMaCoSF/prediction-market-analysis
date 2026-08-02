@@ -12,13 +12,17 @@ Usage:
 Exits 0 on ALL OK, 1 on any failure.
 """
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from uuid_service_turboquant import (  # noqa: E402
-    encode_gyst, decode_gyst,
-    encode_poly_market_uuid, encode_poly_outcome_quote_uuid, encode_poly_trade_uuid,
+    decode_gyst,
+    encode_gyst,
+    encode_poly_market_uuid,
+    encode_poly_outcome_quote_uuid,
+    encode_poly_trade_uuid,
 )
 
 fails = []

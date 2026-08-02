@@ -16,6 +16,7 @@ Usage:
 Exit 0 = ALL VERIFIED, 1 = failure. Leaves ZERO rows behind (ROLLBACK).
 """
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 

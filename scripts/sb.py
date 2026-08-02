@@ -7,7 +7,7 @@ mission control and the Vercel deployment read/write ONE ledger. Native PG
 bigint pairs keep the 128-bit bitmask routing intact (impossible on Turso).
 """
 from __future__ import annotations
-import os
+
 from pathlib import Path
 
 ENV_FILE = Path(__file__).resolve().parent.parent / ".env_turso"

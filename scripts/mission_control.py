@@ -16,6 +16,7 @@ Passkey derivation mirrors app/lib/auth.js: sha256(mac|hostname|STATUS_SALT).
 Run: .venv311/Scripts/python scripts/mission_control.py  ->  http://127.0.0.1:8420
 """
 from __future__ import annotations
+
 import base64
 import hashlib
 import hmac
@@ -35,14 +36,13 @@ try:
 except Exception:
     pass
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-import httpx
-import uvicorn
-
-import uuid_ledger as L
-import sb
-from uuid_service_turboquant import encode_gyst, decode_gyst
+import httpx  # noqa: E402
+import sb  # noqa: E402
+import uuid_ledger as L  # noqa: E402
+import uvicorn  # noqa: E402
+from fastapi import FastAPI, Request  # noqa: E402
+from fastapi.responses import HTMLResponse, JSONResponse  # noqa: E402
+from uuid_service_turboquant import decode_gyst, encode_gyst  # noqa: E402
 
 STATIC = Path(__file__).resolve().parent / "mc_static"
 KILL_FILE = ROOT / ".mc_kill"
@@ -311,7 +311,8 @@ async def api_order(req: Request):
         f = L.mint_fill(o["uuid"], price, count)
         L.record_fill(cur, f, fee_cents=0)
         L.apply_fill_to_position(cur, ticker, side, o["parent_uuid"], price, count, o["ts"])
-        con.commit(); con.close()
+        con.commit()
+        con.close()
         log(f"PAPER fill {side} {price}¢ x{count} {ticker}  uuid={o['uuid'][:13]}… coi={o['client_order_id']}", "paper")
         return {"ok": True, "mode": "paper", "uuid": o["uuid"], "client_order_id": o["client_order_id"]}
 
@@ -334,19 +335,22 @@ async def api_order(req: Request):
         code, resp = kalshi_post_order(req_body)
     except Exception as e:
         cur.execute("UPDATE uuid_orders SET status='error' WHERE uuid=%s", (o["uuid"],))
-        con.commit(); con.close()
+        con.commit()
+        con.close()
         log(f"LIVE submit exception: {repr(e)[:160]}", "error")
         return JSONResponse({"error": repr(e)[:200]}, status_code=502)
     if code in (200, 201):
         oid = (resp.get("order") or {}).get("order_id")
         cur.execute("UPDATE uuid_orders SET status='submitted', exchange_order_id=%s WHERE uuid=%s",
                     (oid, o["uuid"]))
-        con.commit(); con.close()
+        con.commit()
+        con.close()
         log(f"LIVE ACK order_id={oid}  coi={o['client_order_id']}  (reconciles by low-42 bitmask)", "live")
         return {"ok": True, "mode": "live", "uuid": o["uuid"],
                 "client_order_id": o["client_order_id"], "exchange_order_id": oid, "ack": resp}
     cur.execute("UPDATE uuid_orders SET status='rejected' WHERE uuid=%s", (o["uuid"],))
-    con.commit(); con.close()
+    con.commit()
+    con.close()
     log(f"LIVE REJECTED {code}: {json.dumps(resp)[:200]}", "error")
     return JSONResponse({"error": "exchange rejected", "status": code, "resp": resp}, status_code=400)
 
