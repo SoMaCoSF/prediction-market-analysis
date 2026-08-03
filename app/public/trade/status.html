@@ -1,0 +1,91 @@
+<!-- =============================================================================== file_id: SOM-APP-0989-v1.0.0 name: trade/status.html description: STATUS — the real-time logic proof: LIVE vs PAPER split, pipeline chain freshness, computed PASS/FAIL checks project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [status, proof, live, paper, checks] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STATUS · trade.somacosf.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050508;--panel:#0c0c14;--line:#1e1e2e;--amber:#ff9000;--cyan:#00ccdd;--green:#00dd66;--red:#ff4d4d;--dim:#8a8aa0}
+*{margin:0;box-sizing:border-box}
+body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace}
+header{display:flex;align-items:baseline;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
+header h1{font-family:Orbitron;font-size:20px;letter-spacing:3px;color:var(--cyan)}
+.sub{font-size:10px;color:var(--dim)}#stamp{margin-left:auto;font-size:10px;color:var(--green)}
+main{padding:18px 22px;max-width:1000px;display:grid;gap:14px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bigcard{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;text-align:center}
+.bigcard .n{font-family:Orbitron;font-size:38px;font-weight:900}
+.bigcard .l{font-size:10px;color:var(--dim);letter-spacing:2px;margin-top:6px;text-transform:uppercase}
+.live-c{color:var(--green)}.paper-c{color:var(--amber)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h3{font-family:Orbitron;font-size:11px;letter-spacing:2px;color:var(--amber);margin-bottom:10px;text-transform:uppercase}
+.pipe{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.stage{border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-size:10px;text-align:center;min-width:110px}
+.stage b{display:block;font-size:12px;margin-top:3px}
+.stage.hot{border-color:var(--green)}.stage.cold{border-color:var(--red);opacity:.6}
+.arrow{color:var(--dim)}
+.check{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:11px}
+.check:last-child{border-bottom:0}
+.pass{color:var(--green);font-weight:bold}.fail{color:var(--red);font-weight:bold}
+.dim{color:var(--dim)}
+a{color:var(--cyan);font-size:10px}
+</style>
+</head>
+<body>
+<header><h1>STATUS</h1><span class="sub">REAL-TIME LOGIC PROOF · EVERY NUMBER FROM THE LEDGER/EXCHANGE</span><span id="stamp">—</span></header>
+<main>
+  <div class="split">
+    <div class="bigcard"><div class="n live-c" id="n-live">—</div><div class="l">LIVE orders (real money)</div></div>
+    <div class="bigcard"><div class="n paper-c" id="n-paper">—</div><div class="l">PAPER orders (simulation)</div></div>
+  </div>
+
+  <div class="card"><h3>The pipeline — each link lit by freshness</h3>
+    <div class="pipe" id="pipe">
+      <div class="stage" id="st-tick">TICKS<b>—</b></div><span class="arrow">→</span>
+      <div class="stage" id="st-signal">SIGNALS<b>—</b></div><span class="arrow">→</span>
+      <div class="stage" id="st-order">ORDERS<b>—</b></div><span class="arrow">→</span>
+      <div class="stage" id="st-fill">FILLS<b>—</b></div><span class="arrow">→</span>
+      <div class="stage" id="st-settle">SETTLES<b>—</b></div>
+    </div>
+  </div>
+
+  <div class="card"><h3>Checks — computed by this page, not claimed</h3><div id="checks"></div></div>
+
+  <div class="card"><h3>Fleet</h3><div id="fleet" class="dim" style="font-size:11px">—</div></div>
+
+  <div class="card"><h3>Last live order</h3><div id="last-order" style="font-size:11px">—</div></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+async function j(u){try{const r=await fetch(u);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+function lit(id,ok,txt){const el=$(id);el.className="stage "+(ok?"hot":"cold");el.querySelector("b").textContent=txt;}
+async function tick(){
+  $("stamp").textContent=new Date().toLocaleTimeString();
+  const d=await j("/api/trade/status");
+  if(!d||d.error)return;
+  const m=d.orders_by_mode||{};
+  $("n-live").textContent=m.live||0;
+  $("n-paper").textContent=m.paper||0;
+  const ticks=d.state&&d.state["tick:health"]?Object.keys(d.state["tick:health"].v.symbols||{}).length:0;
+  const tickAge=d.state&&d.state["tick:health"]?d.state["tick:health"].age_s:99999;
+  lit("st-tick",ticks>=3,ticks+" syms · "+tickAge+"s");
+  const evAge=d.state&&d.state["evidence:lanes"]?d.state["evidence:lanes"].age_s:99999;
+  lit("st-signal",evAge<600,"evidence "+evAge+"s");
+  const lo=d.last_order;
+  lit("st-order",!!(lo&&lo.exchange_order_id),lo?(lo.ts?Math.max(0,Math.round(Date.now()/1000-lo.ts))+"s":"?"):"none");
+  const f=d.fills||{last_age_s:99999,total:0};
+  lit("st-fill",f.last_age_s<600,f.last_age_s+"s · "+f.total);
+  const rc=(d.recent_realized||[]).length;
+  lit("st-settle",rc>0,rc+" realized");
+  $("checks").innerHTML=(d.checks||[]).map(c=>
+    `<div class="check"><span>${c.name} <span class="dim">— ${c.detail}</span></span><span class="${c.pass?"pass":"fail"}">${c.pass?"PASS":"FAIL"}</span></div>`).join("");
+  const live=(d.fleet||[]).filter(x=>x.state==="alive"&&x.age_s<400);
+  $("fleet").innerHTML=live.length+"/"+(d.fleet||[]).length+" live · "+
+    (d.fleet||[]).map(x=>`<span style="color:${x.state==="alive"&&x.age_s<400?"#00dd66":"#ff4d4d"}">${x.name}</span>`).join(" · ");
+  $("last-order").innerHTML=lo?`${lo.ticker} ${lo.side} x${lo.count} @${lo.price_cents}¢ — <b class="${lo.exchange_order_id?"pass":"fail"}">${lo.exchange_order_id?"ACK "+String(lo.exchange_order_id).slice(0,18)+"…":"NOT ACKED"}</b> (${lo.mode})`:"none yet";
+}
+tick();setInterval(tick,5000);
+</script>
+</body>
+</html>

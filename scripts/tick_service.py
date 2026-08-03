@@ -32,6 +32,7 @@ FLUSH_S = 5.0
 TICKS: dict[str, deque] = defaultdict(lambda: deque(maxlen=RING))   # sym -> [(ts, price, bid)]
 SPOOL: list[tuple] = []                                             # pending pg rows
 LOCK = threading.Lock()
+pg_ok = False
 
 
 def pg_conn():
@@ -59,11 +60,30 @@ def ensure_table():
 
 
 def flusher():
+    n = 0
     while True:
         time.sleep(FLUSH_S)
         fleetlib.checkin("tick")
+        n += 1
         with LOCK:
             rows, SPOOL[:] = SPOOL[:], []
+            snap = {s: (len(d), round(time.time() - d[-1][0], 1) if d else None) for s, d in TICKS.items()}
+        if n % 6 == 0:  # publish health every ~30s for the cloud status page
+            try:
+                import json as _json
+                con = pg_conn() or None
+                import sb
+                scon = sb.sb_conn()
+                scon.autocommit = True
+                scon.cursor().execute(
+                    "INSERT INTO mc_state (k, v, updated_at) VALUES ('tick:health', %s, now()) "
+                    "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
+                    (_json.dumps({"symbols": snap, "pg": bool(pg_ok)}),))
+                scon.close()
+                if con:
+                    con.close()
+            except Exception:
+                pass
         if not rows:
             continue
         try:
@@ -145,6 +165,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
+    global pg_ok
     fleetlib.acquire_lock("tick")
     pg_ok = ensure_table()
     runlog.log_event("tick", f"tick service start :{PORT} pg={'ok' if pg_ok else 'NO-DSN (ram-only)'}")
