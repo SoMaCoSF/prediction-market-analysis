@@ -38,6 +38,8 @@ DAEMONS = {
     "trend-sol": "scripts/trend_engine.py KXSOL15M SOLUSD",
     "trend-xrp": "scripts/trend_engine.py KXXRP15M XRPUSD",
     "trend-doge": "scripts/trend_engine.py KXDOGE15M DOGEUSD",
+    "speed-btc": "scripts/speed_lane.py KXBTC15M XBTUSD",
+    "speed-eth": "scripts/speed_lane.py KXETH15M ETHUSD",
     # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.
     "ingest": "scripts/uuid_ingest.py",
