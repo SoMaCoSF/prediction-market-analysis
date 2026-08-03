@@ -22,13 +22,19 @@ LOGDIR.mkdir(exist_ok=True)
 
 
 def _pid_alive(pid: int) -> bool:
-    if pid <= 0:
-        return False
+    """True if pid is a live process. Windows: tasklist; POSIX: os.kill(pid, 0)."""
+    if os.name == "nt":
+        try:
+            out = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {pid}"],
+                capture_output=True, text=True, timeout=5,
+            ).stdout
+            return str(pid) in out
+        except Exception:
+            return False
     try:
-        import subprocess
-        r = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"],
-                           capture_output=True, text=True, timeout=5)
-        return str(pid) in r.stdout
+        os.kill(pid, 0)
+        return True
     except Exception:
         return False
 
