@@ -27,6 +27,7 @@ DAEMONS = {
     "mc": "scripts/mission_control.py",
     "scalp": "scripts/profit_scalp.py",
     "btctrend": "scripts/btc_trend.py",
+    "xwatch": "scripts/x_watcher.py",
     # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.
     "ingest": "scripts/uuid_ingest.py",
