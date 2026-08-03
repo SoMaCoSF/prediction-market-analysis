@@ -62,6 +62,24 @@ def fire(ticker, side, price, count=1):
         return {"ok": False, "filled": 0.0}
 
 
+def publish_board():
+    """The wallet leaderboard — top whales by flow, for the poly panel."""
+    try:
+        import json as _json
+        top = sorted(wallet_flow.items(), key=lambda kv: -kv[1])[:10]
+        board = [{"wallet": w[:12] + "…", "flow_usd": round(v), "rank": i + 1}
+                 for i, (w, v) in enumerate(top)]
+        con = sb.sb_conn()
+        con.autocommit = True
+        con.cursor().execute(
+            "INSERT INTO mc_state (k, v, updated_at) VALUES ('copier:board', %s, now()) "
+            "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
+            (_json.dumps(board),))
+        con.close()
+    except Exception:
+        pass
+
+
 def map_series(text):
     low = text.lower()
     for k, v in CRYPTO_MAP.items():
@@ -142,6 +160,21 @@ def main():
                                     log(f"whale ${usd:,.0f} {(t.get('side') or '').upper()} | no kalshi map: {q[:44]}")
                 if len(seen_prints) > 5000:
                     seen_prints.clear()
+                publish_board()
+                # publish the whale leaderboard (flow-ranked)
+                try:
+                    import json as _json
+                    board = [{"wallet": w[:12], "flow_usd": round(wallet_flow[w])}
+                             for w in sorted(wallet_flow, key=lambda w: -wallet_flow[w])[:10]]
+                    con = sb.sb_conn()
+                    con.autocommit = True
+                    con.cursor().execute(
+                        "INSERT INTO mc_state (k, v, updated_at) VALUES ('copier:board', %s, now()) "
+                        "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
+                        (_json.dumps(board),))
+                    con.close()
+                except Exception:
+                    pass
             except Exception as e:
                 log(f"cycle warn {repr(e)[:60]}")
             time.sleep(POLL_S)

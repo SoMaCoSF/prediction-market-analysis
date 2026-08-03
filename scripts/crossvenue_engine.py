@@ -49,6 +49,23 @@ def log(m):
     runlog.log_event("xvenue", m)
 
 
+def publish(payload):
+    try:
+        import json as _json
+        con = sb.sb_conn()
+        con.autocommit = True
+        con.cursor().execute(
+            "INSERT INTO mc_state (k, v, updated_at) VALUES ('xvenue:latest', %s, now()) "
+            "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
+            (_json.dumps(payload[:15]),))
+        con.close()
+    except Exception:
+        pass
+
+
+divergences: list[dict] = []
+
+
 def fire(ticker, side, price):
     try:
         r = httpx.post(f"{MC}/api/order", json={"ticker": ticker, "side": side, "price": price,
@@ -122,7 +139,16 @@ def main():
                 poly = poly_crypto_prices(cx)
                 kal = kalshi_windows(cx)
                 for coin, k in kal.items():
-                    if coin not in poly or len(open_pos) >= MAX_CONC or spent_today >= DAILY_CAP:
+                    if coin not in poly:
+                        continue
+                    pp, pvol = poly[coin]
+                    diverge = pp - k["ya"]
+                    if abs(diverge) >= DIVERGE_C:
+                        divergences.append({"coin": coin, "poly_c": pp, "kalshi_c": k["ya"],
+                                            "diverge_c": round(diverge, 1), "poly_vol": pvol, "ts": int(time.time())})
+                        divergences[:] = divergences[-15:]
+                        publish(divergences)
+                    if len(open_pos) >= MAX_CONC or spent_today >= DAILY_CAP:
                         continue
                     pp, pvol = poly[coin]
                     kvol = k["vol"]
@@ -132,6 +158,11 @@ def main():
                     # follow the deeper venue's price
                     if kvol >= pvol:
                         continue  # kalshi deeper -> our price is the sharp one, no trade
+                    divergences.append({"coin": coin, "poly_c": round(pp, 1), "kalshi_c": k["ya"],
+                                        "diverge_c": round(diverge, 1), "poly_vol": round(pvol),
+                                        "ts": int(time.time())})
+                    divergences[:] = divergences[-15:]
+                    publish(divergences)
                     side, price = ("yes", k["ya"]) if diverge > 0 else ("no", 100 - k["yb"])
                     if not (1 <= price <= ENTRY_MAX):
                         continue
@@ -140,6 +171,10 @@ def main():
                         open_pos.append({"ticker": k["ticker"], "side": side, "price": price})
                         spent_today += price / 100
                         log(f"DIVERGENCE {coin}: poly {pp:.0f}c vs kalshi {k['ya']}c ({diverge:+.0f}c, poly vol ${pvol:,.0f} > k ${kvol:,.0f}) -> {side.upper()} @{price}c")
+                        divergences.append({"coin": coin, "poly_c": pp, "kalshi_c": k["ya"],
+                                            "diverge_c": round(diverge, 1), "side": side, "price": price,
+                                            "ts": int(time.time())})
+                        publish(divergences)
                 if poly or kal:
                     log(f"scan: poly {len(poly)} coins, kalshi {len(kal)} windows | open {len(open_pos)}/{MAX_CONC}")
             except Exception as e:

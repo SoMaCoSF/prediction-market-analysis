@@ -49,6 +49,234 @@ const nextConfig = {
           destination: '/time/about.html',
           has: [{ type: 'host', value: 'time.somacosf.com' }],
         },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        {
+          source: '/about',
+          destination: '/time/about.html',
+          has: [{ type: 'host', value: 'time.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        {
+          source: '/about',
+          destination: '/time/about.html',
+          has: [{ type: 'host', value: 'time.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the Polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        {
+          source: '/about',
+          destination: '/time/about.html',
+          has: [{ type: 'host', value: 'time.somacosf.com' }],
+        },
+        // poly.somacosf.com — the Polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the Polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        {
+          source: '/about',
+          destination: '/time/about.html',
+          has: [{ type: 'host', value: 'time.somacosf.com' }],
+        },
+        // poly.somacosf.com — the Polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        {
+          source: '/about',
+          destination: '/time/about.html',
+          has: [{ type: 'host', value: 'time.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — the polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        // poly.somacosf.com — polymarket control panel
+        {
+          source: '/',
+          destination: '/poly/index.html',
+          has: [{ type: 'host', value: 'poly.somacosf.com' }],
+        },
+        {
+          source: '/about',
+          destination: '/time/about.html',
+          has: [{ type: 'host', value: 'time.somacosf.com' }],
+        },
       ],
       afterFiles: [
         { source: '/thesis', destination: '/thesis/index.html' },

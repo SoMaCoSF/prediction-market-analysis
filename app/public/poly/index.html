@@ -1,0 +1,57 @@
+<!-- =============================================================================== file_id: SOM-APP-0987-v1.0.0 name: poly/index.html description: POLY — the Polymarket control panel: whale flow, cross-venue divergences, copier leaderboard. LCARS-dark. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [poly, polymarket, whales, panel, lcars] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>POLY · SoMaCo — polymarket control</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050508;--panel:#0c0c14;--line:#1e1e2e;--amber:#ff9000;--cyan:#00ccdd;--green:#00dd66;--red:#ff4d4d;--dim:#8a8aa0;--lav:#cc99ff}
+*{margin:0;box-sizing:border-box}
+body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-height:100vh}
+header{display:flex;align-items:baseline;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
+header h1{font-family:Orbitron;font-size:20px;letter-spacing:3px;color:var(--lav)}
+header .sub{font-size:10px;color:var(--dim);letter-spacing:1px}
+.live{margin-left:auto;font-size:10px;color:var(--green)}
+main{padding:18px 22px;display:grid;grid-template-columns:1fr;gap:14px;max-width:1100px}
+@media(min-width:900px){main{grid-template-columns:1fr 1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h3{font-family:Orbitron;font-size:11px;letter-spacing:2px;color:var(--amber);margin-bottom:10px;text-transform:uppercase}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:11px}
+.row:last-child{border-bottom:0}
+.dim{color:var(--dim)}.c-green{color:var(--green)}.c-cyan{color:var(--cyan)}.c-lav{color:var(--lav)}
+.empty{color:var(--dim);font-size:11px;padding:8px 0}
+a{color:var(--cyan)}
+</style>
+</head>
+<body>
+<header><h1>POLY</h1><span class="sub">POLYMARKET CONTROL · WHALE FLOW · CROSS-VENUE</span><span class="live" id="stamp">—</span></header>
+<main>
+  <div class="card"><h3>Whale flow (≥$10k prints)</h3><div id="shadow"><div class="empty">no prints yet — the shadow lane watches top-12 markets</div></div></div>
+  <div class="card"><h3>Cross-venue divergences</h3><div id="xvenue"><div class="empty">no divergences — fires when poly vs kalshi disagree >5¢</div></div></div>
+  <div class="card"><h3>Copier leaderboard (tracked wallets)</h3><div id="board"><div class="empty">building the board — wallets ranked by flow</div></div></div>
+  <div class="card"><h3>About this panel</h3>
+    <div class="row"><span>Signal venue</span><b class="c-lav">Polymarket (keyless public APIs)</b></div>
+    <div class="row"><span>Execution venue</span><b class="c-cyan">Kalshi (our account)</b></div>
+    <div class="row"><span>Every signal</span><b class="c-green">minted as a UUIDv8 object</b></div>
+    <div class="row"><span>CLOB execution on poly</span><b class="dim">wallet funded? pending</b></div>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+async function j(u){try{const r=await fetch(u);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+async function tick(){
+  $("stamp").textContent=new Date().toLocaleTimeString();
+  const d=await j("/api/trade/poly");
+  if(!d)return;
+  if(d.shadow&&d.shadow.length)$("shadow").innerHTML=d.shadow.slice(0,10).map(e=>
+    `<div class="row"><span class="dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</span><span>${(e.detail||JSON.stringify(e)).slice(0,64)}</span></div>`).join("");
+  if(d.divergences&&d.divergences.length)$("xvenue").innerHTML=d.divergences.slice(-10).reverse().map(e=>
+    `<div class="row"><span class="c-lav">${e.coin}</span><span>poly ${e.poly_c}¢ vs kalshi ${e.kalshi_c}¢ (<b class="c-green">${e.diverge_c>0?"+":""}${e.diverge_c}¢</b>)</span><span class="dim">${e.side} @${e.price}¢</span></div>`).join("");
+  if(d.board&&d.board.length)$("board").innerHTML=d.board.map(w=>
+    `<div class="row"><span class="c-cyan">#${w.rank||""} ${w.wallet}</span><span class="dim">flow $${(w.flow_usd||0).toLocaleString()}</span></div>`).join("");
+}
+tick();setInterval(tick,15000);
+</script>
+</body>
+</html>
