@@ -2,7 +2,7 @@
 """vault.py — the bankroll vault.
 
 One locked reserve, one spendable allowance, published for the whole fleet:
-  reserve   = min(100, equity * 0.5)   # never trade below this line
+  reserve   = min(50, equity * 0.30)  # never trade below this line (30% — 50% strangled entries at small equity)
   allowance = max(0, cash - reserve)   # what engines may actually put at risk
   equity    = cash + portfolio_value
 

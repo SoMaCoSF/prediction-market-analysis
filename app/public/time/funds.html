@@ -1,0 +1,92 @@
+<!-- =============================================================================== file_id: SOM-APP-0992-v1.0.0 name: time/funds.html description: FUNDS — the money page: equity, returns, per-lane P&L, vault, moonshot sleeve, sweep, both venues. Live. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [funds, returns, money, live, lcars] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FUNDS · SoMaCo — the money page</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050508;--panel:#0c0c14;--line:#1e1e2e;--amber:#ff9000;--cyan:#00ccdd;--green:#00dd66;--red:#ff4d4d;--dim:#8a8aa0;--lav:#cc99ff}
+*{margin:0;box-sizing:border-box}
+body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace}
+header{display:flex;align-items:baseline;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
+header h1{font-family:Orbitron;font-size:20px;letter-spacing:3px;color:var(--amber)}
+.sub{font-size:10px;color:var(--dim)}#stamp{margin-left:auto;font-size:10px;color:var(--green)}
+main{padding:18px 22px;max-width:1000px;display:grid;gap:14px}
+.hero{display:flex;gap:16px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px}
+.hero .cell{min-width:120px}
+.hero .l{font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase}
+.hero .v{font-family:Orbitron;font-size:24px;font-weight:700}
+.up{color:var(--green)}.dn{color:var(--red)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h3{font-family:Orbitron;font-size:11px;letter-spacing:2px;color:var(--cyan);margin-bottom:10px;text-transform:uppercase}
+.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:11px}
+.row:last-child{border-bottom:0}
+.dim{color:var(--dim)}
+canvas{width:100%;height:64px;display:block}
+a{color:var(--cyan);font-size:10px}
+</style>
+</head>
+<body>
+<header><h1>FUNDS</h1><span class="sub">KALSHI × POLYMARKET · LIVE FROM THE LEDGER + EXCHANGE</span><span id="stamp">—</span></header>
+<main>
+  <div class="hero">
+    <div class="cell"><div class="l">Equity</div><div class="v" id="h-eq">$—</div></div>
+    <div class="cell"><div class="l">Cash</div><div class="v" id="h-cash" style="font-size:18px">—</div></div>
+    <div class="cell"><div class="l">In positions</div><div class="v" id="h-pv" style="font-size:18px">—</div></div>
+    <div class="cell"><div class="l">Realized (banked)</div><div class="v" id="h-real" style="font-size:18px">—</div></div>
+    <div class="cell"><div class="l">Day range</div><div class="v" id="h-range" style="font-size:14px">—</div></div>
+  </div>
+  <div class="card"><h3>Equity curve (today)</h3><canvas id="curve"></canvas></div>
+  <div class="card"><h3>Returns by lane</h3><div id="lanes"></div></div>
+  <div class="card"><h3>The vault + the sleeve</h3><div id="sleeves"></div></div>
+  <div class="card"><h3>Polymarket side (signal flow)</h3><div id="poly"></div></div>
+  <div class="card"><h3>Sweep rule ($100 to Venmo at $200)</h3><div id="sweep"></div></div>
+  <div style="font-size:10px" class="dim">live orders <span id="m-live">—</span> · paper <span id="m-paper">—</span> · evidence verdict: <span id="verdict">—</span> · <a href="/">TIME</a> · <a href="https://trade.somacosf.com/status">STATUS</a></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+async function j(u){try{const r=await fetch(u);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+async function tick(){
+  $("stamp").textContent=new Date().toLocaleTimeString();
+  const d=await j("/api/trade/funds");
+  if(!d||d.error)return;
+  const a=d.account_equity||{};
+  $("h-eq").textContent="$"+(a.equity||0).toFixed(2);
+  $("h-cash").textContent="$"+(a.cash||0).toFixed(2);
+  $("h-pv").textContent="$"+(a.portfolio||0).toFixed(2);
+  const r=d.realized||{};
+  const rc=$("h-real");rc.textContent=(r.total_usd>=0?"+":"")+"$"+(r.total_usd||0).toFixed(2);
+  rc.className="v "+(r.total_usd>=0?"up":"dn");rc.style.fontSize="18px";
+  const cv=d.curve||[];
+  if(cv.length>1){
+    const vals=cv.map(p=>p.equity),mn=Math.min(...vals),mx=Math.max(...vals);
+    $("h-range").textContent="$"+mn.toFixed(0)+"–$"+mx.toFixed(0);
+    const c=$("curve"),ctx=c.getContext("2d");c.width=c.offsetWidth;
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.strokeStyle=vals[vals.length-1]>=vals[0]?"#00dd66":"#ff4d4d";ctx.lineWidth=1.5;ctx.beginPath();
+    vals.forEach((v,i)=>{const x=i/(vals.length-1)*c.width,y=c.height-4-((v-mn)/((mx-mn)||1))*(c.height-8);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.stroke();
+  }
+  $("lanes").innerHTML=Object.entries(d.lanes||{}).map(([k,v])=>
+    `<div class="row"><span>${k}</span><span class="dim">${v.open} open · $${v.cost_usd.toFixed(0)} in play</span><b class="${v.realized_usd>=0?"up":"dn"}">$${v.realized_usd.toFixed(2)}</b></div>`).join("")||'<div class="row dim">no positions yet</div>';
+  const vt=d.vault_state||{},ms=d.moonshot_sleeve||{};
+  $("sleeves").innerHTML=
+    `<div class="row"><span>Vault reserve (locked)</span><b class="c-cyan">$${(vt.reserve||0).toFixed(2)}</b></div>
+     <div class="row"><span>Trading allowance</span><b>$${(vt.allowance||0).toFixed(2)}</b></div>
+     <div class="row"><span>Moonshot sleeve (${((ms.pct||0.25)*100).toFixed(0)}% of equity)</span><b class="up">$${(ms.sleeve||0).toFixed(2)} · ${ms.open||0} open</b></div>`;
+  const xv=d.xvenue_latest||[],bd=d.copier_board||[];
+  $("poly").innerHTML=(Array.isArray(xv)&&xv.length?xv.slice(-5).reverse().map(e=>
+    `<div class="row"><span class="c-lav">${e.coin}</span><span>poly ${e.poly_c}¢ vs kalshi ${e.kalshi_c}¢ (${e.diverge_c>0?"+":""}${e.diverge_c}¢)</span><span class="dim">${e.side} @${e.price}¢</span></div>`).join(""):'<div class="row dim">no divergences traded yet</div>')
+    +(Array.isArray(bd)&&bd.length?`<div class="row"><span class="dim">whales tracked</span><b>${bd.length}</b></div>`:"");
+  const sw=d.sweep_stats||{},sp=d.sweep_pending;
+  $("sweep").innerHTML=sp?`<div class="row"><b class="dn">SWEEP PENDING — withdraw $${sp.amount||100} to Venmo</b></div>`
+    :`<div class="row"><span>sweeps confirmed</span><b>${sw.count||0} ($${(sw.total||0).toFixed(0)})</b></div><div class="row dim"><span>next trigger: cash ≥ $200</span></div>`;
+  $("m-live").textContent=(d.orders_by_mode||{}).live||0;
+  $("m-paper").textContent=(d.orders_by_mode||{}).paper||0;
+  $("verdict").textContent=(d.evidence_lanes||{}).overall||"—";
+}
+tick();setInterval(tick,15000);
+</script>
+</body>
+</html>
