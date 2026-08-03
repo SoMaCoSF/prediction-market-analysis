@@ -43,7 +43,20 @@ def acquire_lock(name: str) -> None:
         if _pid_alive(pid):
             print(f"[{name}] another instance alive (pid={pid}) — refusing to double-run", flush=True)
             sys.exit(0)
-    lock.write_text(str(os.getpid()))
+    # atomic create — simultaneous boots can't both win
+    try:
+        fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        try:
+            pid = int(lock.read_text().strip())
+        except Exception:
+            pid = -1
+        if _pid_alive(pid):
+            print(f"[{name}] another instance alive (pid={pid}) — refusing to double-run", flush=True)
+            sys.exit(0)
+        fd = os.open(str(lock), os.O_WRONLY | os.O_TRUNC)
+    os.write(fd, str(os.getpid()).encode())
+    os.close(fd)
 
 
 def checkin(name: str) -> None:
