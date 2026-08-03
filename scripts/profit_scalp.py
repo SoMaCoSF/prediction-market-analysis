@@ -37,7 +37,7 @@ PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdige
 
 SERIES = [("KXBTC15M", "XBTUSD"), ("KXETH15M", "ETHUSD"), ("KXSOL15M", "SOLUSD"),
           ("KXXRP15M", "XRPUSD"), ("KXDOGE15M", "DOGEUSD")]
-DRIFT_MIN, ENTRY_MAX, TTL_MIN = 0.20, 60, 540
+DRIFT_MIN, ENTRY_MIN, ENTRY_MAX, TTL_MIN = 0.20, 25, 60, 540
 SCALP_C = 15               # take-profit: exit when bid >= entry + this many cents
 STOP_C = 10                # stop-loss: exit when bid <= entry - this many cents
 CASH_FLOOR = 20.00
@@ -207,9 +207,9 @@ def main():
                         if not m:
                             continue
                         d = drift(cx, pair)
-                        if d >= DRIFT_MIN and m["ya"] <= ENTRY_MAX:
+                        if d >= DRIFT_MIN and ENTRY_MIN <= m["ya"] <= ENTRY_MAX:
                             side, price = "yes", m["ya"]
-                        elif d <= -DRIFT_MIN and (100 - m["yb"]) <= ENTRY_MAX:
+                        elif d <= -DRIFT_MIN and ENTRY_MIN <= (100 - m["yb"]) <= ENTRY_MAX:
                             side, price = "no", 100 - m["yb"]
                         else:
                             continue
