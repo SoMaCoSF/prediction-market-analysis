@@ -45,6 +45,7 @@ DAEMONS = {
     "dry-t25": "scripts/dry_run.py 60 25 0 dry-t25",
     "dry-s15-8": "scripts/dry_run.py 60 15 8 dry-s15-8",
     "evidence": "scripts/evidence_engine.py",
+    "copier": "scripts/whale_copier.py",
     # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.
     "ingest": "scripts/uuid_ingest.py",
