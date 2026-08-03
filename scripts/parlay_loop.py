@@ -32,8 +32,8 @@ KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
 PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdigest()
 
 CYCLE_S = 600
-ALLOC_PCT = 0.10         # 10% of cash per cycle
-MIN_CYCLE, MAX_CYCLE = 2.00, 15.00
+ALLOC_PCT = 0.15         # 15% of cash per cycle
+MIN_CYCLE, MAX_CYCLE = 2.00, 30.00
 PRICE_LO, PRICE_HI = 2, 10
 MAX_EXPOSED_PCT = 0.25    # stop buying when open-parlay cost > 25% of equity
 DAILY_CAP_PCT = 0.35      # stop when today's parlay spend > 35% of equity

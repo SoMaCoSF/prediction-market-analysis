@@ -35,7 +35,7 @@ POLL_S = 60
 TOP_MARKETS = 15
 MIN_PRINT_USD = 5000.0
 TOP_WHALES = 5
-DAILY_CAP = 500          # cents
+DAILY_CAP = 1500          # cents
 MAX_CONC = 3
 CRYPTO_MAP = {"bitcoin": "KXBTC15M", "btc": "KXBTC15M", "ethereum": "KXETH15M", "eth": "KXETH15M",
               "solana": "KXSOL15M", "sol": "KXSOL15M"}

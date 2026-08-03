@@ -357,12 +357,12 @@ async def api_order(req: Request):
         price = int(body["price"])
         count = int(body["count"])
         mode = str(body.get("mode", "paper")).lower()
-        assert side in ("yes", "no") and 1 <= price <= 99 and 1 <= count <= 5 and mode in ("paper", "live")
+        assert side in ("yes", "no") and 1 <= price <= 99 and 1 <= count <= 25 and mode in ("paper", "live")
     except Exception:
         return JSONResponse({"error": "invalid ticker/side/price/count/mode (count<=5)"}, status_code=400)
     notional = price * count
-    if notional > 500:
-        return JSONResponse({"error": f"cap: notional {notional}¢ > 500¢ ($5)"}, status_code=400)
+    if notional > 2500:
+        return JSONResponse({"error": f"cap: notional {notional}¢ > 2500¢ ($25)"}, status_code=400)
 
     o = L.mint_order(ticker, side, price, count)
     price_key = "yes_price" if side == "yes" else "no_price"
