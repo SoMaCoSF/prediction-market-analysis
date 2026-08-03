@@ -33,6 +33,7 @@ DAEMONS = {
     "maker": "scripts/maker_engine.py",
     "sweep": "scripts/sweep_watch.py",
     "news": "scripts/news_supply_engine.py",
+    "dry": "scripts/dry_run.py",
     # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.
     "ingest": "scripts/uuid_ingest.py",
@@ -106,7 +107,11 @@ def main():
                     code = p.poll() if p else "none"
                     runlog.log_event("supervisor", f"{name} DEAD (exit={code})", exit=code)
                     print(f"[supervisor] {name} DEAD exit={code}", flush=True)
-                    if can_relaunch(name):
+                    # clean exits (bounded jobs like dry runs) relaunch free — only crashes count
+                    if code == 0:
+                        time.sleep(2)
+                        spawn(name)
+                    elif can_relaunch(name):
                         relaunches[name].append(time.time())
                         backoff = min(60, 2 ** len(relaunches[name]))
                         runlog.log_event("supervisor", f"relaunching {name} in {backoff}s", backoff=backoff)
