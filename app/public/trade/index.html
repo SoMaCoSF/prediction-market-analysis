@@ -91,6 +91,21 @@
   </div>
 </div>
 
+<div id="sweep-banner" style="display:none;margin:10px 18px 0;padding:12px 14px;border:1px solid var(--amber);border-radius:6px;background:rgba(255,176,32,.12);color:var(--amber);font-weight:bold;letter-spacing:1px"></div>
+
+<div style="padding:12px 18px 0">
+  <div class="card">
+    <h3>Engine lanes — live fleet + returns</h3>
+    <div id="lanes" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+  </div>
+</div>
+<div style="padding:10px 18px 0">
+  <div class="card">
+    <h3>Evidence — the honest verdicts</h3>
+    <div id="evidence" class="mono-sm">loading…</div>
+  </div>
+</div>
+
 <main>
   <div class="card">
     <h3>Live Kalshi Markets (top volume)</h3>
@@ -199,6 +214,24 @@ async function tick(){
   const sh=await j("/api/trade/shadow");
   if(sh&&sh.latest){$("wins").querySelector("tbody").innerHTML=sh.latest.slice(0,8).map(e=>
     `<tr><td class="c-dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</td><td>${(e.detail||"").slice(0,60)}</td></tr>`).join("");}
+  const L=await j("/api/trade/lanes");
+  if(L){
+    if(L.sweep_pending){const b=$("sweep-banner");b.style.display="block";
+      b.textContent=`⚠ SWEEP TIME — cash $${(L.sweep_pending.peak||0).toFixed(2)} ≥ $200 → withdraw $${L.sweep_pending.amount||100} to Venmo in the Kalshi app`;}
+    else $("sweep-banner").style.display="none";
+    if(L.fleet){$("lanes").innerHTML=L.fleet.map(d=>{
+      const live=d.state==="alive"&&d.age_s<400;
+      return`<div style="border:1px solid ${live?"rgba(57,255,20,.4)":"rgba(255,77,77,.4)"};border-radius:5px;padding:5px 10px;font-size:10px">
+        <b style="color:${live?"var(--green)":"var(--red)"}">${live?"●":"○"}</b> ${d.name}</div>`;}).join("");}
+    if(L.lanes){$("lanes").innerHTML+=Object.entries(L.lanes).map(([n,d])=>
+      `<div style="border:1px solid var(--line);border-radius:5px;padding:5px 10px;font-size:10px">
+        <span class="c-cyan">${n}</span> open ${d.open} · <span class="${d.realized_usd>=0?"c-green":"c-red"}">$${d.realized_usd.toFixed(2)}</span></div>`).join("");}
+  }
+  const ev=await j("/api/trade/evidence");
+  if(ev&&ev.evidence){const e=ev.evidence;
+    $("evidence").innerHTML=`<div style="font-size:12px;margin-bottom:6px">OVERALL: <b class="${e.overall==="EDGE-PROVEN"?"c-green":"c-amber"}">${e.overall}</b>
+      <span class="c-dim"> · gates: ${e.gates&&e.gates.PROVEN}</span></div>`+
+      Object.entries(e.lanes||{}).map(([n,v])=>`<div>${n}: n=${v.n} wr=${(v.winrate*100).toFixed(0)}% CI[${(v.ci[0]*100).toFixed(0)}-${(v.ci[1]*100).toFixed(0)}] exp=${v.expectancy_c}c/trade → <b class="${v.verdict==="PROVEN"?"c-green":v.verdict==="DEAD"?"c-red":"c-amber"}">${v.verdict}</b></div>`).join("");}
 }
 $("bb-yes").onclick=()=>{betSide="yes";$("bb-yes").classList.add("sel");$("bb-no").classList.remove("sel");};
 $("bb-no").onclick=()=>{betSide="no";$("bb-no").classList.add("sel");$("bb-yes").classList.remove("sel");};
