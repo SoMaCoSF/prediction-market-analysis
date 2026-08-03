@@ -6,9 +6,9 @@ into data/uuid_stream.db as source='kalshi-ws'. Resubscribes on window rolls.
 Reconnects with backoff. Zero model tokens.
 """
 from __future__ import annotations
+
 import asyncio
 import base64
-import hashlib
 import json
 import os
 import sqlite3
