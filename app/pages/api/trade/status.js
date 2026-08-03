@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const liveFills = await q("SELECT count(*) AS n, max(ts) AS last_ts FROM uuid_fills");
     out.fills = { total: Number(liveFills[0].n), last_age_s: age(liveFills[0].last_ts) };
     const lastOrder = await q(
-      "SELECT ticker, side, price_cents, count, mode, status, exchange_order_id, ts FROM uuid_orders ORDER BY ts DESC LIMIT 1");
+      "SELECT ticker, side, price_cents, count, mode, status, exchange_order_id, ts FROM uuid_orders WHERE mode='live' ORDER BY ts DESC LIMIT 1");
     out.last_order = lastOrder[0] || null;
     const lastSettle = await q(
       "SELECT ticker, realized_pnl_cents FROM uuid_positions WHERE realized_pnl_cents != 0 ORDER BY ticker DESC LIMIT 5");
