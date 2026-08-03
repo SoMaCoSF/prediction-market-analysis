@@ -39,7 +39,7 @@ FLOOR, SESSION_STOP, POLL = 20.00, -300, 5
 
 session_pnl = 0.0
 positions: list[dict] = []   # concurrent horizontal positions (max MAX_CONC)
-MAX_CONC = 3
+MAX_CONC = 2
 
 
 def log(m):
@@ -48,9 +48,10 @@ def log(m):
 
 
 def tape_mom():
+    """3-min momentum from the local tape — kalshi-ws ticks preferred, Kraken spot fallback."""
     try:
         con = sqlite3.connect(STREAM)
-        rows = con.execute("SELECT ts, price_c FROM stream WHERE source='spot' AND symbol=? AND ts > ? ORDER BY ts",
+        rows = con.execute("SELECT ts, price_c FROM stream WHERE source IN ('kalshi-ws','spot') AND symbol=? AND ts > ? ORDER BY ts",
                            (SYM, int(time.time()) - 200)).fetchall()
         con.close()
         if len(rows) < 10:

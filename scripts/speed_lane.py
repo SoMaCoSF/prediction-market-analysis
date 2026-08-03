@@ -31,8 +31,8 @@ MC = os.getenv("MC_URL", "http://127.0.0.1:8420")
 KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
 PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdigest()
 
-BUDGET = 500          # cents — five dollars
-ENTRY_MAX = 30
+BUDGET = 300          # cents — three dollars (wary mode)
+ENTRY_MAX = 20
 TAKE = 5
 DRIFT_MIN = 0.10
 TTL_MIN = 300
