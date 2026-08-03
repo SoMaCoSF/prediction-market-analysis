@@ -17,6 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+import fleetlib  # noqa: E402
 import httpx  # noqa: E402
 import runlog  # noqa: E402
 import sb  # noqa: E402
@@ -70,6 +71,7 @@ def tails(cx):
 
 def main():
     spent = 0
+    fleetlib.acquire_lock("chaos")
     log(f"chaos_monkey start | budget ${TOTAL_BUDGET/100:.2f} | band {BAND_LO}-{BAND_HI}c | round<= {ROUND_MAX}c/{ROUND_EVERY}s")
     for _ in range(10):
         try:
@@ -83,6 +85,7 @@ def main():
     assert s.get("keys") and not s.get("kill"), "MC not armed"
     with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:
         while spent < TOTAL_BUDGET:
+            fleetlib.checkin("chaos")
             round_spent = 0
             try:
                 cands = tails(cx)

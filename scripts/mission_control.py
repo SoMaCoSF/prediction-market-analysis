@@ -36,6 +36,9 @@ try:
 except Exception:
     pass
 
+import threading  # noqa: E402
+
+import fleetlib  # noqa: E402
 import httpx  # noqa: E402
 import runlog  # noqa: E402
 import sb  # noqa: E402
@@ -431,5 +434,11 @@ async def api_order(req: Request):
 
 
 if __name__ == "__main__":
+    fleetlib.acquire_lock("mc")
+    def _checkin_loop():
+        while True:
+            fleetlib.checkin("mc")
+            time.sleep(30)
+    threading.Thread(target=_checkin_loop, daemon=True).start()
     log("mission control starting on http://127.0.0.1:8420")
     uvicorn.run(app, host="127.0.0.1", port=8420, log_level="warning")

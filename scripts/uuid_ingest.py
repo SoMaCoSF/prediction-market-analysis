@@ -21,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+import fleetlib  # noqa: E402
 import httpx  # noqa: E402
 import runlog  # noqa: E402
 import uuid_ledger as L  # noqa: E402
@@ -68,12 +69,14 @@ def mint_spot(sym: str, px: float, ts: int):
 
 
 def main():
+    fleetlib.acquire_lock("ingest")
     con = db()
     cur = con.cursor()
     n = 0
     print(f"[ingest] start -> {DB} (poll {POLL_S}s, zero tokens)", flush=True)
     with httpx.Client(headers={"Accept-Encoding": "identity"}, timeout=15) as cx:
         while True:
+            fleetlib.checkin("ingest")
             ts = int(time.time())
             for series in SERIES:
                 try:

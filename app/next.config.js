@@ -15,6 +15,17 @@ const nextConfig = {
           destination: '/trade/about.html',
           has: [{ type: 'host', value: 'trade.somacosf.com' }],
         },
+        // mc.somacosf.com — same mission-control terminal
+        {
+          source: '/',
+          destination: '/trade/index.html',
+          has: [{ type: 'host', value: 'mc.somacosf.com' }],
+        },
+        {
+          source: '/about',
+          destination: '/trade/about.html',
+          has: [{ type: 'host', value: 'mc.somacosf.com' }],
+        },
       ],
       afterFiles: [
         { source: '/thesis', destination: '/thesis/index.html' },

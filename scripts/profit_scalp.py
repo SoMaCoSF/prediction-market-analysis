@@ -24,6 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+import fleetlib  # noqa: E402
 import httpx  # noqa: E402
 import runlog  # noqa: E402
 import sb  # noqa: E402
@@ -132,6 +133,7 @@ def fire(ticker, side, price, count=1):
 
 def main():
     global session_pnl
+    fleetlib.acquire_lock("scalp")
     log(f"SCALP start | entry<=60c drift>={DRIFT_MIN}% exit@+{SCALP_C}c floor=${CASH_FLOOR} poll={POLL}s")
     for _ in range(10):
         try:
@@ -146,6 +148,7 @@ def main():
     log("MC armed; speed run live")
     with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:
         while True:
+            fleetlib.checkin("scalp")
             if session_pnl * 100 <= SESSION_STOP:
                 log(f"SESSION STOP {session_pnl:+.2f}$")
                 return
