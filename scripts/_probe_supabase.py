@@ -1,4 +1,5 @@
-import os, json, httpx
+import httpx
+
 # Read .env_turso for SUPABASE_TOKEN
 env = {}
 p = "D:/somacosf/outputs/prediction-market-analysis/.env_turso"

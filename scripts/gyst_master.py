@@ -7,12 +7,10 @@ description: Unified Python implementation of GYST UUIDv8 Protocol + TurboQuant
 
 from __future__ import annotations
 
-import os
+import hashlib
 import time
 import uuid
-import hashlib
-from typing import Optional, Dict, Any, Union
-
+from typing import Any, Dict, Optional, Union
 
 # ==============================================================================
 # PROVENANCE CODES (4 bits: bits 60..63)
@@ -97,13 +95,13 @@ class GYSTUUID:
             0..59 : payload / quantization bits (60 bit)
         """
         ns_hash = cls.fnv1a12(f"{namespace}:{identity_str}") & 0xFFF
-        
+
         # 24-bit timestamp (seconds or relative offset)
         ts_val = (custom_ts if custom_ts is not None else int(time.time())) & 0xFFFFFF
-        
+
         # 12-bit Fractal topology (4-bit depth, 4-bit domain, 4-bit generation)
         fractal_val = ((fractal_depth & 0xF) << 8) | ((fractal_domain & 0xF) << 4) | (fractal_gen & 0xF)
-        
+
         # Compute 60-bit payload (signal vector or hash entropy)
         if forecast_signal is not None:
             # Quantize probability float [0.0..1.0] into 16-bit int

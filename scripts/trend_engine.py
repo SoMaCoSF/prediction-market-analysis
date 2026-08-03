@@ -38,6 +38,39 @@ ENTRY_MIN, ENTRY_MAX, TTL_MIN = 25, 60, 480
 TAKE, STOP = 15, 10
 FLOOR, SESSION_STOP, POLL = 20.00, -300, 5   # FLOOR = fallback when vault state missing/stale
 
+# promoter handoff: data/engine_params.json {"take","stop","source","n","ts"}
+PARAMS_FILE = ROOT / "data" / "engine_params.json"
+_start_ts = time.time()        # this process's own start time
+_params_ts = _start_ts         # only adopt params FRESHER than this watermark
+
+
+def adopt_params() -> bool:
+    """Adopt TAKE/STOP from the promoter's engine_params.json.
+
+    Fires at startup and every 50 cycles. Only fresher-than-watermark files
+    count (watermark starts at this engine's own start time, then advances to
+    the adopted file's ts), so a stale file is never re-adopted twice.
+    """
+    global TAKE, STOP, _params_ts
+    try:
+        if not PARAMS_FILE.exists():
+            return False
+        d = json.loads(PARAMS_FILE.read_text(encoding="utf-8"))
+        ts = float(d.get("ts") or PARAMS_FILE.stat().st_mtime)
+        if ts <= _params_ts:
+            return False
+        take, stop = int(d["take"]), int(d["stop"])
+        if not (1 <= take <= 99 and 1 <= stop <= 99):
+            return False
+        TAKE, STOP = take, stop
+        _params_ts = ts
+        log(f"ADOPT engine_params take+{TAKE} stop-{STOP} from {d.get('source')} "
+            f"n={d.get('n')} exp=${float(d.get('expectancy_usd') or 0):+.3f}")
+        return True
+    except Exception as e:
+        log(f"params adopt warn {repr(e)[:60]}")
+        return False
+
 session_pnl = 0.0
 positions: list[dict] = []   # concurrent horizontal positions (max MAX_CONC)
 MAX_CONC = 2
@@ -164,10 +197,15 @@ def window(cx):
 def main():
     global session_pnl
     fleetlib.acquire_lock(LANE)
+    adopt_params()   # promoter handoff at startup (only if fresher than our start)
     log(f"start | {SERIES}/{PAIR} mom>={MOM_BPS}bps take+{TAKE} stop-{STOP} floor=vault:state reserve (fallback ${FLOOR})")
+    cycle = 0
     with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:
         while True:
             fleetlib.checkin(LANE)
+            cycle += 1
+            if cycle % 50 == 0:
+                adopt_params()   # promoter handoff mid-run
             try:
                 if session_pnl * 100 <= SESSION_STOP:
                     log(f"SESSION STOP ${session_pnl:+.2f}")

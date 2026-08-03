@@ -19,7 +19,10 @@ Compliance fixes applied (vs research spec v2.0.0):
   - parent_uuid links child to master (spawn tree, fractal spec sec 11)
 """
 from __future__ import annotations
-import os, sys, time, hashlib
+
+import hashlib
+import sys
+import time
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

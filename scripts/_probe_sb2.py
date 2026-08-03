@@ -1,4 +1,5 @@
-import os, httpx
+import httpx
+
 env = {}
 for line in open("D:/somacosf/outputs/prediction-market-analysis/.env_turso"):
     line=line.strip()

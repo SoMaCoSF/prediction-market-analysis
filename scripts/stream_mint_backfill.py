@@ -12,10 +12,10 @@ Resumption & Fault Tolerance:
 - Catches per-file zstd/tar errors so frame corruption won't crash the entire job.
 """
 
-import os
 import sys
 import tarfile
 from pathlib import Path
+
 import zstandard as zstd
 
 # Anchor script paths relative to the Project Root (1 directory up from scripts/)
@@ -39,8 +39,8 @@ def load_checkpoint_uuids() -> set[str]:
     """Load set of completed GYST UUIDv8 strings from the checkpoint file."""
     if not CHECKPOINT_FILE.exists():
         return set()
-    
-    with open(CHECKPOINT_FILE, "r", encoding="utf-8") as f:
+
+    with open(CHECKPOINT_FILE, encoding="utf-8") as f:
         return {line.strip() for line in f if line.strip()}
 
 
@@ -65,7 +65,7 @@ def stream_mint_backfill():
 
     # 2. Setup zstandard streaming decompressor
     dctx = zstd.ZstdDecompressor()
-    
+
     processed_count = 0
     skipped_count = 0
     minted_count = 0
@@ -121,10 +121,10 @@ def stream_mint_backfill():
 
                             minted_count += 1
                             processed_count += 1
-                            
+
                             print(f"   [+] [{minted_count}] Minted {member_name} -> UUID: {file_uuid}")
 
-                        except (zstd.ZstdError, tarfile.TarError, IOError, Exception) as err:
+                        except (OSError, zstd.ZstdError, tarfile.TarError, Exception) as err:
                             print(f"   [!] Error extracting member {member.name}: {err}")
                             # Record failed member as completed to prevent infinite retry loop
                             append_checkpoint_uuid(file_uuid)
@@ -133,10 +133,10 @@ def stream_mint_backfill():
 
             except zstd.ZstdError as err:
                 print(f"\n[!] Encountered unrecoverable Zstandard frame corruption: {err}")
-                print(f"[*] Stream paused. Re-run script to resume from checkpoint.")
+                print("[*] Stream paused. Re-run script to resume from checkpoint.")
 
     print("\n" + "=" * 60)
-    print(f"[*] Backfill Stream Run Complete.")
+    print("[*] Backfill Stream Run Complete.")
     print(f"    - Total Minted : {minted_count}")
     print(f"    - Total Skipped: {skipped_count}")
     print(f"    - Checkpoints  : {len(completed_uuids)} active UUIDs")

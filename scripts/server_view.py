@@ -13,30 +13,28 @@ bit layout the backfill mints.
 """
 from __future__ import annotations
 
-import os
-import sys
 import glob
-import json
+import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import duckdb
 import httpx
 from fastapi import FastAPI, Query
-from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from uuid_service_turboquant import decode_gyst, encode_gyst, PROV_POLY_MAKER  # noqa: E402
+from uuid_service_turboquant import PROV_POLY_MAKER, decode_gyst, encode_gyst  # noqa: E402
 
 # ---- Postgres (local, no-admin) connection for uuid_trades ----
 try:
     import psycopg2  # noqa: E402
-    from psycopg2 import sql as pg_sql  # noqa: E402
     HAVE_PG = True
 except Exception:  # pragma: no cover
     HAVE_PG = False
@@ -327,7 +325,6 @@ def api_dr_status() -> JSONResponse:
     - DR dump presence + size (the recoverable artifact)
     - backfill process alive? (so we know if the count is still moving)
     """
-    import os as _os
     resp = {}
     # parquet integrity (the real DR source)
     try:

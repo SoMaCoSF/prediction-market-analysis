@@ -1,4 +1,7 @@
-import os, httpx
+import os
+
+import httpx
+
 url=os.getenv("TURSO_DATABASE_URL") or os.getenv("TURSO_DB_URL")
 token=os.getenv("TURSO_AUTH_TOKEN") or os.getenv("TURSO_DB_TOKEN")
 base=url.replace("libsql://","https://",1).rstrip("/")

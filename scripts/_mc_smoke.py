@@ -1,6 +1,11 @@
 # MC smoke test: stats, markets, paper order (passkey computed locally, never printed), tables
-import sys, json, time, hashlib, httpx
+import hashlib
+import sys
+import time
 from pathlib import Path
+
+import httpx
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sb
 

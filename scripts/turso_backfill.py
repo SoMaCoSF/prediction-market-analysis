@@ -9,26 +9,27 @@ Transactions: 500 rows per batch by default.
 Progress: rate + count every 10,000 records.
 """
 
+import argparse
+import csv
+import glob
 import os
 import sys
-import glob
 import time
-import csv
-import argparse
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable, List, Tuple
+from typing import Any, List, Tuple
 
 import duckdb
-import pandas as pd
 import httpx
+import pandas as pd
 from tqdm import tqdm
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from uuid_service_turboquant import (
-    encode_poly_market_uuid,
     PROV_POLY_MAKER,
+    encode_poly_market_uuid,
 )
 
 ENV_VARS_URL = ("TURSO_DATABASE_URL", "TURSO_DB_URL")

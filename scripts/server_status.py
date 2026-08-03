@@ -9,9 +9,11 @@ what is built, what is proven, what is open (schema decision), and live signals
 read-only status surface. Run:  .venv311/Scripts/python scripts/server_status.py
 """
 from __future__ import annotations
+
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
 import psycopg2
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

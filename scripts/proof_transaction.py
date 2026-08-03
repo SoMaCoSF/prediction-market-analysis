@@ -24,7 +24,10 @@ Usage:
   .venv311/Scripts/python scripts/proof_transaction.py --sample 2000
 """
 from __future__ import annotations
-import os, sys, argparse
+
+import argparse
+import os
+import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

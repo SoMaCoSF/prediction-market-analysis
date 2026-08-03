@@ -119,7 +119,8 @@ def report(cx, tag):
            f"open={len(positions)} mark=${open_marks:+.2f} equity=${eq:.2f} maxDD=${max_dd:.2f}")
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
     runlog.log_event("dry", msg, tag=tag, entries=entries, wins=wins, losses=losses,
-                     realized_usd=round(realized, 4), equity_usd=round(eq, 4))
+                     realized_usd=round(realized, 4), equity_usd=round(eq, 4),
+                     lane=LANE, take_c=SCALP_C, stop_c=STOP_C)
     publish(open_marks, msg)
 
 
@@ -128,7 +129,7 @@ def main():
     fleetlib.acquire_lock(LANE)
     end = time.time() + RUN_MINUTES * 60
     print(f"[dry] start: {len(SERIES)} series x{MAX_OPEN_PER_SERIES} open, {RUN_MINUTES}min, paper ${START_EQUITY}", flush=True)
-    runlog.log_event("dry", f"dry run start {RUN_MINUTES}min", minutes=RUN_MINUTES)
+    runlog.log_event("dry", f"dry run start {RUN_MINUTES}min", minutes=RUN_MINUTES, lane=LANE)
     with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:
         last_report = 0
         while time.time() < end:
@@ -202,7 +203,7 @@ def main():
             time.sleep(POLL)
         report(cx, "FINAL")
         print("[dry] done", flush=True)
-        runlog.log_event("dry", "dry run complete", minutes=RUN_MINUTES)
+        runlog.log_event("dry", "dry run complete", minutes=RUN_MINUTES, lane=LANE)
 
 
 if __name__ == "__main__":

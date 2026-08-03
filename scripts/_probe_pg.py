@@ -1,5 +1,6 @@
 # probe_pg.py — check PG connectivity + uuid tables. Scratch probe.
 import sys
+
 import psycopg2
 
 try:

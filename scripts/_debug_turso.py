@@ -1,6 +1,9 @@
 """Debug: capture full Turso pipeline error body for a single insert."""
-import os, json, httpx
+import json
+import os
 from pathlib import Path
+
+import httpx
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 url = os.getenv("TURSO_DATABASE_URL") or os.getenv("TURSO_DB_URL")

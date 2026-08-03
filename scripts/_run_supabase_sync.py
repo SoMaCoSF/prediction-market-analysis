@@ -1,4 +1,7 @@
-import os, psycopg2
+import os
+
+import psycopg2
+
 env={}
 for line in open(".env_turso"):
     line=line.strip()

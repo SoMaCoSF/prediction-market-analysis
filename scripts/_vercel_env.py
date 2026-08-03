@@ -1,4 +1,6 @@
-import os, subprocess
+import os
+import subprocess
+
 ROOT = "D:/somacosf/outputs/prediction-market-analysis"
 env={}
 for line in open(os.path.join(ROOT, ".env_turso")):

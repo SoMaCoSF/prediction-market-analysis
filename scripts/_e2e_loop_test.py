@@ -1,6 +1,8 @@
 # end-to-end loop test: bot dry-run -> ledger row -> reconcile -> cleanup
-import subprocess, sys
+import subprocess
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import uuid_ledger as L
 

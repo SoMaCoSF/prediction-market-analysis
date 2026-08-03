@@ -9,14 +9,15 @@ This generates 200k trade + 200k market UUIDs (real encoder) and measures:
   2. naive string parse  (simulates needing to parse the string + a dict lookup)
   3. full decode_gyst    (library decode, what the viewer uses)
 """
-import time, sys
+import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from uuid_service_turboquant import encode_gyst, decode_gyst, fnv1a12  # noqa: E402
+from uuid_service_turboquant import decode_gyst, encode_gyst, fnv1a12  # noqa: E402
 
 N = 200_000
 trade_uuids, market_uuids = [], []

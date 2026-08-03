@@ -32,14 +32,14 @@ Schema:
 """
 from __future__ import annotations
 
+import argparse
+import glob
 import os
 import sys
-import glob
 import time
-import json
-import argparse
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import duckdb
 import psycopg2  # pip install psycopg2-binary

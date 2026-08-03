@@ -21,17 +21,17 @@ Markets-first preserved: writes ONLY uuid_trades. Turso uuid_vectors untouched.
 """
 from __future__ import annotations
 
+import argparse
+import glob
 import os
 import sys
-import glob
 import time
-import argparse
+from multiprocessing import Process, Queue, cpu_count
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import duckdb
 import psycopg2
-from multiprocessing import Process, Queue, cpu_count
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))

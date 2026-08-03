@@ -1,6 +1,8 @@
 # cross-verify: Python GYST mint vs JS GYST mint (must be byte-identical)
-import json, sys
+import json
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import uuid_ledger as L
 

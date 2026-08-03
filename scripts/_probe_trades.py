@@ -1,7 +1,10 @@
-import sys, duckdb
+import sys
 from pathlib import Path
+
+import duckdb
+
 sys.path.insert(0, "scripts")
-from uuid_service_turboquant import encode_poly_trade_uuid, decode_gyst
+from uuid_service_turboquant import decode_gyst, encode_poly_trade_uuid
 
 ROOT = Path(".")
 # build token map
