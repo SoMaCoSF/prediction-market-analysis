@@ -27,7 +27,9 @@ KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
 SERIES = [("KXBTC15M", "XBTUSD"), ("KXETH15M", "ETHUSD"), ("KXSOL15M", "SOLUSD"),
           ("KXXRP15M", "XRPUSD"), ("KXDOGE15M", "DOGEUSD")]
 DRIFT_MIN, ENTRY_MAX, TTL_MIN = 0.20, 60, 540
-SCALP_C = 15
+SCALP_C = int(sys.argv[2]) if len(sys.argv) > 2 else 15
+STOP_C = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+LANE = sys.argv[4] if len(sys.argv) > 4 else "dry"
 MAX_OPEN_PER_SERIES = 3
 POLL = 5
 RUN_MINUTES = int(sys.argv[1]) if len(sys.argv) > 1 else 60
@@ -123,7 +125,7 @@ def report(cx, tag):
 
 def main():
     global realized, fees, entries, scalp_exits, settles, wins, losses, equity_peak, max_dd
-    fleetlib.acquire_lock("dry")
+    fleetlib.acquire_lock(LANE)
     end = time.time() + RUN_MINUTES * 60
     print(f"[dry] start: {len(SERIES)} series x{MAX_OPEN_PER_SERIES} open, {RUN_MINUTES}min, paper ${START_EQUITY}", flush=True)
     runlog.log_event("dry", f"dry run start {RUN_MINUTES}min", minutes=RUN_MINUTES)

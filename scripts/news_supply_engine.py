@@ -90,7 +90,59 @@ FEEDS = [
     ("ecb", "https://www.ecb.europa.eu/rss/press.html"),
     ("euractiv", "https://www.euractiv.com/feed/"),
     ("mw-commodities", "https://feeds.content.dowjones.io/public/rss/mw_marketpulse"),
+    # AI plane for TIME.somacosf.com
+    ("techcrunch-ai", "https://techcrunch.com/category/artificial-intelligence/feed/"),
+    ("verge-ai", "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"),
+    ("venturebeat-ai", "https://venturebeat.com/category/ai/feed/"),
+    ("mit-review", "https://www.technologyreview.com/feed/"),
+    ("ars-ai", "https://feeds.arstechnica.com/arstechnica/technology-lab"),
 ]
+
+AI_TOPICS = {
+    "openai": ["openai", "chatgpt", "gpt", "sama", "altman"],
+    "anthropic": ["anthropic", "claude"],
+    "nvidia": ["nvidia", "jensen", "blackwell", "gpu", "cuda"],
+    "agents": ["agent", "agentic", "autonomous", "mcp"],
+    "chips": ["chip", "semiconductor", "tsmc", "asml", "fab"],
+    "regulation": ["regulation", "eu ai act", "policy", "antitrust", "copyright", "lawsuit"],
+    "models": ["llm", "model", "reasoning", "benchmark", "frontier"],
+    "robotics": ["robot", "humanoid", "figure", "optimus"],
+}
+
+
+def topic_of(title: str) -> str:
+    low = title.lower()
+    for topic, kws in AI_TOPICS.items():
+        if any(k in low for k in kws):
+            return topic
+    return "ai-general"
+
+AI_FEEDS = [
+    ("techcrunch-ai", "https://techcrunch.com/category/artificial-intelligence/feed/"),
+    ("verge-ai", "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"),
+    ("ars-ai", "https://feeds.arstechnica.com/arstechnica/technology-lab"),
+    ("venturebeat-ai", "https://venturebeat.com/category/ai/feed/"),
+    ("mit-tr-ai", "https://www.technologyreview.com/feed/"),
+]
+
+TOPICS = {
+    "openai": ["openai", "chatgpt", "gpt-5", "sama", "sam altman"],
+    "anthropic": ["anthropic", "claude"],
+    "nvidia": ["nvidia", "jensen", "gpu", "blackwell", "h100", "b200"],
+    "agents": ["agent", "agentic", "autonomous"],
+    "chips": ["chip", "semiconductor", "tsmc", "asml", "intel", "amd"],
+    "regulation": ["regulation", "eu ai act", "executive order", "antitrust", "ftc", "copyright"],
+    "models": ["llm", "model", "gemini", "llama", "mistral", "grok", "kimi", "deepseek"],
+    "robotics": ["robot", "humanoid", "figure", "optimus"],
+}
+
+
+def topic_of(title: str) -> str:
+    low = title.lower()
+    for topic, kws in TOPICS.items():
+        if any(k in low for k in kws):
+            return topic
+    return "ai-general"
 
 # supply-chain atlas: node -> (keywords, downstream effects, kalshi hint, base prob shift)
 ATLAS = {
@@ -133,11 +185,43 @@ def headlines(cx):
             root = ET.fromstring(r.text)
             for item in root.iter("item"):
                 t = item.findtext("title") or ""
+                link = item.findtext("link") or ""
                 if t:
-                    out.append((name, t.strip()))
+                    out.append((name, t.strip(), link.strip()))
         except Exception as e:
             runlog.log_event("news", f"feed {name} warn {repr(e)[:50]}", kind="warn")
-    return out[:60]
+    return out[:80]
+
+
+def publish_articles(items):
+    """Publish AI-topic articles to mc_state time:articles for TIME.somacosf.com."""
+    try:
+        import hashlib as _h
+        import json as _json
+        seen = set()
+        arts = []
+        for src, title, link in items:
+            topic = topic_of(title)
+            if topic == "ai-general" and not src.endswith(("-ai", "review")):
+                continue  # non-AI feeds only contribute tagged AI items
+            aid = _h.sha256(title.encode()).hexdigest()[:12]
+            if aid in seen:
+                continue
+            seen.add(aid)
+            arts.append({"id": aid, "title": title, "source": src, "topic": topic,
+                         "link": link, "ts": int(time.time())})
+        arts = arts[:40]
+        con = sb.sb_conn()
+        con.autocommit = True
+        con.cursor().execute(
+            "INSERT INTO mc_state (k, v, updated_at) VALUES ('time:articles', %s, now()) "
+            "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
+            (_json.dumps(arts),))
+        con.close()
+        return len(arts)
+    except Exception as e:
+        runlog.log_event("news", f"articles warn {repr(e)[:50]}", kind="warn")
+        return 0
 
 
 def main():
@@ -152,7 +236,8 @@ def main():
             try:
                 con = sqlite3.connect(DB)
                 cur = con.cursor()
-                for src, title in headlines(cx):
+                items = headlines(cx)
+                for src, title, link in items:
                     low = title.lower()
                     for node, (kws, chain, hint, shift) in ATLAS.items():
                         if any(k in low for k in kws):
@@ -163,6 +248,9 @@ def main():
                             runlog.log_event("news", f"FORECAST {detail}")
                 con.commit()
                 con.close()
+                n_art = publish_articles(items)
+                if n_art:
+                    runlog.log_event("news", f"published {n_art} AI articles to TIME", articles=n_art)
             except Exception as e:
                 runlog.log_event("news", f"cycle warn {repr(e)[:60]}", kind="warn")
             if made or ts % 1800 < POLL_S:
