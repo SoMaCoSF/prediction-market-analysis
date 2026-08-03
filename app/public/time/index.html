@@ -1,4 +1,4 @@
-<!-- =============================================================================== file_id: SOM-APP-0981-v1.0.0 name: time/index.html description: TIME — AI-centric living magazine: time-sorted articles, topic explorer, vote + discuss, wired to prediction markets. LCARS. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [time, magazine, ai, lcars, discussion] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!-- =============================================================================== file_id: SOM-APP-0981-v2.0.0 name: time/index.html description: TIME v2 — AI-centric living magazine: stats bar, OUR CALLS forecast panel, per-story tradable cards (size slider, YES/NO, PIN, FIRE -> /api/trade/tim_order, parentUuid = article uuid). LCARS. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [time, magazine, ai, lcars, discussion, trading, uuid] created: 2026-08-03 modified: 2026-08-03 version: 2.0.0 agent_id: HERMES-AGENT =============================================================================== -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,15 +19,43 @@ body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-h
 .topic:hover{color:#fff;border-color:var(--line)}
 .topic.on{background:linear-gradient(90deg,rgba(255,144,0,.25),transparent);color:var(--amber);border-color:rgba(255,144,0,.4)}
 .rail .foot{margin-top:auto;padding:14px;font-size:9px;color:var(--dim);line-height:1.6}
+.rail .foot a{color:var(--cyan);text-decoration:none}
 /* feed */
-.feed{flex:1;padding:22px 26px;max-width:900px}
+.feed{flex:1;padding:22px 26px;max-width:980px}
 .feed h1{font-family:Orbitron;font-size:15px;letter-spacing:2px;color:var(--cyan);margin-bottom:14px}
-.stamp{font-size:10px;color:var(--dim);margin-bottom:16px}
-.art{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:12px;cursor:pointer;transition:.15s}
+.feed h1 a{color:var(--amber);text-decoration:none;font-size:10px;letter-spacing:2px;border:1px solid var(--amber);border-radius:10px;padding:3px 10px;margin-left:10px;vertical-align:middle}
+.stamp{font-size:10px;color:var(--dim);margin-bottom:14px}
+/* stats bar */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;position:relative;overflow:hidden}
+.stat:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--amber)}
+.stat:nth-child(2):before{background:var(--cyan)}
+.stat:nth-child(3):before{background:var(--green)}
+.stat:nth-child(4):before{background:var(--lav)}
+.stat .v{font-family:Orbitron;font-size:20px;font-weight:700;color:#fff}
+.stat .l{font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-top:2px}
+.stat .s{font-size:9px;color:var(--cyan);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* OUR CALLS */
+.calls{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:18px;overflow:hidden}
+.calls .hd{padding:10px 14px;font-family:Orbitron;font-size:11px;letter-spacing:2px;color:var(--amber);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;cursor:pointer}
+.calls .hd .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
+.calls .hd .up{margin-left:auto;font-size:9px;color:var(--dim);font-family:"IBM Plex Mono";letter-spacing:0}
+.callgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line)}
+.call{background:var(--panel);padding:10px 14px}
+.call .node{font-size:11px;color:var(--cyan);font-weight:600;letter-spacing:1px}
+.call .pred{font-size:10px;color:#bbb;margin-top:3px;line-height:1.5}
+.call .prob{margin-top:6px;height:6px;background:#080810;border-radius:3px;overflow:hidden}
+.call .prob i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--green));border-radius:3px}
+.call .pv{font-size:9px;color:var(--green);margin-top:3px}
+.calls .empty{padding:14px;font-size:10px;color:var(--dim)}
+/* articles */
+.art{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:12px;transition:.15s}
 .art:hover{border-color:var(--amber)}
-.art .t{font-size:14px;line-height:1.45;margin-bottom:8px}
+.art .t{font-size:14px;line-height:1.45;margin-bottom:8px;cursor:pointer}
 .art .meta{display:flex;gap:10px;align-items:center;font-size:10px;color:var(--dim);flex-wrap:wrap}
 .badge{padding:2px 8px;border-radius:10px;font-size:9px;letter-spacing:1px;text-transform:uppercase}
+.handle{font-size:9px;color:var(--lav);border:1px solid var(--line);border-radius:10px;padding:2px 8px;letter-spacing:1px}
 .vote{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:12px;padding:3px 10px;cursor:pointer;font-size:10px;color:var(--dim)}
 .vote:hover{border-color:var(--green);color:var(--green)}
 .vote.voted{color:var(--green);border-color:var(--green)}
@@ -36,7 +64,32 @@ body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-h
 .detail .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .pill-link{font-size:10px;padding:5px 12px;border-radius:12px;border:1px solid var(--cyan);color:var(--cyan);text-decoration:none}
 .pill-link:hover{background:rgba(0,204,221,.1)}
-.mkts span{font-size:10px;color:var(--lav)}
+/* tradable card */
+.trade{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px;background:#08080f}
+.trade .th{font-family:Orbitron;font-size:10px;letter-spacing:2px;color:var(--amber);margin-bottom:8px}
+.trade .mkt{font-size:11px;color:#ccc;line-height:1.5;margin-bottom:4px}
+.trade .mkt b{color:var(--cyan)}
+.trade .px{font-size:10px;color:var(--dim);margin-bottom:10px}
+.trade .px b{color:var(--green);font-size:13px}
+.trade .nomk{font-size:10px;color:var(--dim)}
+.ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.ctl .lab{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:6px;background:var(--line);border-radius:3px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--amber);cursor:pointer;border:2px solid #000}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--amber);cursor:pointer;border:2px solid #000}
+.total{font-family:Orbitron;font-size:14px;color:var(--green)}
+.sides{display:flex;gap:6px}
+.side{padding:6px 14px;border-radius:6px;border:1px solid var(--line);font-size:11px;cursor:pointer;color:var(--dim);letter-spacing:1px}
+.side.yes.on{background:rgba(0,221,102,.15);color:var(--green);border-color:var(--green)}
+.side.no.on{background:rgba(255,77,77,.15);color:var(--red);border-color:var(--red)}
+.fire-row{display:flex;gap:8px;align-items:center}
+.fire-row input{background:#080810;border:1px solid var(--line);border-radius:6px;color:#fff;padding:9px 10px;font-family:inherit;font-size:13px;letter-spacing:4px;width:110px;text-align:center}
+.fire{flex:1;background:var(--amber);color:#000;border:0;border-radius:6px;padding:10px 14px;font-family:Orbitron;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer}
+.fire:disabled{background:#332200;color:#775500;cursor:not-allowed}
+.cap{font-size:9px;color:var(--red);margin-top:6px}
+.result{font-size:10px;margin-top:8px;padding:8px 10px;border-radius:6px;display:none}
+.result.ok{display:block;background:rgba(0,221,102,.08);border:1px solid rgba(0,221,102,.35);color:var(--green)}
+.result.err{display:block;background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.35);color:var(--red)}
 .comments{margin-top:8px}
 .comment{font-size:11px;padding:8px 10px;border-left:2px solid var(--line);margin-bottom:6px;color:#bbb}
 .comment b{color:var(--amber);font-size:10px}
@@ -45,7 +98,13 @@ body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-h
 .cform input:first-child{width:110px}
 .cform input:nth-child(2){flex:1}
 .cform button{background:var(--amber);color:#000;border:0;border-radius:6px;padding:8px 14px;font-family:Orbitron;font-size:10px;cursor:pointer}
-@media(max-width:720px){.rail{width:64px;min-width:64px}.rail .logo{font-size:13px;padding:14px 8px}.topic{padding:8px 6px;font-size:8px;border-radius:10px 4px 4px 10px}.rail .foot{display:none}.feed{padding:14px}}
+@media(max-width:720px){
+  .rail{width:64px;min-width:64px}.rail .logo{font-size:13px;padding:14px 8px}.topic{padding:8px 6px;font-size:8px;border-radius:10px 4px 4px 10px}.rail .foot{display:none}
+  .feed{padding:14px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .callgrid{grid-template-columns:1fr}
+  input[type=range]{width:110px}
+}
 </style>
 </head>
 <body>
@@ -56,10 +115,20 @@ body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-h
     <div class="block" style="background:var(--cyan);width:60%"></div>
     <div class="block" style="background:var(--lav);width:35%"></div>
     <div id="topics"></div>
-    <div class="foot">LCARS · SoMaCoSF<br>articles via the news engine<br>votes + discussion on every story</div>
+    <div class="foot">LCARS · SoMaCoSF<br>every story is a routable UUIDv8<br>every call is a bettable market<br><a href="/about">/about — the manifesto →</a></div>
   </div>
   <div class="feed">
-    <h1>THE CURRENT TIME — AI EDITION</h1>
+    <h1>THE CURRENT TIME — AI EDITION<a href="/about">/ABOUT</a></h1>
+    <div class="stats" id="stats">
+      <div class="stat"><div class="v" id="s-count">—</div><div class="l">stories</div><div class="s" id="s-count-s"></div></div>
+      <div class="stat"><div class="v" id="s-topics">—</div><div class="l">topics</div><div class="s" id="s-topics-s"></div></div>
+      <div class="stat"><div class="v" id="s-top">—</div><div class="l">top-voted</div><div class="s" id="s-top-s"></div></div>
+      <div class="stat"><div class="v" id="s-fc">—</div><div class="l">forecasts</div><div class="s" id="s-fc-s"></div></div>
+    </div>
+    <div class="calls">
+      <div class="hd" onclick="var b=document.getElementById('callgrid');b.style.display=b.style.display==='none'?'grid':'none'"><span class="pulse"></span>OUR CALLS — THE FLEET'S LIVE FORECASTS<span class="up" id="fc-up"></span></div>
+      <div id="callgrid-wrap"><div class="callgrid" id="callgrid"></div><div class="empty" id="calls-empty" style="display:none">no forecasts published yet — the news engine republishes on its next pass.</div></div>
+    </div>
     <div class="stamp" id="stamp">loading…</div>
     <div id="feed"></div>
   </div>
@@ -68,31 +137,71 @@ body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-h
 const $=id=>document.getElementById(id);
 async function j(u,o){try{const r=await fetch(u,o);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
 let ARTICLES=[],TOPIC="all",VOTED=new Set(JSON.parse(localStorage.getItem("time-votes")||"[]"));
+let MKT={},SIDE={},SIZE={};
 const TCOL={openai:"#00dd66",anthropic:"#cc99ff",nvidia:"#39ff14",agents:"#00ccdd",chips:"#ff9000",regulation:"#ff4d4d",models:"#66aaff",robotics:"#ffcc66","ai-general":"#8a8aa0"};
+const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function probOf(f){
+  if(typeof f.prob==="number")return f.prob>1?f.prob/100:f.prob;
+  const m=String(f.detail||"").match(/(\d{1,3})\s*%|p[=:]?\s*(0?\.\d+)|\b(0?\.\d{1,2})\b/i);
+  if(!m)return null;
+  if(m[1])return Math.min(99,+m[1])/100;
+  return Math.max(0,Math.min(1,parseFloat(m[2]||m[3])));
+}
+
+async function loadForecasts(){
+  const d=await j("/api/time/forecasts");
+  const fc=(d&&d.forecasts)||[];
+  $("s-fc").textContent=fc.length;
+  $("s-fc-s").textContent=d&&d.updated_at?"pub "+new Date(d.updated_at).toLocaleTimeString():"awaiting engine";
+  $("fc-up").textContent=d&&d.updated_at?new Date(d.updated_at).toLocaleTimeString():"";
+  if(!fc.length){$("callgrid").innerHTML="";$("calls-empty").style.display="block";return;}
+  $("calls-empty").style.display="none";
+  $("callgrid").innerHTML=fc.slice(0,8).map(f=>{
+    const p=probOf(f);
+    return `<div class="call">
+      <div class="node">${esc(f.node||"node")}</div>
+      <div class="pred">${esc(f.detail||"")}</div>
+      ${p!=null?`<div class="prob"><i style="width:${Math.round(p*100)}%"></i></div><div class="pv">P ${(p*100).toFixed(0)}%${f.ts?" · "+new Date(f.ts*1000).toLocaleTimeString():""}</div>`:`<div class="pv" style="color:var(--dim)">${f.ts?new Date(f.ts*1000).toLocaleTimeString():""}</div>`}
+    </div>`;}).join("");
+}
+
+function renderStats(){
+  const topics=[...new Set(ARTICLES.map(a=>a.topic))];
+  $("s-count").textContent=ARTICLES.length;
+  $("s-count-s").textContent="live from the news engine";
+  $("s-topics").textContent=topics.length;
+  $("s-topics-s").textContent=topics.slice(0,4).join(" · ");
+  const top=[...ARTICLES].sort((a,b)=>(b.votes||0)-(a.votes||0))[0];
+  $("s-top").textContent=top?(top.votes||0):"0";
+  $("s-top-s").textContent=top?esc(top.title.slice(0,40)):"—";
+}
 
 async function tick(){
   const d=await j("/api/time/articles");
   if(!d)return;
   ARTICLES=d.articles||[];
   $("stamp").textContent=`${ARTICLES.length} stories · updated ${d.updated_at?new Date(d.updated_at).toLocaleTimeString():"—"} · sorted by votes then time`;
+  renderStats();
   const topics=["all",...new Set(ARTICLES.map(a=>a.topic))];
   $("topics").innerHTML=topics.map(t=>`<div class="topic ${TOPIC===t?"on":""}" onclick="setTopic('${t}')">${t}</div>`).join("");
   const list=ARTICLES.filter(a=>TOPIC==="all"||a.topic===TOPIC);
   $("feed").innerHTML=list.map(a=>{
     const col=TCOL[a.topic]||"#8a8aa0";
     return `<div class="art" id="a-${a.id}">
-      <div class="t" onclick="tog('${a.id}')">${a.title}</div>
+      <div class="t" onclick="tog('${a.id}')">${esc(a.title)}</div>
       <div class="meta">
-        <span class="badge" style="color:${col};border:1px solid ${col}">${a.topic}</span>
-        <span>${a.source}</span>
+        <span class="badge" style="color:${col};border:1px solid ${col}">${esc(a.topic)}</span>
+        <span>${esc(a.source)}</span>
+        <span class="handle" title="${esc(a.uuid||a.id)}">uuid:${esc(a.id)}</span>
         <span class="vote ${VOTED.has(a.id)?"voted":""}" onclick="vote('${a.id}',this)">▲ <b id="v-${a.id}">${a.votes||0}</b></span>
-        <span style="cursor:pointer" onclick="tog('${a.id}')">discuss ▸</span>
+        <span style="cursor:pointer" onclick="tog('${a.id}')">trade · discuss ▸</span>
       </div>
       <div class="detail">
         <div class="row">
-          <a class="pill-link" href="${a.link}" target="_blank" rel="noopener">read original ↗</a>
-          <span class="mkts" id="m-${a.id}"></span>
+          <a class="pill-link" href="${esc(a.link)}" target="_blank" rel="noopener">read original ↗</a>
         </div>
+        <div class="trade" id="t-${a.id}"><div class="th">TRADE THIS STORY</div><div class="nomk">scanning open markets…</div></div>
         <div class="comments" id="c-${a.id}">loading…</div>
         <div class="cform">
           <input id="n-${a.id}" placeholder="name" maxlength="24">
@@ -105,7 +214,7 @@ async function tick(){
 window.setTopic=t=>{TOPIC=t;tick();};
 window.tog=async id=>{
   const el=$("a-"+id);el.classList.toggle("open");
-  if(el.classList.contains("open")){loadComments(id);loadMarkets(id);}
+  if(el.classList.contains("open")){loadComments(id);loadTrade(id);}
 };
 window.vote=async(id,el)=>{
   if(VOTED.has(id))return;
@@ -116,23 +225,77 @@ window.vote=async(id,el)=>{
 async function loadComments(id){
   const d=await j("/api/time/comments?id="+id);
   $("c-"+id).innerHTML=(d&&d.comments&&d.comments.length)
-    ? d.comments.map(c=>`<div class="comment"><b>${c.name||"anon"}</b> · ${new Date((c.ts||0)*1000).toLocaleTimeString()}<br>${c.body}</div>`).join("")
+    ? d.comments.map(c=>`<div class="comment"><b>${esc(c.name||"anon")}</b> · ${new Date((c.ts||0)*1000).toLocaleTimeString()}<br>${esc(c.body)}</div>`).join("")
     : `<div class="comment" style="color:var(--dim)">no takes yet — be first.</div>`;
 }
-async function loadMarkets(id){
+/* ---- tradable card ---- */
+async function loadTrade(id){
   const a=ARTICLES.find(x=>x.id===id);
-  const d=await j("/api/time/markets?topic="+(a?a.topic:""));
-  $("m-"+id).innerHTML=(d&&d.markets&&d.markets.length)
-    ? "· markets: "+d.markets.slice(0,3).map(m=>`${m.ticker.slice(0,22)} ${m.yes_ask||"—"}¢`).join(" · ")
-    : "";
+  const d=await j("/api/time/markets?topic="+(a?encodeURIComponent(a.topic):""));
+  const mkt=(d&&d.markets||[]).find(m=>m.ya>0&&m.ya<100);
+  const box=$("t-"+id);
+  if(!mkt){box.innerHTML=`<div class="th">TRADE THIS STORY</div><div class="nomk">no live market for this topic right now — the loop opens one when liquidity appears.</div>`;return;}
+  MKT[id]=mkt;SIDE[id]=SIDE[id]||"yes";SIZE[id]=SIZE[id]||1;
+  box.innerHTML=`<div class="th">TRADE THIS STORY</div>
+    <div class="mkt"><b>${esc(mkt.ticker)}</b> — ${esc(mkt.title)}</div>
+    <div class="px">YES ask <b id="px-${id}">${mkt.ya}¢</b> · bid ${mkt.yb}¢ · vol ${mkt.vol}k</div>
+    <div class="ctl">
+      <span class="lab">size</span>
+      <input type="range" min="1" max="10" value="${SIZE[id]}" id="sz-${id}" oninput="setSize('${id}',this.value)">
+      <span class="total" id="tot-${id}"></span>
+      <span class="sides">
+        <span class="side yes" id="sy-${id}" onclick="setSide('${id}','yes')">YES</span>
+        <span class="side no" id="sn-${id}" onclick="setSide('${id}','no')">NO</span>
+      </span>
+    </div>
+    <div class="fire-row">
+      <input id="pin-${id}" type="password" inputmode="numeric" maxlength="4" placeholder="PIN">
+      <button class="fire" id="f-${id}" onclick="fire('${id}')">FIRE</button>
+    </div>
+    <div class="cap" id="cap-${id}" style="display:none">server caps: ≤4 contracts · $2/order · $20/day — reduce size to fire</div>
+    <div class="result" id="r-${id}"></div>`;
+  paintTrade(id);
 }
+function paintTrade(id){
+  const m=MKT[id],n=SIZE[id],side=SIDE[id];
+  if(!m)return;
+  const cents=(side==="yes"?m.ya:(100-m.yb))*n;
+  $("tot-"+id).textContent=`${n}x = $${(cents/100).toFixed(2)}`;
+  $("sy-"+id).classList.toggle("on",side==="yes");
+  $("sn-"+id).classList.toggle("on",side==="no");
+  const over=n>4||cents>200;
+  $("cap-"+id).style.display=over?"block":"none";
+  $("f-"+id).disabled=over;
+}
+window.setSize=(id,v)=>{SIZE[id]=+v;paintTrade(id);};
+window.setSide=(id,s)=>{SIDE[id]=s;paintTrade(id);};
+window.fire=async id=>{
+  const a=ARTICLES.find(x=>x.id===id),m=MKT[id];
+  const pin=$("pin-"+id).value.trim();
+  const r=$("r-"+id),btn=$("f-"+id);
+  if(!pin){r.className="result err";r.textContent="enter the PIN to fire.";return;}
+  btn.disabled=true;btn.textContent="…";
+  const price=SIDE[id]==="yes"?m.ya:(100-m.yb);
+  const resp=await j("/api/trade/tim_order",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({pin,ticker:m.ticker,side:SIDE[id],price,count:SIZE[id],parentUuid:a.uuid||a.id})});
+  btn.disabled=false;btn.textContent="FIRE";
+  if(resp&&resp.ok){
+    r.className="result ok";
+    r.textContent=`FILLED → ${SIDE[id].toUpperCase()} ${SIZE[id]}x ${m.ticker} @ ${price}¢ · exchange order ${resp.exchange_order_id||"—"} · fills ${resp.fill_count??"—"} · child of uuid:${a.id}`;
+    $("pin-"+id).value="";
+  }else{
+    r.className="result err";
+    r.textContent="REJECTED → "+((resp&&resp.error)||"no route to the exchange");
+  }
+};
 window.postComment=async id=>{
   const name=$("n-"+id).value.trim()||"anon",body=$("b-"+id).value.trim();
   if(!body)return;
   const r=await j("/api/time/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,name,body})});
   if(r&&r.ok){$("b-"+id).value="";loadComments(id);}
 };
-tick();setInterval(tick,30000);
+tick();loadForecasts();
+setInterval(tick,30000);setInterval(loadForecasts,60000);
 </script>
 </body>
 </html>

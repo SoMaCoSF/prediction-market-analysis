@@ -44,6 +44,11 @@ const nextConfig = {
           destination: '/time/index.html',
           has: [{ type: 'host', value: 'time.somacosf.com' }],
         },
+        {
+          source: '/about',
+          destination: '/time/about.html',
+          has: [{ type: 'host', value: 'time.somacosf.com' }],
+        },
       ],
       afterFiles: [
         { source: '/thesis', destination: '/thesis/index.html' },

@@ -62,6 +62,12 @@ export async function createOrderV2({ ticker, side, priceCents, count, clientOrd
   });
 }
 
+/** Signed GET helper — returns parsed json (used by read-only planes like TIME markets). */
+export async function kalshiFetch(apiPath) {
+  const { json } = await call("GET", apiPath);
+  return json;
+}
+
 export async function getFills(params = {}) {
   const qs = new URLSearchParams(params).toString();
   return call("GET", `/portfolio/fills${qs ? "?" + qs : ""}`);

@@ -1,0 +1,177 @@
+<!-- =============================================================================== file_id: SOM-APP-0994-v1.0.0 name: time/about.html description: TIME /about — the manifesto: the UUIDv8 north star, the news→forecasts→markets→bets→evidence loop, the 20+ lane fleet, the honesty machinery, the says.com network vision. LCARS. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [time, about, manifesto, uuid, lcars] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TIME /ABOUT — the manifesto · SoMaCo</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050508;--panel:#0c0c14;--line:#1e1e2e;--amber:#ff9000;--cyan:#00ccdd;--green:#00dd66;--red:#ff4d4d;--dim:#8a8aa0;--lav:#cc99ff}
+*{margin:0;box-sizing:border-box}
+body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:20px 18px 60px}
+header{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:20px}
+.logo{font-family:Orbitron;font-size:30px;font-weight:900;letter-spacing:3px;color:var(--amber)}
+.logo small{display:block;font-size:9px;color:var(--dim);letter-spacing:2px;margin-top:4px;font-family:"IBM Plex Mono"}
+.spacer{flex:1}
+a.back{color:var(--cyan);text-decoration:none;font-size:11px;letter-spacing:1px;border:1px solid var(--cyan);padding:5px 12px;border-radius:12px}
+a.back:hover{background:rgba(0,204,221,.1)}
+section{margin-bottom:26px}
+h2{font-family:Orbitron;font-size:12px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px}
+h2 .n{color:var(--amber);margin-right:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+p{margin:8px 0;font-size:13px;line-height:1.7;color:#ccc}
+b{color:#fff}
+.hero{font-size:16px;line-height:1.8}
+.hero .amber{color:var(--amber);font-weight:600}
+.hero .cyan{color:var(--cyan);font-weight:600}
+.hero .green{color:var(--green);font-weight:600}
+/* loop diagram */
+.loop{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0}
+.loop .step{padding:8px 12px;border-radius:16px;border:1px solid var(--cyan);color:var(--cyan);font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.loop .arr{color:var(--amber);font-size:14px}
+.loop .step:nth-child(3){border-color:var(--amber);color:var(--amber)}
+.loop .step:nth-child(5){border-color:var(--lav);color:var(--lav)}
+.loop .step:nth-child(7){border-color:var(--green);color:var(--green)}
+.loop .step:nth-child(9){border-color:var(--red);color:var(--red)}
+/* uuid anatomy */
+.bits{display:flex;width:100%;height:56px;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:12px 0;font-size:9px}
+.bf{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000;font-weight:700;text-align:center;min-width:0;overflow:hidden;border-right:1px solid rgba(0,0,0,.4)}
+.bf span{font-weight:400;font-size:8px;opacity:.8}
+.mono{background:#030308;border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--cyan);overflow-x:auto;white-space:pre;margin:10px 0}
+.mono .dim{color:var(--dim)} .mono .amb{color:var(--amber)} .mono .grn{color:var(--green)}
+/* lanes */
+.lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.lane{background:#08080f;border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:6px;padding:8px 10px;font-size:10px}
+.lane b{display:block;color:#fff;font-size:10px;letter-spacing:1px;margin-bottom:2px}
+.lane span{color:var(--dim);font-size:9px;line-height:1.4}
+.lane:nth-child(4n+2){border-left-color:var(--amber)}
+.lane:nth-child(4n+3){border-left-color:var(--green)}
+.lane:nth-child(4n+4){border-left-color:var(--lav)}
+/* honesty */
+.hon{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.hon .card{border-left:3px solid var(--green)}
+.hon .card:last-child{border-left-color:var(--red)}
+.tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:9px;letter-spacing:1px;font-weight:700}
+.t-live{background:rgba(0,221,102,.12);color:var(--green);border:1px solid rgba(0,221,102,.35)}
+ul{margin:8px 0 8px 18px;font-size:12px;line-height:1.8;color:#bbb}
+ul b{color:var(--amber)}
+.vision{font-size:14px;line-height:1.8;border-left:3px solid var(--amber);padding-left:14px;color:#ddd}
+footer{margin-top:30px;border-top:1px solid var(--line);padding-top:14px;font-size:10px;color:var(--dim);line-height:1.8}
+footer a{color:var(--cyan);text-decoration:none}
+@media(max-width:720px){
+  .wrap{padding:14px 12px 40px}
+  .lanes{grid-template-columns:repeat(2,1fr)}
+  .hon{grid-template-columns:1fr}
+  .bits{height:auto;flex-wrap:wrap}
+  .bf{min-width:30%;padding:6px 2px;border-bottom:1px solid rgba(0,0,0,.4)}
+  .logo{font-size:22px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">TIME<small>THE AI TIMES · SOMACO</small></div>
+  <div class="spacer"></div>
+  <a class="back" href="/">← THE FEED</a>
+</header>
+
+<section>
+  <h2><span class="n">00</span>WHAT THIS IS</h2>
+  <div class="card">
+    <p class="hero">TIME is a magazine that <span class="amber">reads the news</span>, <span class="cyan">calls the future</span>, and <span class="green">puts money where its mouth is</span>. Every story on the front page is a live object: it has a routable identity, a forecast attached to it, a market it maps to, and a bet button that actually fires. Not a mockup of the loop — <b>the loop itself, in public</b>.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">01</span>THE NORTH STAR — EVERYTHING IS A UUIDv8</h2>
+  <div class="card">
+    <p>One addressing scheme for the whole machine. <b>Every market, every order, every article, every forecast, every vote is a routable, bettable, transactional UUIDv8 object.</b> Not a row id, not a slug — a 128-bit GYST UUIDv8 whose bits carry what the object is, when it was born, and what it believed.</p>
+    <div class="bits">
+      <div class="bf" style="flex:12;background:var(--amber)">TYPE<span>12b · what it is</span></div>
+      <div class="bf" style="flex:12;background:var(--cyan)">NS<span>12b · namespace</span></div>
+      <div class="bf" style="flex:24;background:var(--green)">TIMESTAMP<span>24b · when</span></div>
+      <div class="bf" style="flex:14;background:var(--lav)">TOPOLOGY<span>domain/gen</span></div>
+      <div class="bf" style="flex:16;background:var(--red)">SIGNAL<span>16b · P quantized</span></div>
+      <div class="bf" style="flex:44;background:#666">PROV + ENTROPY<span>4b + 40b hash</span></div>
+    </div>
+    <div class="mono"><span class="dim">article:</span>  3d4bd170-da5f-81a0-b5ff-<span class="amb">feddb382802d</span>  <span class="dim">← the hex tail is the story's handle</span>
+<span class="dim">order:</span>    minted as a <span class="grn">spawn-tree child</span> of the article UUID — parentUuid links bet → story
+<span class="dim">forecast:</span> the 16-bit signal field <span class="grn">is the probability</span>, quantized into the identity itself</div>
+    <p>Because identity is content-addressed and signal-bearing, the graph is traversable in both directions: from a story to every bet it spawned, and from any bet back to the exact article, forecast, and market state that justified it. <b>Identity is the audit trail.</b></p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">02</span>THE LOOP</h2>
+  <div class="card">
+    <div class="loop">
+      <span class="step">news</span><span class="arr">→</span>
+      <span class="step">forecasts</span><span class="arr">→</span>
+      <span class="step">markets</span><span class="arr">→</span>
+      <span class="step">bets</span><span class="arr">→</span>
+      <span class="step">evidence</span>
+    </div>
+    <p>The <b>news supply engine</b> sweeps the feeds and mints each AI story as a UUIDv8 article — that is the front page. The fleet reads the same wire and publishes <b>OUR CALLS</b>: live forecasts with probabilities. Each story's topic maps onto <b>open Kalshi markets</b>; the tradable card on every article lets a reader size a position and <b>FIRE</b> — the order is minted as a child of the story's UUID and routed to the exchange. Fills, rejects, and P&amp;L flow back into the <b>evidence engine</b>, which scores every call the fleet has ever made. The magazine doesn't just report the future — it is graded on it.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">03</span>THE FLEET — 20+ LANES, ALWAYS ON</h2>
+  <div class="card">
+    <p>Behind the page runs a supervised fleet of daemons, each a narrow lane with one job, each emitting UUIDv8 objects into the shared substrate:</p>
+    <div class="lanes">
+      <div class="lane"><b>NEWS</b><span>feed sweep → article minting → time:articles</span></div>
+      <div class="lane"><b>FORECAST</b><span>supply-chain calls with quantized probabilities</span></div>
+      <div class="lane"><b>SCANNER</b><span>calendar + orderbook sweeps for real liquidity</span></div>
+      <div class="lane"><b>MAKER</b><span>quoting lanes on open markets</span></div>
+      <div class="lane"><b>TAKER</b><span>edge-fired crosses when price ≠ belief</span></div>
+      <div class="lane"><b>SHADOW</b><span>paper twins of every live strategy</span></div>
+      <div class="lane"><b>FILLS</b><span>exchange fill sync, decoupled from publish</span></div>
+      <div class="lane"><b>EQUITY</b><span>account history, hero sparkline, near-continuous BTC</span></div>
+      <div class="lane"><b>EVIDENCE</b><span>scores every call against outcomes</span></div>
+      <div class="lane"><b>LEDGER</b><span>the uuid_orders / uuid_acks spawn tree</span></div>
+      <div class="lane"><b>WS-WIRE</b><span>Kalshi websocket tick plane, in-memory rings</span></div>
+      <div class="lane"><b>KILL</b><span>the kill switch — one flag halts all order lanes</span></div>
+    </div>
+    <p style="margin-top:10px">…and the rest of the 20+ lane fleet: ingest, backfill, indexing, monitors, and the mission-control plane itself. Every lane is small, supervised, and replaceable. The fleet is the newsroom.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">04</span>THE HONESTY MACHINERY</h2>
+  <div class="hon">
+    <div class="card">
+      <p><span class="tag t-live">EVIDENCE ENGINE</span></p>
+      <p>Every forecast the fleet publishes is kept. When the outcome lands, the call is scored — calibration, Brier, hit rate — and the scorecard is served back to the same API that published the call. <b>OUR CALLS is not a boast board; it is a ledger of record.</b></p>
+    </div>
+    <div class="card">
+      <p><span class="tag" style="background:rgba(255,77,77,.12);color:var(--red);border:1px solid rgba(255,77,77,.35)">LOSS PUBLISHING</span></p>
+      <p>Losses are published with the same prominence as wins. Rejected orders stay in the ledger with status <b>rejected</b>; losing positions stay on the equity curve. A system that hides its losses is marketing. <b>This one ships its receipts.</b></p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <ul>
+      <li><b>Caps are real:</b> guest orders are PIN-gated, $2 per order, $20 per day, ≤4 contracts — enforced server-side, not in the UI.</li>
+      <li><b>Kill switch:</b> one flag halts every order lane; the UI would rather show a rejection than a lie.</li>
+      <li><b>Shadow twins:</b> every strategy runs a paper double, so live-vs-expected divergence is itself evidence.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">05</span>THE SAYS.COM NETWORK VISION</h2>
+  <div class="card">
+    <p class="vision">TIME is one node of a network. The same substrate — UUIDv8 identity, the loop, the fleet, the honesty machinery — generalizes into the <b>says.com network</b>: a constellation of city and topic portals where every claim is an object, every object can carry a market, and every market resolves into public evidence. A city says a transit line opens in spring; the network mints the claim, prices it, and grades it. An AI magazine says chips get cheaper; same machinery. <b>Journalism where every sentence that predicts something is a position you can inspect, bet against, and score.</b> That's the network. TIME is where it learned to talk.</p>
+  </div>
+</section>
+
+<footer>
+  TIME · SoMaCoSF — the AI times magazine · LCARS interface<br>
+  live objects: <a href="/">the feed</a> · forecasts via /api/time/forecasts · markets via /api/time/markets · orders via /api/trade/tim_order<br>
+  identity substrate: GYST UUIDv8 — routable · bettable · transactional
+</footer>
+</div>
+</body>
+</html>
