@@ -136,16 +136,22 @@ def main():
                 equity = cash + pv
                 if equity < EQUITY_FLOOR or cash < MIN_CYCLE:
                     log(f"below floor: equity ${equity:.2f} cash ${cash:.2f} — idle")
-                    time.sleep(CYCLE_S)
+                    for _ in range(max(1, CYCLE_S // 30)):
+                        fleetlib.checkin("parlay")
+                        time.sleep(30)
                     continue
                 if spent_today > DAILY_CAP_PCT * equity:
                     log(f"daily cap reached (${spent_today:.2f}) — idle")
-                    time.sleep(CYCLE_S)
+                    for _ in range(max(1, CYCLE_S // 30)):
+                        fleetlib.checkin("parlay")
+                        time.sleep(30)
                     continue
                 exposed, held = open_combo_cost()
                 if exposed > MAX_EXPOSED_PCT * equity:
                     log(f"exposure cap: open ${exposed:.2f} > {MAX_EXPOSED_PCT:.0%} of ${equity:.2f} — idle")
-                    time.sleep(CYCLE_S)
+                    for _ in range(max(1, CYCLE_S // 30)):
+                        fleetlib.checkin("parlay")
+                        time.sleep(30)
                     continue
                 alloc = min(MAX_CYCLE, max(MIN_CYCLE, ALLOC_PCT * cash))
                 cands = candidates(cx, held)
@@ -164,7 +170,10 @@ def main():
                 log(f"cycle: +{bought} tickets ${spent:.2f} | day ${spent_today:.2f} | equity ${equity:.2f} exposed ${exposed:.2f}")
             except Exception as e:
                 log(f"cycle warn {repr(e)[:60]}")
-            time.sleep(CYCLE_S)
+            # chunked sleep: checkin every 30s so liveness heartbeats stay fresh
+            for _ in range(max(1, CYCLE_S // 30)):
+                fleetlib.checkin("parlay")
+                time.sleep(30)
 
 
 if __name__ == "__main__":
