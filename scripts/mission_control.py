@@ -133,6 +133,9 @@ def kalshi_post_order(req_body: dict):
         "subaccount": 0,
         "exchange_index": -1,   # auto-route shard by ticker
     }
+    if req_body.get("expiration_ts"):
+        v2["time_in_force"] = "good_till_time"
+        v2["expiration_ts"] = int(req_body["expiration_ts"])
     ts = str(int(time.time() * 1000))
     headers = {
         "KALSHI-ACCESS-KEY": kid,

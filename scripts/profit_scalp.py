@@ -38,8 +38,9 @@ PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdige
 SERIES = [("KXBTC15M", "XBTUSD"), ("KXETH15M", "ETHUSD"), ("KXSOL15M", "SOLUSD"),
           ("KXXRP15M", "XRPUSD"), ("KXDOGE15M", "DOGEUSD")]
 DRIFT_MIN, ENTRY_MAX, TTL_MIN = 0.20, 60, 540
-SCALP_C = 15               # exit when bid >= entry + this many cents
-CASH_FLOOR = 15.00
+SCALP_C = 15               # take-profit: exit when bid >= entry + this many cents
+STOP_C = 10                # stop-loss: exit when bid <= entry - this many cents
+CASH_FLOOR = 5.00
 SESSION_STOP = -300
 POLL = 5
 MAX_OPEN = 5
@@ -165,6 +166,7 @@ def main():
                 if b["status"] != "active":
                     continue
                 bid = round(b["yb"])
+                # take-profit: bid >= entry + SCALP_C -> sell at bid (taker)
                 if bid >= pos["entry_c"] + SCALP_C and 1 <= bid <= 99:
                     sell_px = 100 - bid  # MC maps side=no price P -> ask@(100-P); ask@bid => P=100-bid
                     r = fire(t, "no", sell_px, int(pos["fp"]))
@@ -176,6 +178,19 @@ def main():
                             f"+${profit:.2f} | session ${session_pnl:+.2f}")
                     elif r["ok"]:
                         log(f"exit resting {t[:30]} @ {bid}c")
+                    time.sleep(0.25)
+                # stop-loss: bid <= entry - STOP_C -> cut the loss at ~-10c instead of -entry at settle
+                elif bid <= pos["entry_c"] - STOP_C and 1 <= bid <= 99:
+                    sell_px = 100 - bid
+                    r = fire(t, "no", sell_px, int(pos["fp"]))
+                    if r["ok"] and r["filled"] > 0:
+                        loss = (bid - pos["entry_c"]) * pos["fp"] / 100.0
+                        session_pnl += loss
+                        runlog.assert_event(loss > -(STOP_C + 2) * pos["fp"] / 100.0, "scalp", f"stop contained loss: bid {bid} vs entry {pos['entry_c']}", ticker=t, loss_usd=round(loss, 4))
+                        log(f"STOP-OUT {t[:38]} sold x{pos['fp']:g} @ {bid}c (entry {pos['entry_c']}c) "
+                            f"${loss:.2f} | session ${session_pnl:+.2f}")
+                    elif r["ok"]:
+                        log(f"stop resting {t[:30]} @ {bid}c")
                     time.sleep(0.25)
             # ---- ENTRIES ----
             if len(held) < MAX_OPEN:
