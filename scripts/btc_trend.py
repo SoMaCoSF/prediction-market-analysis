@@ -52,7 +52,7 @@ def log(m):
 
 
 def tape_momentum_bps() -> float | None:
-    """3-min BTC spot momentum from the local UUID tape."""
+    """3-min BTC spot momentum from the local UUID tape; None when thin."""
     try:
         con = sqlite3.connect(STREAM)
         rows = con.execute(
@@ -63,6 +63,17 @@ def tape_momentum_bps() -> float | None:
             return None
         first, last = rows[0][1], rows[-1][1]
         return (last - first) / first * 10000.0
+    except Exception:
+        return None
+
+
+def kraken_drift_bps(cx) -> float | None:
+    """The paper-proven signal: Kraken 24h drift mapped to bps-equivalent momentum."""
+    try:
+        d = cx.get("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", timeout=10).json()["result"]
+        k = next(iter(d))
+        drift_pct = (float(d[k]["c"][0]) - float(d[k]["o"])) / float(d[k]["o"]) * 100
+        return drift_pct * 40.0  # 24h drift -> momentum proxy (dry-run winning path)
     except Exception:
         return None
 
@@ -176,7 +187,11 @@ def main():
                         time.sleep(POLL * 6)
                         continue
                     mom = tape_momentum_bps()
+                    if mom is None:
+                        mom = kraken_drift_bps(cx)
                     m = window_market(cx)
+                    if time.time() % 60 < POLL:
+                        log(f"scan mom={f'{mom:+.1f}' if mom is not None else '—'}bps win={'Y' if m else 'N'}")
                     if m and mom is not None and abs(mom) >= MOM_BPS:
                         if mom > 0 and m["ya"] <= ENTRY_MAX:
                             side, price = "yes", m["ya"]
