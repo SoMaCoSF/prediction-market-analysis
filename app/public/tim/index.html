@@ -1,4 +1,4 @@
-<!-- =============================================================================== file_id: SOM-APP-0956-v2.0.0 name: tim/index.html description: TIM v2 — phone-first betting surface: balance hero, market browser widgets (tabs + sparklines), bet history, one-tap bet sheet. Plane-ride light. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [tim, mobile, betting, widgets, history] created: 2026-08-03 modified: 2026-08-03 version: 2.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!-- =============================================================================== file_id: SOM-APP-0956-v3.0.0 name: tim/index.html description: TIM v3 — Three.js glass UX: calm event-reactive 3D backdrop, glass market cards, ELI5 explainers, trending blob, bet history, PIN bet sheet. Plane-ride light. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [tim, mobile, betting, threejs, glass] created: 2026-08-03 modified: 2026-08-03 version: 3.0.0 agent_id: HERMES-AGENT =============================================================================== -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,83 +6,108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TIM // SOMACO BETS</title>
 <style>
-  :root{--bg:#05070a;--panel:#0d1219;--line:#1e2836;--cyan:#06b6d4;--green:#39ff14;--red:#ff4d4d;--amber:#ffb020;--txt:#dbe5f0;--dim:#6b7a8f;--mono:'SF Mono',ui-monospace,Consolas,monospace}
+  :root{--bg:#05070a;--line:#1e2836;--cyan:#06b6d4;--green:#39ff14;--red:#ff4d4d;--amber:#ffb020;--mag:#ff10f0;--txt:#dbe5f0;--dim:#6b7a8f;--mono:'SF Mono',ui-monospace,Consolas,monospace}
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{background:var(--bg);color:var(--txt);font-family:var(--mono);min-height:100vh;padding-bottom:100px}
-  .top{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px;z-index:5}
+  #bg3d{position:fixed;inset:0;z-index:0;opacity:.55}
+  .z{position:relative;z-index:1}
+  .glass{background:rgba(13,18,25,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line)}
+  .top{position:sticky;top:0;z-index:5;padding:12px 16px;border-bottom:1px solid var(--line)}
   .brand{font-size:10px;letter-spacing:2px;color:var(--dim)} .brand b{color:var(--cyan)}
-  .bal{font-size:30px;font-weight:bold;color:#fff;margin-top:2px}
+  .bal{font-size:32px;font-weight:bold;color:#fff;margin-top:2px;text-shadow:0 0 24px rgba(6,182,212,.35)}
   .bal small{font-size:11px;color:var(--dim);font-weight:normal}
   .day{font-size:11px;color:var(--dim)}
   .tabs{display:flex;gap:6px;padding:10px 14px 2px}
-  .tab{flex:1;text-align:center;font-size:10px;letter-spacing:1px;padding:7px 0;border:1px solid var(--line);border-radius:6px;color:var(--dim);cursor:pointer}
-  .tab.sel{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.1)}
+  .tab{flex:1;text-align:center;font-size:10px;letter-spacing:1px;padding:8px 0;border:1px solid var(--line);border-radius:8px;color:var(--dim);cursor:pointer}
+  .tab.sel{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.12)}
   .sec{padding:10px 14px 4px;font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
-  .mkt{margin:8px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .mkt{margin:8px 14px;border-radius:12px;padding:12px;position:relative;overflow:hidden}
+  .mkt::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5}
   .mkt .q{font-size:12.5px;color:#fff;line-height:1.35;margin-bottom:6px}
   .mkt .meta{font-size:10px;color:var(--dim);margin-bottom:8px}
   .spark{float:right}
   .row{display:flex;gap:8px}
-  .btn{flex:1;padding:12px 0;border-radius:8px;border:1px solid;font-family:var(--mono);font-size:14px;font-weight:bold;text-align:center;cursor:pointer;background:transparent}
-  .btn:active{transform:scale(.97)}
-  .yes{color:var(--green);border-color:var(--green)} .yes.sel{background:rgba(57,255,20,.18)}
-  .no{color:var(--red);border-color:var(--red)} .no.sel{background:rgba(255,77,77,.18)}
-  .bet{margin:4px 14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:11px}
+  .btn{flex:1;padding:13px 0;border-radius:10px;border:1px solid;font-family:var(--mono);font-size:14px;font-weight:bold;text-align:center;cursor:pointer;background:rgba(5,7,10,.5);transition:transform .08s}
+  .btn:active{transform:scale(.96)}
+  .yes{color:var(--green);border-color:var(--green)} .yes.sel{background:rgba(57,255,20,.2);box-shadow:0 0 18px rgba(57,255,20,.25)}
+  .no{color:var(--red);border-color:var(--red)} .no.sel{background:rgba(255,77,77,.2);box-shadow:0 0 18px rgba(255,77,77,.25)}
+  .bet{margin:4px 14px;border-radius:10px;padding:10px 12px;font-size:11px}
   .bet .st{float:right;font-size:10px}
   .filled{color:var(--green)} .rest{color:var(--amber)} .rej{color:var(--red)}
-  .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:14px 16px;display:none;z-index:10}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:14px 16px;display:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0}
   .sheet.open{display:block}
   .sheet .sum{font-size:14px;margin-bottom:10px;line-height:1.5}
   .pinrow{display:flex;gap:8px;margin-bottom:10px}
-  .pinrow input{flex:1;background:var(--bg);border:1px solid var(--line);color:#fff;font-family:var(--mono);font-size:18px;letter-spacing:6px;text-align:center;padding:12px;border-radius:8px;outline:none}
-  .fire{width:100%;padding:15px;border-radius:8px;border:1px solid var(--amber);color:var(--amber);background:transparent;font-family:var(--mono);font-size:16px;font-weight:bold;letter-spacing:2px}
-  .toast{position:fixed;top:70px;left:16px;right:16px;padding:12px;border-radius:8px;font-size:13px;display:none;z-index:20;border:1px solid}
-  .toast.ok{display:block;background:rgba(57,255,20,.12);border-color:var(--green);color:var(--green)}
-  .toast.err{display:block;background:rgba(255,77,77,.12);border-color:var(--red);color:var(--red)}
-  .eli5{margin:8px 14px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:12px;font-size:11px;line-height:1.55;color:var(--txt)}
+  .pinrow input{flex:1;background:rgba(5,7,10,.7);border:1px solid var(--line);color:#fff;font-family:var(--mono);font-size:18px;letter-spacing:6px;text-align:center;padding:12px;border-radius:10px;outline:none}
+  .fire{width:100%;padding:15px;border-radius:10px;border:1px solid var(--amber);color:var(--amber);background:rgba(255,176,32,.06);font-family:var(--mono);font-size:16px;font-weight:bold;letter-spacing:2px}
+  .fire:active{background:rgba(255,176,32,.18)}
+  .toast{position:fixed;top:70px;left:16px;right:16px;padding:12px;border-radius:10px;font-size:13px;display:none;z-index:20;border:1px solid}
+  .toast.ok{display:block;background:rgba(57,255,20,.14);border-color:var(--green);color:var(--green)}
+  .toast.err{display:block;background:rgba(255,77,77,.14);border-color:var(--red);color:var(--red)}
+  .eli5{margin:8px 14px;border-radius:12px;padding:12px;font-size:11px;line-height:1.55;border-color:rgba(6,182,212,.3)}
   .eli5 b{color:var(--cyan)}
   .how{font-size:10px;color:var(--cyan);margin-top:8px;cursor:pointer;letter-spacing:.5px}
-  .howbox{display:none;font-size:10.5px;color:var(--txt);background:rgba(6,182,212,.08);border-radius:8px;padding:10px;margin-top:8px;line-height:1.6}
+  .howbox{display:none;font-size:10.5px;background:rgba(6,182,212,.08);border-radius:8px;padding:10px;margin-top:8px;line-height:1.6}
   .howbox.open{display:block}
   .howbox .g{color:var(--green)} .howbox .r{color:var(--red)} .howbox .a{color:var(--amber)}
-  .trend-blob{margin:8px 14px;background:linear-gradient(135deg,rgba(255,16,240,.08),rgba(6,182,212,.08));border:1px solid var(--line);border-radius:10px;padding:12px}
+  .trend-blob{margin:8px 14px;border-radius:12px;padding:12px;border-color:rgba(255,16,240,.35)}
   .trend-blob .ttl{font-size:10px;letter-spacing:2px;color:var(--mag);margin-bottom:8px}
 </style>
 </head>
 <body>
-<div class="top">
+<canvas id="bg3d"></canvas>
+<div class="z">
+<div class="top glass">
   <div class="brand">SOMACO <b>// TIM</b> — guest book</div>
   <div class="bal" id="bal">$— <small>cash</small></div>
   <div class="day" id="spent">today: $0.00 / $20.00 cap</div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="eli5" id="eli5">
+<div class="eli5 glass" id="eli5">
   <b>How this works in 20 seconds:</b> every market pays <b>$1.00</b> if you're right, $0 if you're wrong.
   The price you see <b>is the crowd's probability</b>. <span class="how" onclick="$('eli5').style.display='none'">got it ✕</span><br>
-  <span style="color:var(--dim)">YES at 43¢ = "43% think this happens" — you pay 43¢, win $1 if it does. NO at 57¢ = the flip side.
-  YES+NO always add to ~$1. Price moves as people bet — buy low, and you can even sell early when the crowd moves your way.</span>
+  <span style="color:var(--dim)">YES at 43¢ = "43% think this happens" — pay 43¢, win $1. YES+NO add to ~$1. Buy low, sell high — or hold for the dollar.</span>
 </div>
 <div class="tabs">
-  <div class="tab sel" id="tab-crypto" onclick="setTab('crypto')">CRYPTO 15M</div>
-  <div class="tab" id="tab-trend" onclick="setTab('trend')">TRENDING</div>
-  <div class="tab" id="tab-history" onclick="setTab('history')">MY BETS</div>
+  <div class="tab sel glass" id="tab-crypto" onclick="setTab('crypto')">CRYPTO 15M</div>
+  <div class="tab glass" id="tab-trend" onclick="setTab('trend')">TRENDING</div>
+  <div class="tab glass" id="tab-history" onclick="setTab('history')">MY BETS</div>
 </div>
 <div id="list"></div>
-<div class="sheet" id="sheet">
+<div class="sheet glass" id="sheet">
   <div class="sum" id="sum"></div>
   <div class="pinrow"><input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN"></div>
   <button class="fire" id="fire">PLACE BET</button>
 </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
 <script>
-let sel=null, tab="crypto", mkts=[], hist={};
+let sel=null, tab="crypto", mkts=[], hist={}, count=1;
 async function j(u,o){const r=await fetch(u,o);return r.json();}
 function toast(m,ok){const t=$("toast");t.textContent=m;t.className="toast "+(ok?"ok":"err");setTimeout(()=>t.className="toast",4000);}
 const $=id=>document.getElementById(id);
-function spark(pts,up){if(!pts||pts.length<2)return"";
-  const w=64,h=22,mn=Math.min(...pts),mx=Math.max(...pts),rg=(mx-mn)||1;
+/* calm three.js: slow icosphere, pulses on bets */
+let pulses=[];
+(function(){
+  try{
+    const c=$("bg3d"),r=new THREE.WebGLRenderer({canvas:c,alpha:true,antialias:true});
+    r.setSize(innerWidth,innerHeight);r.setPixelRatio(Math.min(devicePixelRatio,2));
+    const s=new THREE.Scene(),cam=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,100);cam.position.z=6;
+    const g=new THREE.IcosahedronGeometry(2.4,1);
+    s.add(new THREE.LineSegments(new THREE.WireframeGeometry(g),new THREE.LineBasicMaterial({color:0x06b6d4,transparent:true,opacity:.2})));
+    s.add(new THREE.Points(g,new THREE.PointsMaterial({color:0x39ff14,size:.045,transparent:true,opacity:.45})));
+    window.__pulse=(col)=>{const m=new THREE.Points(new THREE.IcosahedronGeometry(.3,0),new THREE.PointsMaterial({color:col||0x39ff14,size:.16,transparent:true,opacity:.95}));
+      m.position.set((Math.random()-.5)*3.2,(Math.random()-.5)*2.4,(Math.random()-.5)*2);s.add(m);pulses.push({m,t:1});};
+    (function anim(){requestAnimationFrame(anim);s.rotation.y+=.0005;
+      pulses=pulses.filter(p=>{p.t-=.02;p.m.material.opacity=p.t*.95;p.m.scale.setScalar(1+(1-p.t)*2.4);if(p.t<=0){s.remove(p.m);return false}return true});
+      r.render(s,cam)})();
+    addEventListener("resize",()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight)});
+  }catch(e){}
+})();
+function spark(pts,up){if(!pts||pts.length<2)return"";const w=64,h=22,mn=Math.min(...pts),mx=Math.max(...pts),rg=(mx-mn)||1;
   const p=pts.map((v,i)=>`${(i/(pts.length-1)*w).toFixed(1)},${(h-2-((v-mn)/rg)*(h-4)).toFixed(1)}`).join(" ");
   return`<svg class="spark" width="${w}" height="${h}"><polyline points="${p}" fill="none" stroke="${up?"#39ff14":"#ff4d4d"}" stroke-width="1.5"/></svg>`;}
-function setTab(t){tab=t;document.querySelectorAll(".tab").forEach(e=>e.classList.remove("sel"));$("tab-"+t).classList.add("sel");render();}
+function setTab(t){tab=t;document.querySelectorAll(".tab").forEach(e=>e.classList.remove("sel"));$("tab-"+t).classList.add("sel");refresh();}
 async function refresh(){
   try{
     const s=await j("/api/trade/stats");
@@ -90,26 +115,25 @@ async function refresh(){
     if(tab==="history"){const b=await j("/api/trade/tim_bets");mkts=b.bets||[];}
     else{const m=await j(tab==="crypto"?"/api/trade/markets?series=KXBTC15M":"/api/trade/markets");
       let rows=(m&&m.markets||[]).filter(x=>x.yes_ask>1&&x.yes_ask<99);
-      if(tab==="trend")rows=rows.slice(0,10);else rows=rows.slice(0,6);
-      mkts=rows;
+      mkts=rows.slice(0,tab==="trend"?10:6);
       mkts.forEach(x=>{const h=hist[x.ticker]=hist[x.ticker]||[];h.push(x.yes_ask);if(h.length>24)h.shift();});}
     render();
-  }catch(e){/* plane wifi */}
+  }catch(e){}
 }
 function render(){
   if(tab==="history"){
-    $("list").innerHTML=(mkts.length?mkts.map(b=>{const filled=(b.fill_count||0)>0;
-      return`<div class="bet"><span class="st ${filled?"filled":"rest"}">${filled?"FILLED":b.status}</span>
+    $("list").innerHTML=(mkts.length?mkts.map(b=>{const f=(b.fill_count||0)>0;
+      return`<div class="bet glass"><span class="st ${f?"filled":"rest"}">${f?"FILLED":b.status}</span>
       <b class="${b.side==="yes"?"filled":"rej"}">${(b.side||"").toUpperCase()}</b> x${b.count} @ ${b.price_cents}¢<br>
       <span style="color:var(--dim)">${b.ticker.slice(0,40)}</span></div>`;}).join(""):'<div class="sec">no bets yet — tap a market</div>');
     return;
   }
-  const blob=tab==="trend"?`<div class="trend-blob"><div class="ttl">WHAT'S TRENDING</div>
+  const blob=tab==="trend"?`<div class="trend-blob glass"><div class="ttl">WHAT'S TRENDING</div>
     <div style="font-size:11px;line-height:1.5">What the crowd is piling into right now — biggest money flows first.
-    High volume = lots of people betting = prices move fast. <span style="color:var(--dim)">Tap YES/NO to ride it.</span></div></div>`:"";
+    High volume = prices move fast. <span style="color:var(--dim)">Tap YES/NO to ride it.</span></div></div>`:"";
   $("list").innerHTML=blob+(mkts.length?mkts.map((x,i)=>{const h=hist[x.ticker]||[];const up=h.length>1&&h[h.length-1]>=h[0];
     const ya=x.yes_ask||0, nb=100-(x.yes_bid||0);
-    return`<div class="mkt">
+    return`<div class="mkt glass">
       <div class="q">${(x.title||x.ticker).slice(0,80)}</div>
       <div class="meta">${x.ticker.slice(0,30)}${x.volume?` · ${Math.round(x.volume/1000)}k vol`:""} ${spark(h,up)}</div>
       <div class="row">
@@ -118,20 +142,17 @@ function render(){
       </div>
       <div class="how" onclick="document.getElementById('hw${i}').classList.toggle('open')">ⓘ how does this bet work?</div>
       <div class="howbox" id="hw${i}">
-        <span class="g">YES costs ${ya}¢</span> — win <b>$1.00</b> if it happens (${ya}% chance by the crowd).<br>
+        <span class="g">YES costs ${ya}¢</span> — win <b>$1.00</b> if it happens (crowd says ${ya}%).<br>
         <span class="r">NO costs ${nb}¢</span> — win <b>$1.00</b> if it doesn't (${nb}%).<br>
-        <span class="a">Why these prices?</span> The price IS the probability — everyone's bets push it up/down in real time.
-        Buy at ${ya}¢ and if the crowd moves to 60¢ you can sell early for +${60-ya}¢ — or hold to the end for the full $1.
+        <span class="a">Why these prices?</span> Price IS probability — bets push it in real time. Buy ${ya}¢, crowd moves to 60¢, sell early +${60-ya}¢ — or hold for the full $1.
       </div></div>`;}).join(""):'<div class="sec">no live books right now</div>');
 }
 function pick(i,side){sel={i,side};document.querySelectorAll(".btn").forEach(b=>b.classList.remove("sel"));
   $(side==="yes"?"y"+i:"n"+i).classList.add("sel");
   const x=mkts[i];const price=side==="yes"?x.yes_ask:100-(x.yes_bid||0);
-  $("sum").innerHTML=`<b style="color:${side==="yes"?"var(--green)":"var(--red)"}">${side.toUpperCase()}</b> 1 contract @ ${price}¢ = <b>$${(price/100).toFixed(2)}</b><br>
-  <span style="color:var(--dim);font-size:11px">${(x.title||x.ticker).slice(0,64)}</span>
-  <div class="row" style="margin-top:10px">${[1,2,3,4].map(c=>`<div class="btn" style="border-color:var(--line);color:var(--txt)" onclick="setCount(this,${c})" id="c${c}">${c}ct</div>`).join("")}</div>`;
-  $("sheet").classList.add("open");}
-let count=1;
+  $("sum").innerHTML=`<b style="color:${side==="yes"?"var(--green)":"var(--red)"}">${side.toUpperCase()}</b> @ ${price}¢
+  <div class="row" style="margin-top:10px">${[1,2,3,4].map(c=>`<div class="btn" style="border-color:var(--line);color:var(--txt)" onclick="setCount(this,${c})" id="c${c}">${c}ct<br><span style="font-size:9px">$${(c*price/100).toFixed(2)}</span></div>`).join("")}</div>`;
+  $("sheet").classList.add("open");window.__pulse&&window.__pulse(side==="yes"?0x39ff14:0xff4d4d);}
 function setCount(el,c){count=c;[1,2,3,4].forEach(n=>$("c"+n).style.borderColor="var(--line)");el.style.borderColor="var(--cyan)";}
 $("fire").onclick=async()=>{
   if(!sel)return;const x=mkts[sel.i];
@@ -139,6 +160,7 @@ $("fire").onclick=async()=>{
   const r=await j("/api/trade/tim_order",{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({ticker:x.ticker,side:sel.side,price,count,pin:$("pin").value})});
   if(r.ok){toast(`BET PLACED — ${sel.side.toUpperCase()} x${count} @ ${price}¢ (fill ${r.fill_count})`,true);
+    window.__pulse&&window.__pulse(0xffb020);
     $("sheet").classList.remove("open");$("pin").value="";refresh();}
   else toast(r.error||"rejected",false);
 };

@@ -34,6 +34,7 @@ PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdige
 STREAM = ROOT / "data" / "uuid_stream.db"
 
 MOM_BPS = 3.0            # 3-min momentum threshold (basis points)
+MOM2_BPS = 6.0           # strong-signal threshold -> 2 contracts
 ENTRY_MAX = 60
 TTL_MIN = 480
 TAKE, STOP = 15, 10
@@ -184,7 +185,8 @@ def main():
                         else:
                             side = None
                         if side:
-                            r = fire(m["ticker"], side, price, 1)
+                            qty = 2 if abs(mom) >= MOM2_BPS else 1
+                            r = fire(m["ticker"], side, price, qty)
                             if r["ok"] and r["filled"] > 0:
                                 pos = {"ticker": m["ticker"], "side": side, "entry_c": price, "close": m["close"]}
                                 runlog.assert_event(True, "btctrend", f"entry {side} @{price}c mom {mom:+.1f}bps (tape)", ticker=m["ticker"])

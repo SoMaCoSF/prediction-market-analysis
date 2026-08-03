@@ -40,10 +40,10 @@ SERIES = [("KXBTC15M", "XBTUSD"), ("KXETH15M", "ETHUSD"), ("KXSOL15M", "SOLUSD")
 DRIFT_MIN, ENTRY_MAX, TTL_MIN = 0.20, 60, 540
 SCALP_C = 15               # take-profit: exit when bid >= entry + this many cents
 STOP_C = 10                # stop-loss: exit when bid <= entry - this many cents
-CASH_FLOOR = 5.00
+CASH_FLOOR = 20.00
 SESSION_STOP = -300
 POLL = 5
-MAX_OPEN = 5
+MAX_OPEN = 8
 
 session_pnl = 0.0
 
