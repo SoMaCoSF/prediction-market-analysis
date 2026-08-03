@@ -133,7 +133,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-async function j(u,o){const r=await fetch(u,o);return r.json();}
+async function j(u,o){try{const r=await fetch(u,o);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
 function log(msg,cls){const b=$("logbox");const d=document.createElement("div");d.className="l";
   d.innerHTML=`<span class="t">${new Date().toLocaleTimeString()}</span><span class="${cls||''}">${msg}</span>`;
   b.insertBefore(d,b.firstChild);while(b.children.length>80)b.removeChild(b.lastChild);}
@@ -174,7 +174,8 @@ async function tick(){
   if(s){
     $("p-keys").textContent=s.keys?"KEYS ARMED":"KEYS MISSING";$("p-keys").className="pill "+(s.keys?"ok":"bad");
     $("p-kill").textContent=s.kill?"KILL ENGAGED":"KILL OFF";$("p-kill").className="pill "+(s.kill?"bad":"ok");
-    if(s.account){$("h-eq").textContent="$"+s.account.equity.toFixed(2);
+    if(s&&!s.account){$("h-eq").textContent="feed…";}
+    if(s&&s.account){$("h-eq").textContent="$"+s.account.equity.toFixed(2);
       const d=s.account.equity-24.98;$("h-day").innerHTML=`day <b class="${d>=0?"up":"dn"}">${d>=0?"+":""}$${d.toFixed(2)} (${(d/24.98*100).toFixed(0)}%)</b> · <span class="c-dim">from $24.98</span>`;
       $("h-cash").textContent="$"+s.account.cash.toFixed(2);}
     if(s.ledger){$("h-pnl").textContent=(s.ledger.realized_pnl_cents/100).toFixed(2)+"$";
