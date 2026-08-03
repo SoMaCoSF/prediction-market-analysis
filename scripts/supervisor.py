@@ -34,6 +34,10 @@ DAEMONS = {
     "sweep": "scripts/sweep_watch.py",
     "news": "scripts/news_supply_engine.py",
     "dry": "scripts/dry_run.py",
+    "trend-eth": "scripts/trend_engine.py KXETH15M ETHUSD",
+    "trend-sol": "scripts/trend_engine.py KXSOL15M SOLUSD",
+    "trend-xrp": "scripts/trend_engine.py KXXRP15M XRPUSD",
+    "trend-doge": "scripts/trend_engine.py KXDOGE15M DOGEUSD",
     # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.
     "ingest": "scripts/uuid_ingest.py",
@@ -50,8 +54,9 @@ def spawn(name: str):
     out = open(LOGDIR / f"{name}.out.log", "a", encoding="utf-8")
     env = dict(os.environ)
     env["PYTHONPATH"] = ""          # kill the hermes-venv leak
+    parts = DAEMONS[name].split()   # "scripts/x.py arg1 arg2" supported
     p = subprocess.Popen(
-        [str(PY), str(ROOT / DAEMONS[name])],
+        [str(PY), str(ROOT / parts[0]), *parts[1:]],
         cwd=str(ROOT), stdout=out, stderr=subprocess.STDOUT, env=env)
     procs[name] = p
     runlog.log_event("supervisor", f"spawned {name} pid={p.pid}", pid=p.pid)
