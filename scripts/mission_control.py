@@ -364,7 +364,7 @@ async def api_order(req: Request):
     if notional > 2500:
         return JSONResponse({"error": f"cap: notional {notional}¢ > 2500¢ ($25)"}, status_code=400)
 
-    o = L.mint_order(ticker, side, price, count)
+    o = L.mint_order(ticker, side, price, count, parent_uuid=body.get("parent_uuid"))
     price_key = "yes_price" if side == "yes" else "no_price"
     req_body = {"ticker": ticker, "side": side, "action": "buy", "count": count,
                 "type": "limit", price_key: price, "client_order_id": o["client_order_id"]}

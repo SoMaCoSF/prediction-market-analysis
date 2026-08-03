@@ -26,6 +26,7 @@ from uuid_service_turboquant import encode_gyst, fnv1a12  # noqa: E402
 
 DB = ROOT / "data" / "uuid_stream.db"
 TYPE_FORECAST = 0x326
+TYPE_ARTICLE = 0x3D4
 PROV_NEWS = 0xD
 POLL_S = 300
 
@@ -137,13 +138,6 @@ TOPICS = {
 }
 
 
-def topic_of(title: str) -> str:
-    low = title.lower()
-    for topic, kws in TOPICS.items():
-        if any(k in low for k in kws):
-            return topic
-    return "ai-general"
-
 # supply-chain atlas: node -> (keywords, downstream effects, kalshi hint, base prob shift)
 ATLAS = {
     "red-sea-shipping": (["red sea", "houthi", "suez", "shipping attack", "freight"],
@@ -177,6 +171,14 @@ def store(cur, u, ts, node, detail):
     return cur.rowcount
 
 
+def mint_article(title: str, topic: str, source: str, ts: int) -> str:
+    """Every story is a UUIDv8 object: routable, bettable (as order parent), transactional."""
+    return encode_gyst(type_code=TYPE_ARTICLE, namespace=fnv1a12(topic), timestamp_sec=ts,
+                       fractal_depth=1, fractal_domain=0xA, fractal_generation=0,
+                       forecast_signal=0.5, provenance=PROV_NEWS,
+                       content_seed=f"article|{source}|{title[:60]}")
+
+
 def headlines(cx):
     out = []
     for name, url in FEEDS:
@@ -196,7 +198,6 @@ def headlines(cx):
 def publish_articles(items):
     """Publish AI-topic articles to mc_state time:articles for TIME.somacosf.com."""
     try:
-        import hashlib as _h
         import json as _json
         seen = set()
         arts = []
@@ -204,19 +205,30 @@ def publish_articles(items):
             topic = topic_of(title)
             if topic == "ai-general" and not src.endswith(("-ai", "review")):
                 continue  # non-AI feeds only contribute tagged AI items
-            aid = _h.sha256(title.encode()).hexdigest()[:12]
+            u = mint_article(title, topic, src, int(time.time()))
+            aid = u[-12:]  # low-42 hex tail = the routable handle
             if aid in seen:
                 continue
             seen.add(aid)
-            arts.append({"id": aid, "title": title, "source": src, "topic": topic,
+            arts.append({"id": aid, "uuid": u, "title": title, "source": src, "topic": topic,
                          "link": link, "ts": int(time.time())})
         arts = arts[:40]
         con = sb.sb_conn()
         con.autocommit = True
-        con.cursor().execute(
+        cur = con.cursor()
+        cur.execute(
             "INSERT INTO mc_state (k, v, updated_at) VALUES ('time:articles', %s, now()) "
             "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
             (_json.dumps(arts),))
+        # forecasts for the page: recent supply-chain calls with probabilities
+        cur2 = sqlite3.connect(DB).cursor()
+        rows = cur2.execute(
+            "SELECT symbol, detail, ts FROM stream WHERE source='forecast' ORDER BY ts DESC LIMIT 8").fetchall()
+        fcs = [{"node": r[0], "detail": r[1], "ts": r[2]} for r in rows]
+        cur.execute(
+            "INSERT INTO mc_state (k, v, updated_at) VALUES ('time:forecasts', %s, now()) "
+            "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
+            (_json.dumps(fcs),))
         con.close()
         return len(arts)
     except Exception as e:
@@ -237,7 +249,7 @@ def main():
                 con = sqlite3.connect(DB)
                 cur = con.cursor()
                 items = headlines(cx)
-                for src, title, link in items:
+                for _src, title, _link in items:
                     low = title.lower()
                     for node, (kws, chain, hint, shift) in ATLAS.items():
                         if any(k in low for k in kws):

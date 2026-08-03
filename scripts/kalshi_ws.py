@@ -88,6 +88,18 @@ async def tape():
         await asyncio.sleep(30)
         return
     log(f"subscribing {len(tickers)} windows: {list(tickers.values())}")
+    buf = []
+
+    async def push(t):
+        buf.append(t)
+        if len(buf) >= 10:
+            batch, buf[:] = buf[:], []
+            try:
+                async with httpx.AsyncClient(timeout=2) as cx:
+                    await cx.post("http://127.0.0.1:8421/tick", json=batch)
+            except Exception:
+                pass
+
     async with websockets.connect(WS_URL, additional_headers=ws_headers(), ping_interval=20) as ws:
         await ws.send(json.dumps({"id": 1, "cmd": "subscribe",
                                   "params": {"channels": ["ticker"], "market_tickers": list(tickers)}}))
@@ -107,6 +119,7 @@ async def tape():
                 yb = float(d.get("yes_bid_dollars") or 0) * 100
                 if ya > 0:
                     store(sym, ya, yb, int(time.time()))
+                    await push({"sym": sym, "price": ya, "bid": yb, "source": "kalshi-ws"})
                     n += 1
                     if n % 500 == 0:
                         fleetlib.checkin("ws")

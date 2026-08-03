@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `daily cap: $${DAILY_CAP_C / 100} (spent $${(spent / 100).toFixed(2)})` });
   }
 
-  const o = mintOrder({ ticker, side, priceCents: price, count });
+  const o = mintOrder({ ticker, side, priceCents: price, count, parentUuid: b.parentUuid || null });
   try {
     await q(
       `INSERT INTO uuid_orders (uuid, uuid_hi, uuid_lo, client_order_id, parent_uuid, ticker, side, price_cents, count, status, mode, ts)

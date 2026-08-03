@@ -48,7 +48,14 @@ def log(m):
 
 
 def tape_mom():
-    """3-min momentum from the local tape — kalshi-ws ticks preferred, Kraken spot fallback."""
+    """3-min momentum: RAM tick service first (sub-ms), sqlite tape fallback."""
+    try:
+        r = httpx.get(f"http://127.0.0.1:8421/tick/{SYM}?secs=180", timeout=1.5)
+        d = r.json()
+        if d.get("n", 0) >= 10 and d.get("age_ms", 9999) < 5000:
+            return float(d["mom_bps"])
+    except Exception:
+        pass
     try:
         con = sqlite3.connect(STREAM)
         rows = con.execute("SELECT ts, price_c FROM stream WHERE source IN ('kalshi-ws','spot') AND symbol=? AND ts > ? ORDER BY ts",
