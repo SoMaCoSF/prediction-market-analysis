@@ -80,6 +80,7 @@
     <div class="h-lbl">Account equity</div>
     <div class="h-eq" id="h-eq">$—</div>
     <div class="h-sub" id="h-day">—</div>
+    <canvas id="eq-spark" width="220" height="36" style="margin-top:6px;display:block"></canvas>
   </div>
   <div class="h-chip"><div class="h-lbl">Cash</div><b id="h-cash">—</b></div>
   <div class="h-chip"><div class="h-lbl">Realized P&L</div><b id="h-pnl">—</b></div>
@@ -232,6 +233,15 @@ async function tick(){
     $("evidence").innerHTML=`<div style="font-size:12px;margin-bottom:6px">OVERALL: <b class="${e.overall==="EDGE-PROVEN"?"c-green":"c-amber"}">${e.overall}</b>
       <span class="c-dim"> · gates: ${e.gates&&e.gates.PROVEN}</span></div>`+
       Object.entries(e.lanes||{}).map(([n,v])=>`<div>${n}: n=${v.n} wr=${(v.winrate*100).toFixed(0)}% CI[${(v.ci[0]*100).toFixed(0)}-${(v.ci[1]*100).toFixed(0)}] exp=${v.expectancy_c}c/trade → <b class="${v.verdict==="PROVEN"?"c-green":v.verdict==="DEAD"?"c-red":"c-amber"}">${v.verdict}</b></div>`).join("");}
+  const eqh=await j("/api/trade/equity");
+  if(eqh&&eqh.history&&eqh.history.length>1){
+    const cv=$("eq-spark"),ctx=cv.getContext("2d"),vals=eqh.history.map(r=>Number(r.equity));
+    const mn=Math.min(...vals),mx=Math.max(...vals),rg=(mx-mn)||1;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.strokeStyle=vals[vals.length-1]>=vals[0]?"#39ff14":"#ff4d4d";ctx.lineWidth=1.5;ctx.beginPath();
+    vals.forEach((v,i)=>{const x=i/(vals.length-1)*cv.width,y=cv.height-3-((v-mn)/rg)*(cv.height-6);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.stroke();
+  }
 }
 $("bb-yes").onclick=()=>{betSide="yes";$("bb-yes").classList.add("sel");$("bb-no").classList.remove("sel");};
 $("bb-no").onclick=()=>{betSide="no";$("bb-no").classList.add("sel");$("bb-yes").classList.remove("sel");};

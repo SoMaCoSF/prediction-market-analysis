@@ -33,7 +33,7 @@ KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
 PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdigest()
 STREAM = ROOT / "data" / "uuid_stream.db"
 
-MOM_BPS = 3.0            # 3-min momentum threshold (basis points)
+MOM_BPS = 1.5            # near-continuous: fires on any real drift
 MOM2_BPS = 6.0           # strong-signal threshold -> 2 contracts
 ENTRY_MAX = 60
 TTL_MIN = 480

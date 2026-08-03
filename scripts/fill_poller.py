@@ -124,6 +124,10 @@ def publish_account():
             "INSERT INTO mc_state (k, v, updated_at) VALUES ('account:equity', %s, now()) "
             "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
             (_json.dumps({"cash": cash, "portfolio": pv, "equity": cash + pv, "ts": time.time()}),))
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS equity_history (ts TIMESTAMPTZ DEFAULT now(), equity NUMERIC, cash NUMERIC, portfolio NUMERIC)")
+        cur.execute("INSERT INTO equity_history (equity, cash, portfolio) VALUES (%s, %s, %s)",
+                    (cash + pv, cash, pv))
         con.close()
     except Exception:
         pass
