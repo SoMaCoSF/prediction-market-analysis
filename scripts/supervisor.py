@@ -45,6 +45,7 @@ DAEMONS = {
     "tick": "scripts/tick_service.py",
     "xvenue": "scripts/crossvenue_engine.py",
     "calendar": "scripts/calendar_engine.py",
+    "moonshot": "scripts/moonshot_engine.py",
     "dry-t10": "scripts/dry_run.py 60 10 0 dry-t10",
     "dry-t20": "scripts/dry_run.py 60 20 0 dry-t20",
     "dry-t25": "scripts/dry_run.py 60 25 0 dry-t25",
