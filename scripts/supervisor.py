@@ -26,7 +26,8 @@ LOGDIR.mkdir(exist_ok=True)
 DAEMONS = {
     "mc": "scripts/mission_control.py",
     "scalp": "scripts/profit_scalp.py",
-    "chaos": "scripts/chaos_monkey.py",
+    # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
+    # with a FRESH $1 budget = infinite spend. Run manually when wanted.
     "ingest": "scripts/uuid_ingest.py",
     "fills": "scripts/fill_poller.py",
 }

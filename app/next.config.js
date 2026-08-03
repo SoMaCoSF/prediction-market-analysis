@@ -26,6 +26,12 @@ const nextConfig = {
           destination: '/trade/about.html',
           has: [{ type: 'host', value: 'mc.somacosf.com' }],
         },
+        // dry.somacosf.com — public paper-engine terminal
+        {
+          source: '/',
+          destination: '/dry/index.html',
+          has: [{ type: 'host', value: 'dry.somacosf.com' }],
+        },
       ],
       afterFiles: [
         { source: '/thesis', destination: '/thesis/index.html' },

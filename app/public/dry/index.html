@@ -1,0 +1,79 @@
+<!-- =============================================================================== file_id: SOM-APP-0947-v1.0.0 name: dry/index.html description: DRY RUN public terminal — live paper-engine state (entries, exits, equity, win rate) auto-refresh project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [dry-run, terminal, paper, public] created: 2026-08-02 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOMACO // DRY RUN — paper engine</title>
+<style>
+  :root{--bg:#05070a;--panel:#0a0e14;--line:#1e2836;--cyan:#06b6d4;--green:#39ff14;--mag:#ff10f0;--amber:#ffb020;--red:#ff4d4d;--txt:#c9d4e3;--dim:#6b7a8f;--mono:'Consolas','SF Mono',monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px)}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  header{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}
+  .hex{width:14px;height:16px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+  h1{font-size:14px;letter-spacing:2px;color:#fff} h1 .a{color:var(--amber)}
+  .tag{font-size:10px;letter-spacing:1px;padding:2px 8px;border:1px solid var(--amber);color:var(--amber);border-radius:3px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+  @media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px}
+  .big{font-size:26px;font-weight:bold}
+  .lbl{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
+  .up{color:var(--green)} .dn{color:var(--red)} .mid{color:var(--amber)}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{color:var(--dim);text-align:left;padding:3px 6px;border-bottom:1px solid var(--line);font-size:9px;letter-spacing:1px}
+  td{padding:4px 6px;border-bottom:1px solid rgba(30,40,54,.5)}
+  #events{max-height:340px;overflow-y:auto;font-size:11px;line-height:1.5}
+  #events div{padding:2px 0;border-bottom:1px solid rgba(30,40,54,.3)}
+  .e-entry{color:var(--cyan)} .e-settle-win{color:var(--green)} .e-settle-loss{color:var(--red)} .e-report{color:var(--amber)}
+  h2{font-size:11px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin-bottom:8px}
+  .spacer{flex:1}
+  #stamp{color:var(--dim);font-size:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hex" style="background:var(--amber)"></div>
+  <div class="hex" style="background:var(--cyan)"></div>
+  <h1>SOMACO <span class="a">// DRY RUN — PAPER ENGINE</span></h1>
+  <span class="tag">NO REAL MONEY</span>
+  <div class="spacer"></div><span id="stamp">…</span>
+</header>
+<div class="grid">
+  <div class="card"><div class="lbl">Paper equity</div><div class="big" id="eq">—</div><div id="eqd" style="font-size:10px;color:var(--dim)">start $25.00</div></div>
+  <div class="card"><div class="lbl">Realized P&L</div><div class="big" id="pnl">—</div><div id="fees" style="font-size:10px;color:var(--dim)">fees —</div></div>
+  <div class="card"><div class="lbl">Win / Loss</div><div class="big" id="wl">—</div><div id="wr" style="font-size:10px;color:var(--dim)">win rate —</div></div>
+  <div class="card"><div class="lbl">Entries / Scalps</div><div class="big" id="es">—</div><div id="dd" style="font-size:10px;color:var(--dim)">maxDD —</div></div>
+</div>
+<div class="grid" style="grid-template-columns:1fr 1fr">
+  <div class="card"><h2>Open paper positions</h2><table><thead><tr><th>ticker</th><th>side</th><th>entry</th></tr></thead><tbody id="open"><tr><td colspan="3" style="color:var(--dim)">—</td></tr></tbody></table></div>
+  <div class="card"><h2>Event feed</h2><div id="events">waiting for engine…</div></div>
+</div>
+</div>
+<script>
+async function j(u){const r=await fetch(u);return r.json();}
+function cls(m){if(m.includes("WIN"))return"e-settle-win";if(m.includes("LOSS"))return"e-settle-loss";if(m.startsWith("ENTRY"))return"e-entry";return"e-report";}
+async function tick(){
+  try{
+    const d=await j("/api/trade/dry");
+    const s=d.state||{};
+    const eq=s.equity,delta=eq!=null?(eq-s.start_equity):null;
+    document.getElementById("eq").textContent=eq!=null?"$"+eq.toFixed(2):"—";
+    document.getElementById("eq").className="big "+(delta>0?"up":delta<0?"dn":"mid");
+    document.getElementById("pnl").textContent=s.realized!=null?"$"+s.realized.toFixed(2):"—";
+    document.getElementById("pnl").className="big "+(s.realized>0?"up":s.realized<0?"dn":"mid");
+    document.getElementById("fees").textContent="fees $"+(s.fees??0).toFixed(2)+" · maxDD $"+(s.max_dd??0).toFixed(2);
+    document.getElementById("wl").textContent=(s.wins??0)+" / "+(s.losses??0);
+    const tot=(s.wins??0)+(s.losses??0);
+    document.getElementById("wr").textContent="win rate "+(tot?Math.round(100*s.wins/tot)+"%":"—");
+    document.getElementById("es").textContent=(s.entries??0)+" / "+(s.scalps??0);
+    document.getElementById("dd").textContent="state age "+(s.ts?Math.max(0,Math.round(Date.now()/1000-s.ts))+"s":"—");
+    document.getElementById("open").innerHTML=(s.open&&s.open.length)?s.open.map(p=>`<tr><td>${p.ticker.slice(0,36)}</td><td>${p.side}</td><td>${p.entry_c}c</td></tr>`).join(""):'<tr><td colspan="3" style="color:var(--dim)">flat</td></tr>';
+    document.getElementById("events").innerHTML=(d.events||[]).map(e=>{const t=(e.ts||"").slice(11,19);return`<div class="${cls(e.msg)}">[${t}] ${e.msg}</div>`;}).join("")||"waiting for engine…";
+    document.getElementById("stamp").textContent="updated "+new Date().toLocaleTimeString();
+  }catch(e){document.getElementById("stamp").textContent="feed error";}
+}
+tick();setInterval(tick,10000);
+</script>
+</body>
+</html>
