@@ -1,10 +1,10 @@
-<!-- =============================================================================== file_id: SOM-APP-0919-v1.0.0 name: mc_static/index.html description: SOMACO TRADE CONTROL — terminal-UX mission control for the UUID trader: corpus stats, live Kalshi markets, ledger tables, passkey-gated PAPER/FIRE ticket, kill switch project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [mission-control, terminal, dashboard, trading, uuid] created: 2026-08-02 modified: 2026-08-02 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!-- =============================================================================== file_id: SOM-APP-0919-v3.0.0 name: trade/index.html description: SOMACO TRADE CONTROL v3 — LIVE: real winnings hero, one-tap live bet tile, auto-follow super trends, calm Three.js event-reactive backdrop project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [mission-control, live, betting, threejs, terminal] created: 2026-08-02 modified: 2026-08-03 version: 3.0.0 agent_id: HERMES-AGENT =============================================================================== -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOMACO // TRADE CONTROL</title>
+<title>SOMACO // TRADE CONTROL — LIVE</title>
 <style>
   :root{
     --bg:#05070a; --panel:#0a0e14; --panel2:#0e131c; --line:#1e2836;
@@ -12,237 +12,222 @@
     --txt:#c9d4e3; --dim:#6b7a8f; --mono:'Consolas','SF Mono','Cascadia Mono',monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.45;
-    background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px)}
-  header{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+  body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.45}
+  #bg3d{position:fixed;inset:0;z-index:0;opacity:.5}
+  .zwrap{position:relative;z-index:1}
+  header{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:rgba(10,14,20,.88)}
   .hex{width:16px;height:18px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
   h1{font-size:15px;letter-spacing:3px;color:#fff}
   h1 .a{color:var(--cyan)}
   .pill{padding:2px 10px;border-radius:3px;font-size:10px;letter-spacing:1px;font-weight:bold;border:1px solid var(--line)}
   .ok{color:var(--green);border-color:rgba(57,255,20,.4);background:rgba(57,255,20,.08)}
   .bad{color:var(--red);border-color:rgba(255,77,77,.4);background:rgba(255,77,77,.08)}
-  .warn{color:var(--amber);border-color:rgba(255,176,32,.4);background:rgba(255,176,32,.08)}
   .spacer{flex:1}
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:12px 18px}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px 12px}
+  .hero{display:flex;gap:22px;align-items:center;padding:16px 20px;background:rgba(10,14,20,.8);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .h-eq{font-size:42px;font-weight:bold;color:#fff;line-height:1}
+  .h-lbl{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+  .h-sub{font-size:12px;margin-top:4px}
+  .up{color:var(--green)} .dn{color:var(--red)}
+  .h-chip{border:1px solid var(--line);border-radius:6px;padding:8px 12px;background:rgba(5,7,10,.7);min-width:110px}
+  .h-chip b{display:block;font-size:16px;margin-top:2px}
+  .switch{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+  .sw{width:44px;height:22px;border-radius:11px;border:1px solid var(--line);position:relative;background:var(--panel2);transition:.2s}
+  .sw.on{border-color:var(--green);background:rgba(57,255,20,.15)}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--dim);transition:.2s}
+  .sw.on::after{left:24px;background:var(--green)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:12px 18px}
+  .stat{background:rgba(10,14,20,.85);border:1px solid var(--line);border-radius:4px;padding:10px 12px}
   .stat h4{font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
   .stat .v{font-size:20px;font-weight:bold;color:#fff}
-  .stat .v small{font-size:11px;color:var(--dim);font-weight:normal}
   main{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;padding:0 18px 12px}
   @media(max-width:1100px){main{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px}
+  .card{background:rgba(10,14,20,.88);border:1px solid var(--line);border-radius:4px;padding:12px}
   .card h3{font-size:11px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:6px}
   table{width:100%;border-collapse:collapse;font-size:11px}
   th{color:var(--dim);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px;text-transform:uppercase}
   td{padding:4px 6px;border-bottom:1px solid rgba(30,40,54,.5);vertical-align:top;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
-  tr.mrow{cursor:pointer}
-  tr.mrow:hover td{background:rgba(6,182,212,.08)}
-  .c-cyan{color:var(--cyan)} .c-green{color:var(--green)} .c-mag{color:var(--mag)} .c-amber{color:var(--amber)} .c-red{color:var(--red)} .c-dim{color:var(--dim)}
-  .field{display:flex;gap:6px;margin-bottom:8px}
-  .field label{width:64px;font-size:10px;color:var(--dim);align-self:center;letter-spacing:1px;text-transform:uppercase}
-  input,select{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:3px;outline:none}
-  input:focus,select:focus{border-color:var(--cyan)}
-  .btns{display:flex;gap:8px;margin-top:10px}
-  button{flex:1;font-family:var(--mono);font-size:12px;letter-spacing:2px;font-weight:bold;padding:9px 0;border-radius:3px;border:1px solid;cursor:pointer;background:transparent}
-  .b-paper{color:var(--cyan);border-color:var(--cyan)}
-  .b-paper:hover{background:rgba(6,182,212,.12)}
-  .b-fire{color:var(--red);border-color:var(--red)}
-  .b-fire:hover{background:rgba(255,77,77,.12)}
-  .b-kill{color:var(--amber);border-color:var(--amber)}
-  .b-kill:hover{background:rgba(255,176,32,.12)}
-  .b-kill.engaged{background:rgba(255,77,77,.2);color:var(--red);border-color:var(--red)}
-  #logbox{margin:0 18px 16px;background:#030507;border:1px solid var(--line);border-radius:4px;padding:10px;height:190px;overflow-y:auto;font-size:11px}
+  .c-cyan{color:var(--cyan)} .c-green{color:var(--green)} .c-amber{color:var(--amber)} .c-red{color:var(--red)} .c-dim{color:var(--dim)}
+  .bigbtns{display:flex;gap:8px;margin:8px 0}
+  .bb{flex:1;padding:14px 0;border-radius:6px;border:1px solid;font-family:var(--mono);font-size:16px;font-weight:bold;text-align:center;cursor:pointer;background:transparent}
+  .bb.yes{color:var(--green);border-color:var(--green)} .bb.yes.sel{background:rgba(57,255,20,.18)}
+  .bb.no{color:var(--red);border-color:var(--red)} .bb.no.sel{background:rgba(255,77,77,.18)}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-family:var(--mono);font-size:12px;padding:7px 8px;border-radius:3px;outline:none}
+  .fire{width:100%;padding:12px;border-radius:6px;border:1px solid var(--amber);color:var(--amber);background:transparent;font-family:var(--mono);font-size:14px;font-weight:bold;letter-spacing:2px;cursor:pointer;margin-top:8px}
+  .fire:hover{background:rgba(255,176,32,.12)}
+  #logbox{margin:0 18px 16px;background:rgba(3,5,7,.9);border:1px solid var(--line);border-radius:4px;padding:10px;height:150px;overflow-y:auto;font-size:11px}
   #logbox .l{margin:1px 0;white-space:pre-wrap;word-break:break-all}
   #logbox .t{color:var(--dim);margin-right:8px}
-  .lk{color:var(--red)} .lw{color:var(--amber)} .lp{color:var(--cyan)} .ll{color:var(--mag)} .le{color:var(--red)} .li{color:var(--green)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 18px 12px}
-  @media(max-width:1100px){.grid2{grid-template-columns:1fr}}
   .mono-sm{font-size:10px;color:var(--dim)}
-  ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
 </style>
 </head>
 <body>
+<canvas id="bg3d"></canvas>
+<div class="zwrap">
 <header>
   <div class="hex" style="background:var(--cyan)"></div>
   <div class="hex" style="background:var(--green)"></div>
   <div class="hex" style="background:var(--mag)"></div>
-  <h1>SOMACO <span class="a">// TRADE CONTROL</span></h1>
-  <a href="/about" style="color:var(--cyan);text-decoration:none;font-size:10px;letter-spacing:1px;border:1px solid var(--cyan);padding:2px 8px;border-radius:3px">ABOUT / ALGO</a>
-  <span class="pill" id="p-corpus">CORPUS …</span>
+  <h1>SOMACO <span class="a">// TRADE CONTROL — LIVE</span></h1>
+  <a href="/trade/about.html" style="color:var(--cyan);text-decoration:none;font-size:10px;letter-spacing:1px;border:1px solid var(--cyan);padding:2px 8px;border-radius:3px">ABOUT</a>
   <span class="pill" id="p-keys">KEYS …</span>
   <span class="pill" id="p-kill">KILL …</span>
   <div class="spacer"></div>
   <span class="mono-sm" id="clock"></span>
 </header>
 
-<div class="stats">
-  <div class="stat"><h4>Corpus trades</h4><div class="v" id="s-trades">—</div></div>
-  <div class="stat"><h4>Wirespeed decode</h4><div class="v c-cyan" id="s-ops">—</div></div>
-  <div class="stat"><h4>Ledger orders</h4><div class="v" id="s-orders">—</div></div>
-  <div class="stat"><h4>Ledger fills</h4><div class="v" id="s-fills">—</div></div>
-  <div class="stat"><h4>Realized P&amp;L</h4><div class="v c-green" id="s-pnl">—</div></div>
-  <div class="stat"><h4>Open contracts</h4><div class="v c-amber" id="s-exp">—</div></div>
+<div class="hero">
+  <div>
+    <div class="h-lbl">Account equity</div>
+    <div class="h-eq" id="h-eq">$—</div>
+    <div class="h-sub" id="h-day">—</div>
+  </div>
+  <div class="h-chip"><div class="h-lbl">Cash</div><b id="h-cash">—</b></div>
+  <div class="h-chip"><div class="h-lbl">Realized P&L</div><b id="h-pnl">—</b></div>
+  <div class="h-chip"><div class="h-lbl">Paper engine</div><b id="h-dry">—</b></div>
+  <div class="h-chip"><div class="h-lbl">Fleet</div><b id="h-fleet">—</b></div>
+  <div class="h-chip">
+    <div class="h-lbl">Auto-follow super trends</div>
+    <div class="switch" id="sw-trend"><div class="sw" id="sw-trend-el"></div><span id="sw-trend-txt" style="font-size:11px">OFF</span></div>
+  </div>
 </div>
 
 <main>
   <div class="card">
     <h3>Live Kalshi Markets (top volume)</h3>
     <table id="markets"><thead><tr><th>Ticker</th><th>Title</th><th>Bid</th><th>Ask</th><th>Vol</th></tr></thead><tbody></tbody></table>
+    <h3 style="margin-top:12px">Recent winnings</h3>
+    <table id="wins"><thead><tr><th>When</th><th>Event</th></tr></thead><tbody></tbody></table>
   </div>
   <div class="card">
-    <h3>Order Ticket</h3>
-    <div class="field"><label>Ticker</label><input id="f-ticker" placeholder="KX…"></div>
-    <div class="field"><label>Side</label><select id="f-side"><option value="yes">YES</option><option value="no">NO</option></select></div>
-    <div class="field"><label>Price ¢</label><input id="f-price" type="number" min="1" max="99" value="42"></div>
-    <div class="field"><label>Count</label><input id="f-count" type="number" min="1" max="5" value="1"></div>
-    <div class="field"><label>Mode</label><select id="f-mode"><option value="paper">PAPER</option><option value="live">LIVE</option></select></div>
-    <div class="field"><label>Passkey</label><input id="f-pass" type="password" placeholder="passkey"></div>
-    <div class="field" id="confirm-row" style="display:none"><label>Confirm</label><input id="f-confirm" placeholder="type FIRE"></div>
-    <div class="btns">
-      <button class="b-paper" id="btn-go">EXECUTE</button>
+    <h3>Bet — live 15M window</h3>
+    <div class="mono-sm" id="bet-mkt">loading window…</div>
+    <div class="bigbtns">
+      <div class="bb yes" id="bb-yes">YES —</div>
+      <div class="bb no" id="bb-no">NO —</div>
     </div>
-    <div class="btns">
-      <button class="b-kill" id="btn-kill">ENGAGE KILL SWITCH</button>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <select id="b-count"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <input id="b-pass" type="password" placeholder="passkey">
     </div>
-    <div class="mono-sm" style="margin-top:8px">caps: ≤5 contracts · ≤$5 notional · client_order_id = UUID low-42 tail · every event minted on the substrate</div>
+    <button class="fire" id="b-fire">FIRE LIVE BET</button>
+    <div class="mono-sm" style="margin-top:8px" id="b-result">caps ≤5 · ≤$5 · minted to the substrate</div>
+    <h3 style="margin-top:14px">Order ticket (any market)</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+      <input id="f-ticker" placeholder="ticker">
+      <input id="f-price" type="number" value="42" min="1" max="99">
+    </div>
+    <div style="display:flex;gap:8px">
+      <select id="f-side"><option value="yes">YES</option><option value="no">NO</option></select>
+      <select id="f-mode"><option value="paper">PAPER</option><option value="live">LIVE</option></select>
+      <button class="fire" id="f-go" style="margin-top:0">EXECUTE</button>
+    </div>
+    <div class="mono-sm" style="margin-top:6px" id="f-result"></div>
   </div>
   <div class="card">
     <h3>Positions &amp; P&amp;L</h3>
     <table id="positions"><thead><tr><th>Ticker</th><th>Side</th><th>Net</th><th>Avg¢</th><th>Realized¢</th></tr></thead><tbody></tbody></table>
-    <h3 style="margin-top:12px">P&amp;L by market (spawn-tree)</h3>
-    <table id="pnl"><thead><tr><th>Ticker</th><th>Orders</th><th>Filled</th><th>Notional¢</th><th>Fees¢</th></tr></thead><tbody></tbody></table>
   </div>
 </main>
-
-<div class="grid2">
-  <div class="card">
-    <h3>Orders</h3>
-    <table id="orders"><thead><tr><th>UUID</th><th>COI</th><th>Ticker</th><th>Side</th><th>¢</th><th>x</th><th>Status</th><th>Mode</th></tr></thead><tbody></tbody></table>
-  </div>
-  <div class="card">
-    <h3>Fills</h3>
-    <table id="fills"><thead><tr><th>UUID</th><th>Parent order</th><th>¢</th><th>x</th><th>Fee¢</th></tr></thead><tbody></tbody></table>
-  </div>
-</div>
-
 <div id="logbox"></div>
-
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
 <script>
-const $ = (id)=>document.getElementById(id);
-const esc = (s)=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const short = (u)=>u?esc(u.slice(0,13))+"…":"—";
-sessionStorage.pk = sessionStorage.pk || "";
-$("f-pass").value = sessionStorage.pk;
-$("f-pass").addEventListener("input", e=>sessionStorage.pk = e.target.value);
+const $=id=>document.getElementById(id);
+async function j(u,o){const r=await fetch(u,o);return r.json();}
+function log(msg,cls){const b=$("logbox");const d=document.createElement("div");d.className="l";
+  d.innerHTML=`<span class="t">${new Date().toLocaleTimeString()}</span><span class="${cls||''}">${msg}</span>`;
+  b.insertBefore(d,b.firstChild);while(b.children.length>80)b.removeChild(b.lastChild);}
 
-async function j(url, opts){
-  const r = await fetch(url, opts);
-  return r.json();
+/* ---------- calm three.js backdrop: static icosphere, pulses on fills ---------- */
+let pulses=[];
+(function(){
+  try{
+    const c=$("bg3d");const r=new THREE.WebGLRenderer({canvas:c,alpha:true,antialias:true});
+    r.setSize(innerWidth,innerHeight);r.setPixelRatio(Math.min(devicePixelRatio,2));
+    const s=new THREE.Scene();const cam=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,100);
+    cam.position.z=6;
+    const geo=new THREE.IcosahedronGeometry(2.2,1);
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(geo),
+      new THREE.LineBasicMaterial({color:0x06b6d4,transparent:true,opacity:.22}));
+    s.add(wire);
+    const pts=new THREE.Points(geo,new THREE.PointsMaterial({color:0x39ff14,size:.05,transparent:true,opacity:.5}));
+    s.add(pts);
+    window.__pulse=(col)=>{pulses.push({m:new THREE.Points(new THREE.IcosahedronGeometry(.35,0),
+      new THREE.PointsMaterial({color:col||0x39ff14,size:.18,transparent:true,opacity:.95})),t:1});
+      const p=pulses[pulses.length-1].m;
+      p.position.set((Math.random()-.5)*3.5,(Math.random()-.5)*2.2,(Math.random()-.5)*2);
+      s.add(p);};
+    (function anim(){requestAnimationFrame(anim);
+      wire.rotation.y+=0.0004;pts.rotation.y+=0.0004;
+      pulses=pulses.filter(p=>{p.t-=.015;p.m.material.opacity=p.t*.95;p.m.scale.setScalar(1+(1-p.t)*2.2);
+        if(p.t<=0){s.remove(p.m);return false;}return true;});
+      r.render(s,cam);})();
+    addEventListener("resize",()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+  }catch(e){/* no webgl — panel works anyway */}
+})();
+
+/* ---------- live data ---------- */
+let lastFills=0, betMkt=null, betSide=null;
+async function tick(){
+  $("clock").textContent=new Date().toLocaleTimeString();
+  const s=await j("/api/trade/stats");
+  if(s){
+    $("p-keys").textContent=s.keys?"KEYS ARMED":"KEYS MISSING";$("p-keys").className="pill "+(s.keys?"ok":"bad");
+    $("p-kill").textContent=s.kill?"KILL ENGAGED":"KILL OFF";$("p-kill").className="pill "+(s.kill?"bad":"ok");
+    if(s.account){$("h-eq").textContent="$"+s.account.equity.toFixed(2);
+      const d=s.account.equity-24.98;$("h-day").innerHTML=`day <b class="${d>=0?"up":"dn"}">${d>=0?"+":""}$${d.toFixed(2)} (${(d/24.98*100).toFixed(0)}%)</b> · <span class="c-dim">from $24.98</span>`;
+      $("h-cash").textContent="$"+s.account.cash.toFixed(2);}
+    if(s.ledger){$("h-pnl").textContent=(s.ledger.realized_pnl_cents/100).toFixed(2)+"$";
+      $("h-pnl").className=s.ledger.realized_pnl_cents>=0?"up":"dn";
+      if(lastFills&&s.ledger.fills>lastFills){window.__pulse&&window.__pulse(0x39ff14);}
+      lastFills=s.ledger.fills||lastFills;}
+  }
+  const d=await j("/api/trade/dry");
+  if(d&&d.state){$("h-dry").textContent=`${d.state.wins}/${d.state.losses} · $${(d.state.equity||0).toFixed(2)}`;}
+  const f=await j("/api/trade/fleet");
+  if(f&&f.daemons){const up=f.daemons.filter(x=>x.state==="alive"&&x.age_s<400);
+    $("h-fleet").textContent=up.length+"/"+f.daemons.length+" live";}
+  const m=await j("/api/trade/markets");
+  if(m&&m.markets){
+    $("markets").querySelector("tbody").innerHTML=m.markets.slice(0,14).map(x=>
+      `<tr><td class="c-cyan">${x.ticker.slice(0,30)}</td><td>${(x.title||"").slice(0,42)}</td><td>${x.yes_bid}</td><td>${x.yes_ask}</td><td class="c-dim">${x.volume?Math.round(x.volume/1000)+"k":"—"}</td></tr>`).join("");
+    const btc=m.markets.find(x=>x.ticker.includes("KXBTC15M")&&x.yes_ask>0&&x.yes_ask<99);
+    if(btc){betMkt=btc;$("bet-mkt").textContent=btc.ticker+" · "+(btc.title||"").slice(0,50);
+      $("bb-yes").textContent="YES "+btc.yes_ask+"¢";$("bb-no").textContent="NO "+(100-(btc.yes_bid||0))+"¢";}
+  }
+  const sh=await j("/api/trade/shadow");
+  if(sh&&sh.latest){$("wins").querySelector("tbody").innerHTML=sh.latest.slice(0,8).map(e=>
+    `<tr><td class="c-dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</td><td>${(e.detail||"").slice(0,60)}</td></tr>`).join("");}
 }
-
-async function refreshStats(){
-  const s = await j("/api/stats");
-  $("s-trades").textContent = s.corpus.online ? s.corpus.trades.toLocaleString() : "offline";
-  $("s-ops").innerHTML = s.corpus.decode_ops ? (s.corpus.decode_ops/1e6).toFixed(2)+"M <small>ops/s</small>" : "—";
-  $("s-orders").textContent = s.ledger.orders;
-  $("s-fills").textContent = s.ledger.fills;
-  $("s-pnl").textContent = s.ledger.realized_pnl_cents+"¢";
-  $("s-exp").textContent = s.ledger.open_contracts;
-  setPill("p-corpus", s.corpus.online, s.corpus.online?"CORPUS ONLINE":"CORPUS DOWN");
-  setPill("p-keys", s.keys, s.keys?"KEYS ARMED":"NO KEYS");
-  setPill("p-kill", !s.kill, s.kill?"KILL ENGAGED":"ARMED", s.kill?"bad":"ok");
-  $("btn-kill").textContent = s.kill ? "DISENGAGE KILL" : "ENGAGE KILL SWITCH";
-  $("btn-kill").classList.toggle("engaged", s.kill);
-}
-function setPill(id, good, txt, force){
-  const el = $(id); el.textContent = txt;
-  el.className = "pill " + (force ? force : (good?"ok":"warn"));
-}
-
-async function refreshMarkets(){
-  const d = await j("/api/markets");
-  const tb = $("markets").querySelector("tbody"); tb.innerHTML="";
-  (d.markets||[]).forEach(m=>{
-    const tr = document.createElement("tr"); tr.className="mrow";
-    tr.innerHTML = `<td class="c-cyan">${esc(m.ticker)}</td><td>${esc(m.title)}</td><td class="c-green">${m.yes_bid??"—"}</td><td class="c-amber">${m.yes_ask??"—"}</td><td>${(m.volume||0).toLocaleString()}</td>`;
-    tr.onclick = ()=>{ $("f-ticker").value = m.ticker; if(m.yes_ask) $("f-price").value = m.yes_ask; };
-    tb.appendChild(tr);
-  });
-}
-
-async function refreshTables(){
-  const [o,f,p,pn] = await Promise.all([j("/api/orders"), j("/api/fills"), j("/api/positions"), j("/api/pnl")]);
-  let tb = $("orders").querySelector("tbody"); tb.innerHTML="";
-  (o.orders||[]).forEach(r=>{
-    const tr=document.createElement("tr");
-    const sc = r.status==="submitted"?"c-green":(r.status==="rejected"||r.status==="error")?"c-red":r.status==="filled"?"c-cyan":"c-dim";
-    tr.innerHTML = `<td>${short(r.uuid)}</td><td class="c-dim">${esc(r.client_order_id)}</td><td>${esc(r.ticker)}</td><td>${esc(r.side)}</td><td>${r.price_cents}</td><td>${r.count}</td><td class="${sc}">${esc(r.status)}</td><td class="${r.mode==="live"?"c-mag":"c-dim"}">${esc(r.mode)}</td>`;
-    tb.appendChild(tr);
-  });
-  tb = $("fills").querySelector("tbody"); tb.innerHTML="";
-  (f.fills||[]).forEach(r=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML = `<td>${short(r.uuid)}</td><td>${short(r.parent_uuid)}</td><td>${r.price_cents}</td><td>${r.count}</td><td>${r.fee_cents}</td>`;
-    tb.appendChild(tr);
-  });
-  tb = $("positions").querySelector("tbody"); tb.innerHTML="";
-  (p.positions||[]).forEach(r=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML = `<td>${esc(r.ticker)}</td><td>${esc(r.side)}</td><td>${r.net_count}</td><td>${Number(r.avg_price_cents).toFixed(1)}</td><td class="${r.realized_pnl_cents>=0?"c-green":"c-red"}">${r.realized_pnl_cents}</td>`;
-    tb.appendChild(tr);
-  });
-  tb = $("pnl").querySelector("tbody"); tb.innerHTML="";
-  (pn.pnl||[]).forEach(r=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML = `<td>${esc(r.ticker)}</td><td>${r.orders}</td><td>${r.filled_contracts}</td><td>${r.notional_cents}</td><td>${r.fees_cents}</td>`;
-    tb.appendChild(tr);
-  });
-}
-
-async function refreshLog(){
-  const d = await j("/api/log");
-  const box = $("logbox"); box.innerHTML="";
-  (d.log||[]).forEach(e=>{
-    const div = document.createElement("div"); div.className="l";
-    const t = new Date(e.ts*1000).toLocaleTimeString();
-    const cls = {kill:"lk",warn:"lw",paper:"lp",live:"ll",error:"le"}[e.kind]||"li";
-    div.innerHTML = `<span class="t">${t}</span><span class="${cls}">${esc(e.msg)}</span>`;
-    box.appendChild(div);
-  });
-}
-
-$("f-mode").addEventListener("change", e=>{
-  $("confirm-row").style.display = e.target.value==="live" ? "flex":"none";
-  $("btn-go").textContent = e.target.value==="live" ? "FIRE (LIVE)" : "EXECUTE (PAPER)";
-  $("btn-go").className = e.target.value==="live" ? "b-fire" : "b-paper";
-});
-
-$("btn-go").onclick = async ()=>{
-  const body = {
-    ticker: $("f-ticker").value.trim(), side: $("f-side").value,
-    price: +$("f-price").value, count: +$("f-count").value,
-    mode: $("f-mode").value, passkey: $("f-pass").value,
-    confirm: $("f-confirm").value
-  };
-  if(!body.ticker) return alert("ticker required");
-  const r = await fetch("/api/order", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
-  const d = await r.json();
-  if(!r.ok) alert("REJECTED: " + (d.error||r.status) + (d.resp?("\n"+JSON.stringify(d.resp).slice(0,300)):""));
-  refreshStats(); refreshTables(); refreshLog();
+$("bb-yes").onclick=()=>{betSide="yes";$("bb-yes").classList.add("sel");$("bb-no").classList.remove("sel");};
+$("bb-no").onclick=()=>{betSide="no";$("bb-no").classList.add("sel");$("bb-yes").classList.remove("sel");};
+$("b-fire").onclick=async()=>{
+  if(!betMkt||!betSide)return $("b-result").textContent="pick a side first";
+  const price=betSide==="yes"?betMkt.yes_ask:100-(betMkt.yes_bid||0);
+  const r=await j("/api/trade/order",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({ticker:betMkt.ticker,side:betSide,price,count:Number($("b-count").value),
+      mode:"live",passkey:$("b-pass").value,confirm:"FIRE"})});
+  if(r.ok){$("b-result").innerHTML=`<span class="c-green">FIRED + ACK ${r.exchange_order_id||""} fill=${r.ack&&r.ack.fill_count}</span>`;
+    log(`BET ${betSide.toUpperCase()} x${$("b-count").value} @${price}c ${betMkt.ticker.slice(0,26)}`,"c-green");window.__pulse&&window.__pulse(0xffb020);}
+  else $("b-result").innerHTML=`<span class="c-red">${r.error||"rejected"}</span>`;
 };
-
-$("btn-kill").onclick = async ()=>{
-  const engaging = $("btn-kill").textContent.includes("ENGAGE");
-  const r = await fetch("/api/kill", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({on: engaging, passkey: $("f-pass").value})});
-  if(r.status===403) alert("bad passkey");
-  refreshStats(); refreshLog();
+$("f-go").onclick=async()=>{
+  const r=await j("/api/trade/order",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({ticker:$("f-ticker").value,side:$("f-side").value,price:Number($("f-price").value),
+      count:1,mode:$("f-mode").value,passkey:$("b-pass").value,confirm:"FIRE"})});
+  $("f-result").innerHTML=r.ok?`<span class="c-green">ok ${r.mode}</span>`:`<span class="c-red">${r.error||"err"}</span>`;
 };
-
-setInterval(()=>{ $("clock").textContent = new Date().toLocaleTimeString(); }, 1000);
-async function tick(){ await Promise.all([refreshStats(), refreshTables(), refreshLog()]); }
-refreshMarkets(); tick();
-setInterval(tick, 2500);
-setInterval(refreshMarkets, 20000);
+$("sw-trend").onclick=async()=>{
+  const el=$("sw-trend-el");const on=!el.classList.contains("on");
+  el.classList.toggle("on",on);$("sw-trend-txt").textContent=on?"ON":"OFF";
+  await j("/api/trade/autofollow",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on})});
+  log(`auto-follow super trends ${on?"ON":"OFF"}`,"c-cyan");
+};
+(async()=>{try{const a=await j("/api/trade/autofollow");if(a&&a.on){$("sw-trend-el").classList.add("on");$("sw-trend-txt").textContent="ON";}}catch(e){}
+  const p=await j("/api/trade/positions");
+  if(p&&p.positions){$("positions").querySelector("tbody").innerHTML=p.positions.slice(0,20).map(x=>
+    `<tr><td class="c-cyan">${x.ticker.slice(0,28)}</td><td>${x.side}</td><td>${x.net_count}</td><td>${x.avg_price_cents}</td><td class="${x.realized_pnl_cents>0?"c-green":x.realized_pnl_cents<0?"c-red":""}">${x.realized_pnl_cents}</td></tr>`).join("");}
+  tick();setInterval(tick,10000);})();
 </script>
 </body>
 </html>

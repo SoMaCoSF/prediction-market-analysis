@@ -1,4 +1,4 @@
-<!-- =============================================================================== file_id: SOM-APP-0956-v1.0.0 name: tim/index.html description: TIM — phone-first betting surface: balance hero, tap market, tap YES/NO, tap size, PIN, done. Plane-ride light. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [tim, mobile, betting, phone] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!-- =============================================================================== file_id: SOM-APP-0956-v2.0.0 name: tim/index.html description: TIM v2 — phone-first betting surface: balance hero, market browser widgets (tabs + sparklines), bet history, one-tap bet sheet. Plane-ride light. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [tim, mobile, betting, widgets, history] created: 2026-08-03 modified: 2026-08-03 version: 2.0.0 agent_id: HERMES-AGENT =============================================================================== -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,103 +8,141 @@
 <style>
   :root{--bg:#05070a;--panel:#0d1219;--line:#1e2836;--cyan:#06b6d4;--green:#39ff14;--red:#ff4d4d;--amber:#ffb020;--txt:#dbe5f0;--dim:#6b7a8f;--mono:'SF Mono',ui-monospace,Consolas,monospace}
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{background:var(--bg);color:var(--txt);font-family:var(--mono);min-height:100vh;padding-bottom:90px}
-  .top{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:14px 16px;z-index:5}
-  .brand{font-size:11px;letter-spacing:2px;color:var(--dim)}
-  .brand b{color:var(--cyan)}
-  .bal{font-size:34px;font-weight:bold;color:#fff;margin-top:4px}
-  .bal small{font-size:12px;color:var(--dim);font-weight:normal}
-  .day{font-size:12px;margin-top:2px}
-  .up{color:var(--green)} .dn{color:var(--red)}
-  .sec{padding:12px 14px 4px;font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+  body{background:var(--bg);color:var(--txt);font-family:var(--mono);min-height:100vh;padding-bottom:100px}
+  .top{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px;z-index:5}
+  .brand{font-size:10px;letter-spacing:2px;color:var(--dim)} .brand b{color:var(--cyan)}
+  .bal{font-size:30px;font-weight:bold;color:#fff;margin-top:2px}
+  .bal small{font-size:11px;color:var(--dim);font-weight:normal}
+  .day{font-size:11px;color:var(--dim)}
+  .tabs{display:flex;gap:6px;padding:10px 14px 2px}
+  .tab{flex:1;text-align:center;font-size:10px;letter-spacing:1px;padding:7px 0;border:1px solid var(--line);border-radius:6px;color:var(--dim);cursor:pointer}
+  .tab.sel{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.1)}
+  .sec{padding:10px 14px 4px;font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
   .mkt{margin:8px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
-  .mkt .q{font-size:13px;color:#fff;line-height:1.35;margin-bottom:10px}
-  .mkt .meta{font-size:10px;color:var(--dim);margin-bottom:10px}
-  .row{display:flex;gap:10px}
-  .btn{flex:1;padding:14px 0;border-radius:8px;border:1px solid;font-family:var(--mono);font-size:15px;font-weight:bold;text-align:center;cursor:pointer;background:transparent}
+  .mkt .q{font-size:12.5px;color:#fff;line-height:1.35;margin-bottom:6px}
+  .mkt .meta{font-size:10px;color:var(--dim);margin-bottom:8px}
+  .spark{float:right}
+  .row{display:flex;gap:8px}
+  .btn{flex:1;padding:12px 0;border-radius:8px;border:1px solid;font-family:var(--mono);font-size:14px;font-weight:bold;text-align:center;cursor:pointer;background:transparent}
   .btn:active{transform:scale(.97)}
-  .yes{color:var(--green);border-color:var(--green)}
-  .yes.sel{background:rgba(57,255,20,.18)}
-  .no{color:var(--red);border-color:var(--red)}
-  .no.sel{background:rgba(255,77,77,.18)}
-  .sizes{display:flex;gap:8px;margin-top:10px}
-  .sz{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--line);color:var(--txt);text-align:center;font-size:14px;cursor:pointer}
-  .sz.sel{border-color:var(--cyan);background:rgba(6,182,212,.15);color:var(--cyan)}
+  .yes{color:var(--green);border-color:var(--green)} .yes.sel{background:rgba(57,255,20,.18)}
+  .no{color:var(--red);border-color:var(--red)} .no.sel{background:rgba(255,77,77,.18)}
+  .bet{margin:4px 14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:11px}
+  .bet .st{float:right;font-size:10px}
+  .filled{color:var(--green)} .rest{color:var(--amber)} .rej{color:var(--red)}
   .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:14px 16px;display:none;z-index:10}
   .sheet.open{display:block}
   .sheet .sum{font-size:14px;margin-bottom:10px;line-height:1.5}
   .pinrow{display:flex;gap:8px;margin-bottom:10px}
   .pinrow input{flex:1;background:var(--bg);border:1px solid var(--line);color:#fff;font-family:var(--mono);font-size:18px;letter-spacing:6px;text-align:center;padding:12px;border-radius:8px;outline:none}
-  .fire{width:100%;padding:16px;border-radius:8px;border:1px solid var(--amber);color:var(--amber);background:transparent;font-family:var(--mono);font-size:16px;font-weight:bold;letter-spacing:2px}
-  .fire:active{background:rgba(255,176,32,.15)}
+  .fire{width:100%;padding:15px;border-radius:8px;border:1px solid var(--amber);color:var(--amber);background:transparent;font-family:var(--mono);font-size:16px;font-weight:bold;letter-spacing:2px}
   .toast{position:fixed;top:70px;left:16px;right:16px;padding:12px;border-radius:8px;font-size:13px;display:none;z-index:20;border:1px solid}
   .toast.ok{display:block;background:rgba(57,255,20,.12);border-color:var(--green);color:var(--green)}
   .toast.err{display:block;background:rgba(255,77,77,.12);border-color:var(--red);color:var(--red)}
-  #feed{padding:0 14px}
-  #feed .ev{font-size:11px;color:var(--dim);padding:6px 0;border-bottom:1px solid rgba(30,40,54,.4)}
+  .eli5{margin:8px 14px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:12px;font-size:11px;line-height:1.55;color:var(--txt)}
+  .eli5 b{color:var(--cyan)}
+  .how{font-size:10px;color:var(--cyan);margin-top:8px;cursor:pointer;letter-spacing:.5px}
+  .howbox{display:none;font-size:10.5px;color:var(--txt);background:rgba(6,182,212,.08);border-radius:8px;padding:10px;margin-top:8px;line-height:1.6}
+  .howbox.open{display:block}
+  .howbox .g{color:var(--green)} .howbox .r{color:var(--red)} .howbox .a{color:var(--amber)}
+  .trend-blob{margin:8px 14px;background:linear-gradient(135deg,rgba(255,16,240,.08),rgba(6,182,212,.08));border:1px solid var(--line);border-radius:10px;padding:12px}
+  .trend-blob .ttl{font-size:10px;letter-spacing:2px;color:var(--mag);margin-bottom:8px}
 </style>
 </head>
 <body>
 <div class="top">
   <div class="brand">SOMACO <b>// TIM</b> — guest book</div>
   <div class="bal" id="bal">$— <small>cash</small></div>
-  <div class="day" id="spent">today: $0.00 / $20.00</div>
+  <div class="day" id="spent">today: $0.00 / $20.00 cap</div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="sec">Live markets — tap a side</div>
-<div id="mkts">loading…</div>
-<div class="sec">Recent</div>
-<div id="feed"></div>
+<div class="eli5" id="eli5">
+  <b>How this works in 20 seconds:</b> every market pays <b>$1.00</b> if you're right, $0 if you're wrong.
+  The price you see <b>is the crowd's probability</b>. <span class="how" onclick="$('eli5').style.display='none'">got it ✕</span><br>
+  <span style="color:var(--dim)">YES at 43¢ = "43% think this happens" — you pay 43¢, win $1 if it does. NO at 57¢ = the flip side.
+  YES+NO always add to ~$1. Price moves as people bet — buy low, and you can even sell early when the crowd moves your way.</span>
+</div>
+<div class="tabs">
+  <div class="tab sel" id="tab-crypto" onclick="setTab('crypto')">CRYPTO 15M</div>
+  <div class="tab" id="tab-trend" onclick="setTab('trend')">TRENDING</div>
+  <div class="tab" id="tab-history" onclick="setTab('history')">MY BETS</div>
+</div>
+<div id="list"></div>
 <div class="sheet" id="sheet">
   <div class="sum" id="sum"></div>
   <div class="pinrow"><input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN"></div>
   <button class="fire" id="fire">PLACE BET</button>
 </div>
 <script>
-let sel=null, size=1, mkts=[];
+let sel=null, tab="crypto", mkts=[], hist={};
 async function j(u,o){const r=await fetch(u,o);return r.json();}
-function toast(msg,ok){const t=document.getElementById("toast");t.textContent=msg;t.className="toast "+(ok?"ok":"err");setTimeout(()=>t.className="toast",4000);}
+function toast(m,ok){const t=$("toast");t.textContent=m;t.className="toast "+(ok?"ok":"err");setTimeout(()=>t.className="toast",4000);}
+const $=id=>document.getElementById(id);
+function spark(pts,up){if(!pts||pts.length<2)return"";
+  const w=64,h=22,mn=Math.min(...pts),mx=Math.max(...pts),rg=(mx-mn)||1;
+  const p=pts.map((v,i)=>`${(i/(pts.length-1)*w).toFixed(1)},${(h-2-((v-mn)/rg)*(h-4)).toFixed(1)}`).join(" ");
+  return`<svg class="spark" width="${w}" height="${h}"><polyline points="${p}" fill="none" stroke="${up?"#39ff14":"#ff4d4d"}" stroke-width="1.5"/></svg>`;}
+function setTab(t){tab=t;document.querySelectorAll(".tab").forEach(e=>e.classList.remove("sel"));$("tab-"+t).classList.add("sel");render();}
 async function refresh(){
   try{
     const s=await j("/api/trade/stats");
-    if(s&&s.account){document.getElementById("bal").innerHTML="$"+s.account.cash.toFixed(2)+" <small>cash · $"+s.account.equity.toFixed(2)+" equity</small>";}
-    const m=await j("/api/trade/markets?series=KXBTC15M");
-    const all=(m&&m.markets||[]).filter(x=>x.yes_ask>0&&x.yes_ask<99).slice(0,4);
-    const s2=await j("/api/trade/markets");
-    const vol=(s2&&s2.markets||[]).filter(x=>x.yes_ask>2&&x.yes_ask<97).slice(0,4);
-    mkts=[...all,...vol].slice(0,8);
-    document.getElementById("mkts").innerHTML=mkts.map((x,i)=>`
-      <div class="mkt">
-        <div class="q">${(x.title||x.ticker).slice(0,90)}</div>
-        <div class="meta">${x.ticker.slice(0,34)}${x.volume?` · vol ${Math.round(x.volume/1000)}k`:""}</div>
-        <div class="row">
-          <div class="btn yes" id="y${i}" onclick="pick(${i},'yes')">YES ${x.yes_ask}¢</div>
-          <div class="btn no" id="n${i}" onclick="pick(${i},'no')">NO ${100-(x.yes_bid||0)}¢</div>
-        </div>
-        <div class="sizes">${[1,2,3,4].map(c=>`<div class="sz" id="s${i}${c}" onclick="pickSize(${i},${c})">$${(c*(x.yes_ask||50)/100).toFixed(2)}<br><span style="font-size:9px;color:var(--dim)">${c}ct</span></div>`).join("")}</div>
-      </div>`).join("")||"no live books right now";
+    if(s&&s.account)$("bal").innerHTML="$"+s.account.cash.toFixed(2)+" <small>cash · eq $"+s.account.equity.toFixed(2)+"</small>";
+    if(tab==="history"){const b=await j("/api/trade/tim_bets");mkts=b.bets||[];}
+    else{const m=await j(tab==="crypto"?"/api/trade/markets?series=KXBTC15M":"/api/trade/markets");
+      let rows=(m&&m.markets||[]).filter(x=>x.yes_ask>1&&x.yes_ask<99);
+      if(tab==="trend")rows=rows.slice(0,10);else rows=rows.slice(0,6);
+      mkts=rows;
+      mkts.forEach(x=>{const h=hist[x.ticker]=hist[x.ticker]||[];h.push(x.yes_ask);if(h.length>24)h.shift();});}
+    render();
   }catch(e){/* plane wifi */}
 }
+function render(){
+  if(tab==="history"){
+    $("list").innerHTML=(mkts.length?mkts.map(b=>{const filled=(b.fill_count||0)>0;
+      return`<div class="bet"><span class="st ${filled?"filled":"rest"}">${filled?"FILLED":b.status}</span>
+      <b class="${b.side==="yes"?"filled":"rej"}">${(b.side||"").toUpperCase()}</b> x${b.count} @ ${b.price_cents}¢<br>
+      <span style="color:var(--dim)">${b.ticker.slice(0,40)}</span></div>`;}).join(""):'<div class="sec">no bets yet — tap a market</div>');
+    return;
+  }
+  const blob=tab==="trend"?`<div class="trend-blob"><div class="ttl">WHAT'S TRENDING</div>
+    <div style="font-size:11px;line-height:1.5">What the crowd is piling into right now — biggest money flows first.
+    High volume = lots of people betting = prices move fast. <span style="color:var(--dim)">Tap YES/NO to ride it.</span></div></div>`:"";
+  $("list").innerHTML=blob+(mkts.length?mkts.map((x,i)=>{const h=hist[x.ticker]||[];const up=h.length>1&&h[h.length-1]>=h[0];
+    const ya=x.yes_ask||0, nb=100-(x.yes_bid||0);
+    return`<div class="mkt">
+      <div class="q">${(x.title||x.ticker).slice(0,80)}</div>
+      <div class="meta">${x.ticker.slice(0,30)}${x.volume?` · ${Math.round(x.volume/1000)}k vol`:""} ${spark(h,up)}</div>
+      <div class="row">
+        <div class="btn yes" id="y${i}" onclick="pick(${i},'yes')">YES ${ya}¢</div>
+        <div class="btn no" id="n${i}" onclick="pick(${i},'no')">NO ${nb}¢</div>
+      </div>
+      <div class="how" onclick="document.getElementById('hw${i}').classList.toggle('open')">ⓘ how does this bet work?</div>
+      <div class="howbox" id="hw${i}">
+        <span class="g">YES costs ${ya}¢</span> — win <b>$1.00</b> if it happens (${ya}% chance by the crowd).<br>
+        <span class="r">NO costs ${nb}¢</span> — win <b>$1.00</b> if it doesn't (${nb}%).<br>
+        <span class="a">Why these prices?</span> The price IS the probability — everyone's bets push it up/down in real time.
+        Buy at ${ya}¢ and if the crowd moves to 60¢ you can sell early for +${60-ya}¢ — or hold to the end for the full $1.
+      </div></div>`;}).join(""):'<div class="sec">no live books right now</div>');
+}
 function pick(i,side){sel={i,side};document.querySelectorAll(".btn").forEach(b=>b.classList.remove("sel"));
-  document.getElementById(side==="yes"?"y"+i:"n"+i).classList.add("sel");pickSize(i,size);}
-function pickSize(i,c){size=c;[1,2,3,4].forEach(n=>{const e=document.getElementById("s"+i+n);if(e)e.classList.remove("sel");});
-  const e=document.getElementById("s"+i+c);if(e)e.classList.add("sel");openSheet();}
-function openSheet(){if(!sel)return;const x=mkts[sel.i];
-  const price=sel.side==="yes"?x.yes_ask:100-(x.yes_bid||0);
-  document.getElementById("sum").innerHTML=`<b style="color:${sel.side==="yes"?"var(--green)":"var(--red)"}">${sel.side.toUpperCase()}</b> ${size} contract${size>1?"s":""} @ ${price}¢ = <b>$${(size*price/100).toFixed(2)}</b><br><span style="color:var(--dim);font-size:11px">${(x.title||x.ticker).slice(0,70)}</span>`;
-  document.getElementById("sheet").classList.add("open");}
-document.getElementById("fire").onclick=async()=>{
+  $(side==="yes"?"y"+i:"n"+i).classList.add("sel");
+  const x=mkts[i];const price=side==="yes"?x.yes_ask:100-(x.yes_bid||0);
+  $("sum").innerHTML=`<b style="color:${side==="yes"?"var(--green)":"var(--red)"}">${side.toUpperCase()}</b> 1 contract @ ${price}¢ = <b>$${(price/100).toFixed(2)}</b><br>
+  <span style="color:var(--dim);font-size:11px">${(x.title||x.ticker).slice(0,64)}</span>
+  <div class="row" style="margin-top:10px">${[1,2,3,4].map(c=>`<div class="btn" style="border-color:var(--line);color:var(--txt)" onclick="setCount(this,${c})" id="c${c}">${c}ct</div>`).join("")}</div>`;
+  $("sheet").classList.add("open");}
+let count=1;
+function setCount(el,c){count=c;[1,2,3,4].forEach(n=>$("c"+n).style.borderColor="var(--line)");el.style.borderColor="var(--cyan)";}
+$("fire").onclick=async()=>{
   if(!sel)return;const x=mkts[sel.i];
   const price=sel.side==="yes"?x.yes_ask:100-(x.yes_bid||0);
-  const pin=document.getElementById("pin").value;
   const r=await j("/api/trade/tim_order",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ticker:x.ticker,side:sel.side,price,count:size,pin})});
-  if(r.ok){toast(`BET PLACED — ${sel.side.toUpperCase()} ${size} @ ${price}¢ fill=${r.fill_count}`,true);
-    document.getElementById("feed").insertAdjacentHTML("afterbegin",`<div class="ev">${new Date().toLocaleTimeString()} — ${sel.side.toUpperCase()} x${size} @${price}¢ ${x.ticker.slice(0,26)}</div>`);
-    document.getElementById("sheet").classList.remove("open");document.getElementById("pin").value="";}
+    body:JSON.stringify({ticker:x.ticker,side:sel.side,price,count,pin:$("pin").value})});
+  if(r.ok){toast(`BET PLACED — ${sel.side.toUpperCase()} x${count} @ ${price}¢ (fill ${r.fill_count})`,true);
+    $("sheet").classList.remove("open");$("pin").value="";refresh();}
   else toast(r.error||"rejected",false);
 };
-refresh();setInterval(refresh,15000);
+refresh();setInterval(refresh,12000);
 </script>
 </body>
 </html>
