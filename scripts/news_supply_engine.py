@@ -41,7 +41,7 @@ load_dotenv(ROOT / ".env")
 MC = os.getenv("MC_URL", "http://127.0.0.1:8420")
 KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
 PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdigest()
-BET_SERIES = {"KXBTC15M": "crypto", "KXETH15M": "crypto"}   # validated-live series only (v1)
+BET_SERIES = {"KXBTC15M": "crypto", "KXETH15M": "crypto", "KXWTI": "energy"}   # validated-live series only
 MAX_OPEN_BETS = 5
 DAILY_BET_CAP = 25.00
 open_bets: list[dict] = []
@@ -142,6 +142,14 @@ TOPICS = {
 ATLAS = {
     "red-sea-shipping": (["red sea", "houthi", "suez", "shipping attack", "freight"],
                          "freight rates up -> goods inflation -> energy bid", "KXWTI", +0.08),
+    "nuclear-restart": (["nuclear", "reactor", "uranium", "smr", "small modular", "enrichment"],
+                        "firm power premium -> grid capex -> copper/electrical bid", "KXWTI", +0.04),
+    "datacenter-power": (["datacenter", "data center", "ai capex", "hyperscaler", "power purchase agreement", "ppa"],
+                         "grid strain -> power prices -> energy complex", "KXWTI", +0.05),
+    "electrical-supply": (["grainger", "cable tray", "low voltage", "switchgear", "transformer", "hubbell", "eaton"],
+                          "MRO backlog -> construction costs -> industrial inflation", "KXWTI", +0.03),
+    "copper-grid": (["copper", "grid", "transmission", "substation", "interconnection queue"],
+                    "grid build-out -> copper demand -> energy-adjacent bid", "KXWTI", +0.04),
     "ecb-rates": (["ecb", "interest rate", "lagarde", "deposit facility", "rate cut", "rate hike"],
                   "EUR move -> dollar index -> crypto inverse", "KXBTC15M", +0.05),
     "semis-export": (["asml", "semiconductor", "chip export", "export control", "tsmc"],
