@@ -4,7 +4,7 @@ import { q } from "../../../lib/trade-db";
 export default async function handler(req, res) {
   try {
     const st = await q("SELECT v, updated_at FROM mc_state WHERE k='dry_run_state'");
-    const ev = await q("SELECT ts, msg FROM mc_log WHERE kind='dry' ORDER BY id DESC LIMIT 60");
+    const ev = await q("SELECT to_char(created_at,'HH24:MI:SS') AS ts, msg FROM mc_log WHERE kind='dry' ORDER BY id DESC LIMIT 60");
     let state = null;
     if (st.length) {
       try { state = JSON.parse(st[0].v); } catch { state = { raw: st[0].v }; }

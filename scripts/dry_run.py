@@ -96,7 +96,7 @@ def publish(open_marks: float, last_event: str = ""):
             "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
             (_json.dumps(state),))
         if last_event:
-            cur.execute("INSERT INTO mc_log (ts, kind, msg) VALUES (now(), 'dry', %s)", (last_event,))
+            cur.execute("INSERT INTO mc_log (ts, kind, msg) VALUES (%s, 'dry', %s)", (int(time.time()), last_event))
         con.close()
     except Exception:
         pass
