@@ -10,9 +10,15 @@ export default async function handler(req, res) {
     const [fills] = await q("SELECT count(*)::int c FROM uuid_fills");
     const [pnl] = await q("SELECT coalesce(sum(realized_pnl_cents),0)::bigint r FROM uuid_positions");
     const [exp] = await q("SELECT coalesce(sum(net_count),0)::bigint e FROM uuid_positions");
+    let account = null;
+    try {
+      const acct = await q("SELECT v FROM mc_state WHERE k='account:equity'");
+      if (acct.length) account = JSON.parse(acct[0].v);
+    } catch { /* mc_state optional */ }
     res.status(200).json({
       corpus: { online: null, note: "corpus is local-PG; cloud shows ledger only" },
       ledger: { orders: orders.c, fills: fills.c, realized_pnl_cents: Number(pnl.r), open_contracts: Number(exp.e) },
+      account,
       kill: await isKilled(),
       keys: keysPresent(),
       ts: Math.floor(Date.now() / 1000),

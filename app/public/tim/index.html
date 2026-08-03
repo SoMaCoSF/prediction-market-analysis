@@ -1,0 +1,110 @@
+<!-- =============================================================================== file_id: SOM-APP-0956-v1.0.0 name: tim/index.html description: TIM — phone-first betting surface: balance hero, tap market, tap YES/NO, tap size, PIN, done. Plane-ride light. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [tim, mobile, betting, phone] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TIM // SOMACO BETS</title>
+<style>
+  :root{--bg:#05070a;--panel:#0d1219;--line:#1e2836;--cyan:#06b6d4;--green:#39ff14;--red:#ff4d4d;--amber:#ffb020;--txt:#dbe5f0;--dim:#6b7a8f;--mono:'SF Mono',ui-monospace,Consolas,monospace}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--txt);font-family:var(--mono);min-height:100vh;padding-bottom:90px}
+  .top{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:14px 16px;z-index:5}
+  .brand{font-size:11px;letter-spacing:2px;color:var(--dim)}
+  .brand b{color:var(--cyan)}
+  .bal{font-size:34px;font-weight:bold;color:#fff;margin-top:4px}
+  .bal small{font-size:12px;color:var(--dim);font-weight:normal}
+  .day{font-size:12px;margin-top:2px}
+  .up{color:var(--green)} .dn{color:var(--red)}
+  .sec{padding:12px 14px 4px;font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+  .mkt{margin:8px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .mkt .q{font-size:13px;color:#fff;line-height:1.35;margin-bottom:10px}
+  .mkt .meta{font-size:10px;color:var(--dim);margin-bottom:10px}
+  .row{display:flex;gap:10px}
+  .btn{flex:1;padding:14px 0;border-radius:8px;border:1px solid;font-family:var(--mono);font-size:15px;font-weight:bold;text-align:center;cursor:pointer;background:transparent}
+  .btn:active{transform:scale(.97)}
+  .yes{color:var(--green);border-color:var(--green)}
+  .yes.sel{background:rgba(57,255,20,.18)}
+  .no{color:var(--red);border-color:var(--red)}
+  .no.sel{background:rgba(255,77,77,.18)}
+  .sizes{display:flex;gap:8px;margin-top:10px}
+  .sz{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--line);color:var(--txt);text-align:center;font-size:14px;cursor:pointer}
+  .sz.sel{border-color:var(--cyan);background:rgba(6,182,212,.15);color:var(--cyan)}
+  .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:14px 16px;display:none;z-index:10}
+  .sheet.open{display:block}
+  .sheet .sum{font-size:14px;margin-bottom:10px;line-height:1.5}
+  .pinrow{display:flex;gap:8px;margin-bottom:10px}
+  .pinrow input{flex:1;background:var(--bg);border:1px solid var(--line);color:#fff;font-family:var(--mono);font-size:18px;letter-spacing:6px;text-align:center;padding:12px;border-radius:8px;outline:none}
+  .fire{width:100%;padding:16px;border-radius:8px;border:1px solid var(--amber);color:var(--amber);background:transparent;font-family:var(--mono);font-size:16px;font-weight:bold;letter-spacing:2px}
+  .fire:active{background:rgba(255,176,32,.15)}
+  .toast{position:fixed;top:70px;left:16px;right:16px;padding:12px;border-radius:8px;font-size:13px;display:none;z-index:20;border:1px solid}
+  .toast.ok{display:block;background:rgba(57,255,20,.12);border-color:var(--green);color:var(--green)}
+  .toast.err{display:block;background:rgba(255,77,77,.12);border-color:var(--red);color:var(--red)}
+  #feed{padding:0 14px}
+  #feed .ev{font-size:11px;color:var(--dim);padding:6px 0;border-bottom:1px solid rgba(30,40,54,.4)}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">SOMACO <b>// TIM</b> — guest book</div>
+  <div class="bal" id="bal">$— <small>cash</small></div>
+  <div class="day" id="spent">today: $0.00 / $20.00</div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="sec">Live markets — tap a side</div>
+<div id="mkts">loading…</div>
+<div class="sec">Recent</div>
+<div id="feed"></div>
+<div class="sheet" id="sheet">
+  <div class="sum" id="sum"></div>
+  <div class="pinrow"><input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN"></div>
+  <button class="fire" id="fire">PLACE BET</button>
+</div>
+<script>
+let sel=null, size=1, mkts=[];
+async function j(u,o){const r=await fetch(u,o);return r.json();}
+function toast(msg,ok){const t=document.getElementById("toast");t.textContent=msg;t.className="toast "+(ok?"ok":"err");setTimeout(()=>t.className="toast",4000);}
+async function refresh(){
+  try{
+    const s=await j("/api/trade/stats");
+    if(s&&s.account){document.getElementById("bal").innerHTML="$"+s.account.cash.toFixed(2)+" <small>cash · $"+s.account.equity.toFixed(2)+" equity</small>";}
+    const m=await j("/api/trade/markets?series=KXBTC15M");
+    const all=(m&&m.markets||[]).filter(x=>x.yes_ask>0&&x.yes_ask<99).slice(0,4);
+    const s2=await j("/api/trade/markets");
+    const vol=(s2&&s2.markets||[]).filter(x=>x.yes_ask>2&&x.yes_ask<97).slice(0,4);
+    mkts=[...all,...vol].slice(0,8);
+    document.getElementById("mkts").innerHTML=mkts.map((x,i)=>`
+      <div class="mkt">
+        <div class="q">${(x.title||x.ticker).slice(0,90)}</div>
+        <div class="meta">${x.ticker.slice(0,34)}${x.volume?` · vol ${Math.round(x.volume/1000)}k`:""}</div>
+        <div class="row">
+          <div class="btn yes" id="y${i}" onclick="pick(${i},'yes')">YES ${x.yes_ask}¢</div>
+          <div class="btn no" id="n${i}" onclick="pick(${i},'no')">NO ${100-(x.yes_bid||0)}¢</div>
+        </div>
+        <div class="sizes">${[1,2,3,4].map(c=>`<div class="sz" id="s${i}${c}" onclick="pickSize(${i},${c})">$${(c*(x.yes_ask||50)/100).toFixed(2)}<br><span style="font-size:9px;color:var(--dim)">${c}ct</span></div>`).join("")}</div>
+      </div>`).join("")||"no live books right now";
+  }catch(e){/* plane wifi */}
+}
+function pick(i,side){sel={i,side};document.querySelectorAll(".btn").forEach(b=>b.classList.remove("sel"));
+  document.getElementById(side==="yes"?"y"+i:"n"+i).classList.add("sel");pickSize(i,size);}
+function pickSize(i,c){size=c;[1,2,3,4].forEach(n=>{const e=document.getElementById("s"+i+n);if(e)e.classList.remove("sel");});
+  const e=document.getElementById("s"+i+c);if(e)e.classList.add("sel");openSheet();}
+function openSheet(){if(!sel)return;const x=mkts[sel.i];
+  const price=sel.side==="yes"?x.yes_ask:100-(x.yes_bid||0);
+  document.getElementById("sum").innerHTML=`<b style="color:${sel.side==="yes"?"var(--green)":"var(--red)"}">${sel.side.toUpperCase()}</b> ${size} contract${size>1?"s":""} @ ${price}¢ = <b>$${(size*price/100).toFixed(2)}</b><br><span style="color:var(--dim);font-size:11px">${(x.title||x.ticker).slice(0,70)}</span>`;
+  document.getElementById("sheet").classList.add("open");}
+document.getElementById("fire").onclick=async()=>{
+  if(!sel)return;const x=mkts[sel.i];
+  const price=sel.side==="yes"?x.yes_ask:100-(x.yes_bid||0);
+  const pin=document.getElementById("pin").value;
+  const r=await j("/api/trade/tim_order",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({ticker:x.ticker,side:sel.side,price,count:size,pin})});
+  if(r.ok){toast(`BET PLACED — ${sel.side.toUpperCase()} ${size} @ ${price}¢ fill=${r.fill_count}`,true);
+    document.getElementById("feed").insertAdjacentHTML("afterbegin",`<div class="ev">${new Date().toLocaleTimeString()} — ${sel.side.toUpperCase()} x${size} @${price}¢ ${x.ticker.slice(0,26)}</div>`);
+    document.getElementById("sheet").classList.remove("open");document.getElementById("pin").value="";}
+  else toast(r.error||"rejected",false);
+};
+refresh();setInterval(refresh,15000);
+</script>
+</body>
+</html>

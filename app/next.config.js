@@ -32,6 +32,12 @@ const nextConfig = {
           destination: '/dry/index.html',
           has: [{ type: 'host', value: 'dry.somacosf.com' }],
         },
+        // tim.somacosf.com — guest phone betting surface
+        {
+          source: '/',
+          destination: '/tim/index.html',
+          has: [{ type: 'host', value: 'tim.somacosf.com' }],
+        },
       ],
       afterFiles: [
         { source: '/thesis', destination: '/thesis/index.html' },

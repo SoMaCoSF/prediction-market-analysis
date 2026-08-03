@@ -110,6 +110,25 @@ def sync_once() -> int:
     return new
 
 
+def publish_account():
+    """Upsert account snapshot to mc_state so the cloud panel shows live equity."""
+    try:
+        import json as _json
+        bal = kget("/portfolio/balance")
+        cash = float(bal.get("balance_dollars") or 0)
+        pv = (bal.get("portfolio_value") or 0) / 100
+        con = sb.sb_conn()
+        con.autocommit = True
+        cur = con.cursor()
+        cur.execute(
+            "INSERT INTO mc_state (k, v, updated_at) VALUES ('account:equity', %s, now()) "
+            "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
+            (_json.dumps({"cash": cash, "portfolio": pv, "equity": cash + pv, "ts": time.time()}),))
+        con.close()
+    except Exception:
+        pass
+
+
 def main():
     fleetlib.acquire_lock("fills")
     runlog.log_event("fills", "fill_poller start", poll_s=POLL_S)
@@ -117,6 +136,7 @@ def main():
         fleetlib.checkin("fills")
         try:
             n = sync_once()
+            publish_account()
             if n:
                 runlog.log_event("fills", f"sync cycle: {n} new fills", new=n)
         except Exception as e:
