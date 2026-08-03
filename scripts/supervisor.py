@@ -40,6 +40,7 @@ DAEMONS = {
     "trend-doge": "scripts/trend_engine.py KXDOGE15M DOGEUSD",
     "speed-btc": "scripts/speed_lane.py KXBTC15M XBTUSD",
     "speed-eth": "scripts/speed_lane.py KXETH15M ETHUSD",
+    "copier": "scripts/whale_copier.py",
     "dry-t10": "scripts/dry_run.py 60 10 0 dry-t10",
     "dry-t20": "scripts/dry_run.py 60 20 0 dry-t20",
     "dry-t25": "scripts/dry_run.py 60 25 0 dry-t25",
