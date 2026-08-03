@@ -32,6 +32,7 @@ DAEMONS = {
     "shadow": "scripts/shadow_index.py",
     "maker": "scripts/maker_engine.py",
     "sweep": "scripts/sweep_watch.py",
+    "news": "scripts/news_supply_engine.py",
     # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.
     "ingest": "scripts/uuid_ingest.py",
