@@ -111,8 +111,10 @@
   <div class="card">
     <h3>Live Kalshi Markets (top volume)</h3>
     <table id="markets"><thead><tr><th>Ticker</th><th>Title</th><th>Bid</th><th>Ask</th><th>Vol</th></tr></thead><tbody></tbody></table>
-    <h3 style="margin-top:12px">Recent winnings</h3>
-    <table id="wins"><thead><tr><th>When</th><th>Event</th></tr></thead><tbody></tbody></table>
+    <h3 style="margin-top:12px">Settles — our real wins <span class="c-dim" id="settles-tally" style="letter-spacing:0;text-transform:none"></span></h3>
+    <table id="wins"><thead><tr><th>When</th><th>Ticker</th><th>Side</th><th>P&amp;L</th></tr></thead><tbody></tbody></table>
+    <h3 style="margin-top:12px">whale flow <span class="c-dim" style="letter-spacing:0;text-transform:none">(shadow signals — not our money)</span></h3>
+    <table id="whale"><thead><tr><th>When</th><th>Event</th></tr></thead><tbody></tbody></table>
   </div>
   <div class="card">
     <h3>Bet — live 15M window</h3>
@@ -212,8 +214,15 @@ async function tick(){
     if(btc){betMkt=btc;$("bet-mkt").textContent=btc.ticker+" · "+(btc.title||"").slice(0,50);
       $("bb-yes").textContent="YES "+btc.yes_ask+"¢";$("bb-no").textContent="NO "+(100-(btc.yes_bid||0))+"¢";}
   }
+  const st=await j("/api/trade/settles");
+  if(st){
+    $("settles-tally").textContent=`— ${st.wins||0}W / ${st.losses||0}L · net ${(st.total_pnl_cents||0)>=0?"+":""}$${((st.total_pnl_cents||0)/100).toFixed(2)}`;
+    $("wins").querySelector("tbody").innerHTML=(st.settles||[]).map(e=>{
+      const win=e.pnl_cents>0;
+      return`<tr><td class="c-dim">${e.ts?new Date(e.ts*1000).toLocaleTimeString():"—"}</td><td class="c-cyan">${(e.ticker||"").slice(0,26)}</td><td>${(e.side||"").toUpperCase()}</td><td class="${win?"up":"dn"}">${win?"+":""}$${(e.pnl_cents/100).toFixed(2)}</td></tr>`;}).join("")
+      ||'<tr><td colspan="4" class="c-dim">no settles yet</td></tr>';}
   const sh=await j("/api/trade/shadow");
-  if(sh&&sh.latest){$("wins").querySelector("tbody").innerHTML=sh.latest.slice(0,8).map(e=>
+  if(sh&&sh.latest){$("whale").querySelector("tbody").innerHTML=sh.latest.slice(0,6).map(e=>
     `<tr><td class="c-dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</td><td>${(e.detail||"").slice(0,60)}</td></tr>`).join("");}
   const L=await j("/api/trade/lanes");
   if(L){

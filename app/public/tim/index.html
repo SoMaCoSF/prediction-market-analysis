@@ -61,6 +61,8 @@
   <div class="brand">SOMACO <b>// TIM</b> — guest book</div>
   <div class="bal" id="bal">$— <small>cash</small></div>
   <div class="day" id="spent">today: $0.00 / $20.00 cap</div>
+  <canvas id="eqspark" width="320" height="44" style="width:100%;height:44px;margin-top:8px"></canvas>
+  <div class="day" id="eqlbl" style="margin-top:2px">equity curve —</div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="eli5 glass" id="eli5">
@@ -107,6 +109,23 @@ let pulses=[];
 function spark(pts,up){if(!pts||pts.length<2)return"";const w=64,h=22,mn=Math.min(...pts),mx=Math.max(...pts),rg=(mx-mn)||1;
   const p=pts.map((v,i)=>`${(i/(pts.length-1)*w).toFixed(1)},${(h-2-((v-mn)/rg)*(h-4)).toFixed(1)}`).join(" ");
   return`<svg class="spark" width="${w}" height="${h}"><polyline points="${p}" fill="none" stroke="${up?"#39ff14":"#ff4d4d"}" stroke-width="1.5"/></svg>`;}
+async function eqspark(){
+  try{const e=await j("/api/trade/equity");const h=(e&&e.history||[]).map(p=>Number(p.equity)).filter(v=>isFinite(v));
+    const c=$("eqspark");if(!c)return;const dpr=Math.min(devicePixelRatio||1,2);
+    const W=c.clientWidth||320,H=44;c.width=W*dpr;c.height=H*dpr;
+    const x2=c.getContext("2d");x2.scale(dpr,dpr);x2.clearRect(0,0,W,H);
+    if(h.length<2){$("eqlbl").textContent="equity curve — warming up";return;}
+    const mn=Math.min(...h),mx=Math.max(...h),rg=(mx-mn)||1,up=h[h.length-1]>=h[0];
+    const col=up?"#39ff14":"#ff4d4d";
+    x2.beginPath();
+    h.forEach((v,i)=>{const px=i/(h.length-1)*(W-4)+2,py=H-4-((v-mn)/rg)*(H-10);i?x2.lineTo(px,py):x2.moveTo(px,py);});
+    x2.strokeStyle=col;x2.lineWidth=1.6;x2.stroke();
+    const last=h[h.length-1];const gr=x2.createLinearGradient(0,0,0,H);
+    gr.addColorStop(0,up?"rgba(57,255,20,.18)":"rgba(255,77,77,.18)");gr.addColorStop(1,"rgba(0,0,0,0)");
+    x2.lineTo(W-2,H);x2.lineTo(2,H);x2.closePath();x2.fillStyle=gr;x2.fill();
+    $("eqlbl").textContent=`equity curve — $${last.toFixed(2)} (${up?"▲":"▼"} ${h.length} marks)`;
+  }catch(e){}
+}
 function setTab(t){tab=t;document.querySelectorAll(".tab").forEach(e=>e.classList.remove("sel"));$("tab-"+t).classList.add("sel");refresh();}
 async function refresh(){
   try{
@@ -164,7 +183,7 @@ $("fire").onclick=async()=>{
     $("sheet").classList.remove("open");$("pin").value="";refresh();}
   else toast(r.error||"rejected",false);
 };
-refresh();setInterval(refresh,12000);
+refresh();eqspark();setInterval(refresh,12000);setInterval(eqspark,30000);
 </script>
 </body>
 </html>

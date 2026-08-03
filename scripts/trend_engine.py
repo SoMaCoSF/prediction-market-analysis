@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import os
 import sqlite3
 import sys
@@ -35,11 +36,37 @@ STREAM = ROOT / "data" / "uuid_stream.db"
 MOM_BPS, MOM2_BPS = 3.0, 6.0
 ENTRY_MIN, ENTRY_MAX, TTL_MIN = 25, 60, 480
 TAKE, STOP = 15, 10
-FLOOR, SESSION_STOP, POLL = 20.00, -300, 5
+FLOOR, SESSION_STOP, POLL = 20.00, -300, 5   # FLOOR = fallback when vault state missing/stale
 
 session_pnl = 0.0
 positions: list[dict] = []   # concurrent horizontal positions (max MAX_CONC)
 MAX_CONC = 2
+
+_floor_cache = {"v": FLOOR, "ts": 0.0}
+
+
+def cash_floor() -> float:
+    """Cash floor = vault reserve (mc_state vault:state), cached 30s.
+
+    Falls back to the hardcoded FLOOR when vault state is missing or
+    stale (>300s — vault daemon dead -> conservative $20 line)."""
+    if time.time() - _floor_cache["ts"] > 30:
+        try:
+            con = sb.sb_conn()
+            cur = con.cursor()
+            cur.execute("SELECT v FROM mc_state WHERE k='vault:state'")
+            row = cur.fetchone()
+            con.close()
+            val = FLOOR
+            if row:
+                st = json.loads(row[0])
+                if time.time() - float(st.get("ts") or 0) <= 300:
+                    val = float(st.get("reserve") or FLOOR)
+            _floor_cache["v"] = val
+        except Exception:
+            pass
+        _floor_cache["ts"] = time.time()
+    return _floor_cache["v"]
 
 
 def log(m):
@@ -137,7 +164,7 @@ def window(cx):
 def main():
     global session_pnl
     fleetlib.acquire_lock(LANE)
-    log(f"start | {SERIES}/{PAIR} mom>={MOM_BPS}bps take+{TAKE} stop-{STOP} floor=${FLOOR}")
+    log(f"start | {SERIES}/{PAIR} mom>={MOM_BPS}bps take+{TAKE} stop-{STOP} floor=vault:state reserve (fallback ${FLOOR})")
     with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:
         while True:
             fleetlib.checkin(LANE)
@@ -165,7 +192,7 @@ def main():
                                 positions.remove(pos)
                 if len(positions) < MAX_CONC:
                     c = cash()
-                    if c and c < FLOOR:
+                    if c and c < cash_floor():
                         time.sleep(POLL * 6)
                         continue
                     mom = tape_mom()

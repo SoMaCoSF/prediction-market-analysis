@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import os
 import sys
 import time
@@ -40,12 +41,38 @@ SERIES = [("KXBTC15M", "XBTUSD"), ("KXETH15M", "ETHUSD"), ("KXSOL15M", "SOLUSD")
 DRIFT_MIN, ENTRY_MIN, ENTRY_MAX, TTL_MIN = 0.20, 25, 60, 540
 SCALP_C = 15               # take-profit: exit when bid >= entry + this many cents
 STOP_C = 10                # stop-loss: exit when bid <= entry - this many cents
-CASH_FLOOR = 20.00
+CASH_FLOOR = 20.00       # fallback when vault state missing/stale
 SESSION_STOP = -300
 POLL = 5
 MAX_OPEN = 8
 
 session_pnl = 0.0
+
+_floor_cache = {"v": CASH_FLOOR, "ts": 0.0}
+
+
+def cash_floor() -> float:
+    """Cash floor = vault reserve (mc_state vault:state), cached 30s.
+
+    Falls back to the hardcoded CASH_FLOOR when vault state is missing or
+    stale (>300s — vault daemon dead -> conservative $20 line)."""
+    if time.time() - _floor_cache["ts"] > 30:
+        try:
+            con = sb.sb_conn()
+            cur = con.cursor()
+            cur.execute("SELECT v FROM mc_state WHERE k='vault:state'")
+            row = cur.fetchone()
+            con.close()
+            val = CASH_FLOOR
+            if row:
+                st = json.loads(row[0])
+                if time.time() - float(st.get("ts") or 0) <= 300:
+                    val = float(st.get("reserve") or CASH_FLOOR)
+            _floor_cache["v"] = val
+        except Exception:
+            pass
+        _floor_cache["ts"] = time.time()
+    return _floor_cache["v"]
 
 
 def log(m):
@@ -135,7 +162,7 @@ def fire(ticker, side, price, count=1):
 def main():
     global session_pnl
     fleetlib.acquire_lock("scalp")
-    log(f"SCALP start | entry<=60c drift>={DRIFT_MIN}% exit@+{SCALP_C}c floor=${CASH_FLOOR} poll={POLL}s")
+    log(f"SCALP start | entry<=60c drift>={DRIFT_MIN}% exit@+{SCALP_C}c floor=vault:state reserve (fallback ${CASH_FLOOR}) poll={POLL}s")
     for _ in range(10):
         try:
             s = httpx.get(f"{MC}/api/stats", timeout=10).json()
@@ -195,8 +222,9 @@ def main():
             # ---- ENTRIES ----
             if len(held) < MAX_OPEN:
                 c = cash()
-                if c and c < CASH_FLOOR:
-                    log(f"cash ${c:.2f} < floor — entries paused")
+                floor = cash_floor()
+                if c and c < floor:
+                    log(f"cash ${c:.2f} < floor ${floor:.2f} — entries paused")
                     time.sleep(POLL * 6)
                     continue
                 for series, pair in SERIES:

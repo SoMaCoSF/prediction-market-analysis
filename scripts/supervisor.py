@@ -25,6 +25,7 @@ LOGDIR.mkdir(exist_ok=True)
 
 DAEMONS = {
     "mc": "scripts/mission_control.py",
+    "vault": "scripts/vault.py",
     "scalp": "scripts/profit_scalp.py",
     "btctrend": "scripts/btc_trend.py",
     "xwatch": "scripts/x_watcher.py",

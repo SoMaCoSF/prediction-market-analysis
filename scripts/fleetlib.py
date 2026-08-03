@@ -23,14 +23,19 @@ LOGDIR.mkdir(exist_ok=True)
 
 
 def _pid_alive(pid: int) -> bool:
-    """True if pid is a live process. Windows: tasklist; POSIX: os.kill(pid, 0)."""
+    """True if pid is a live PYTHON process. Windows: tasklist + cmdline check
+    (pid reuse made bare tasklist lie — a dead daemon's pid recycled by any
+    process read as 'alive' and zombie-locked the lane). POSIX: os.kill(pid, 0)."""
+    if pid <= 0:
+        return False
     if os.name == "nt":
         try:
             out = subprocess.run(
-                ["tasklist", "/FI", f"PID eq {pid}"],
-                capture_output=True, text=True, timeout=5,
-            ).stdout
-            return str(pid) in out
+                ["powershell", "-NoProfile", "-Command",
+                 f"(Get-CimInstance Win32_Process -Filter \"ProcessId={pid}\").CommandLine"],
+                capture_output=True, text=True, timeout=8,
+            ).stdout or ""
+            return "python" in out.lower()
         except Exception:
             return False
     try:
