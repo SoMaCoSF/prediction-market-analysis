@@ -84,29 +84,43 @@ def fire(ticker, side, price):
 
 
 def scan(cx):
-    """All open markets closing <6h with volume >= MIN_VOL_24H."""
+    """Open markets closing <6h with volume >= MIN_VOL_24H — broad pages + known-liquid series."""
     out = []
-    cursor = None
-    for _ in range(4):
-        params = {"limit": 200, "status": "open"}
-        if cursor:
-            params["cursor"] = cursor
-        try:
-            r = cx.get(f"{KALSHI}/markets", params=params, timeout=20)
-            d = r.json()
-        except Exception:
-            break
+    seen = set()
+
+    def _accept(d):
         for m in d.get("markets", []):
             try:
+                if m["ticker"] in seen:
+                    continue
                 close = datetime.fromisoformat(m["close_time"].replace("Z", "+00:00")).astimezone(timezone.utc).timestamp()
                 ttl = close - time.time()
-                vol = float(m.get("volume_24h_fp") or m.get("volume_24h") or 0)
+                vol = float(m.get("volume_24h_fp") or 0)
                 if 0 < ttl <= CLOSE_H * 3600 and vol >= MIN_VOL_24H:
+                    seen.add(m["ticker"])
                     out.append({"ticker": m["ticker"], "ttl": ttl, "vol": vol,
                                 "ya": round(float(m.get("yes_ask_dollars") or 0) * 100),
                                 "yb": round(float(m.get("yes_bid_dollars") or 0) * 100)})
             except Exception:
                 continue
+
+    # known-liquid series first (the pagination order buries these)
+    for series in ("KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXDOGE15M"):
+        try:
+            _accept(cx.get(f"{KALSHI}/markets", params={"limit": 10, "status": "open", "series_ticker": series}, timeout=20).json())
+        except Exception:
+            pass
+    # broad sweep across everything else
+    cursor = None
+    for _ in range(8):
+        params = {"limit": 200, "status": "open"}
+        if cursor:
+            params["cursor"] = cursor
+        try:
+            d = cx.get(f"{KALSHI}/markets", params=params, timeout=20).json()
+        except Exception:
+            break
+        _accept(d)
         cursor = d.get("cursor")
         if not cursor:
             break
