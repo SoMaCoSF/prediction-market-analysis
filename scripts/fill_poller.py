@@ -140,11 +140,14 @@ def main():
         fleetlib.checkin("fills")
         try:
             n = sync_once()
-            publish_account()
             if n:
                 runlog.log_event("fills", f"sync cycle: {n} new fills", new=n)
         except Exception as e:
             runlog.log_event("fills", f"sync warn {repr(e)[:80]}", kind="warn")
+        try:
+            publish_account()   # decoupled: account feed must flow even when sync fails
+        except Exception as e:
+            runlog.log_event("fills", f"publish warn {repr(e)[:80]}", kind="warn")
         time.sleep(POLL_S)
 
 
