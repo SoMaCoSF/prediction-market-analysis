@@ -38,7 +38,8 @@ TAKE, STOP = 15, 10
 FLOOR, SESSION_STOP, POLL = 20.00, -300, 5
 
 session_pnl = 0.0
-pos = None
+positions: list[dict] = []   # concurrent horizontal positions (max MAX_CONC)
+MAX_CONC = 3
 
 
 def log(m):
@@ -136,14 +137,14 @@ def main():
                 if session_pnl * 100 <= SESSION_STOP:
                     log(f"SESSION STOP ${session_pnl:+.2f}")
                     return
-                if pos:
+                for pos in list(positions):
                     b = book(cx, pos["ticker"])
                     if b["result"] in ("yes", "no"):
                         won = b["result"] == pos["side"]
                         pnl = (100 - pos["entry_c"]) if won else -pos["entry_c"]
                         session_pnl += pnl / 100.0 * pos.get("qty", 1)
                         log(f"SETTLED {pos['side']}@{pos['entry_c']}c -> {b['result']} {'WIN' if won else 'LOSS'} | session ${session_pnl:+.2f}")
-                        pos = None
+                        positions.remove(pos)
                     else:
                         bid = round(b["yb"]) if pos["side"] == "yes" else round(100 - b["ya"])
                         if bid >= pos["entry_c"] + TAKE or bid <= pos["entry_c"] - STOP:
@@ -153,8 +154,8 @@ def main():
                                 pnl = (bid - pos["entry_c"]) * pos.get("qty", 1)
                                 session_pnl += pnl / 100.0
                                 log(f"{'TAKE' if pnl > 0 else 'STOP'}-OUT @{bid}c (in {pos['entry_c']}c) {pnl:+}c | session ${session_pnl:+.2f}")
-                                pos = None
-                if not pos:
+                                positions.remove(pos)
+                if len(positions) < MAX_CONC:
                     c = cash()
                     if c and c < FLOOR:
                         time.sleep(POLL * 6)
@@ -174,8 +175,8 @@ def main():
                             qty = 2 if abs(mom) >= MOM2_BPS else 1
                             r = fire(m["ticker"], side, price, qty)
                             if r["ok"] and r["filled"] > 0:
-                                pos = {"ticker": m["ticker"], "side": side, "entry_c": price, "close": m["close"], "qty": qty}
-                                log(f"ENTRY {side.upper()} x{qty} @ {price}c mom {mom:+.1f}bps | FILLED")
+                                positions.append({"ticker": m["ticker"], "side": side, "entry_c": price, "close": m["close"], "qty": qty})
+                                log(f"ENTRY {side.upper()} x{qty} @ {price}c mom {mom:+.1f}bps | FILLED ({len(positions)}/{MAX_CONC})")
             except Exception as e:
                 log(f"cycle warn {repr(e)[:60]}")
             time.sleep(POLL)

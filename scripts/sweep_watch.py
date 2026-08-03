@@ -26,8 +26,8 @@ from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(ROOT / ".env")
 KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
-TRIGGER = 140.00
-SWEEP = 40.00
+TRIGGER = 200.00
+SWEEP = 100.00
 POLL_S = 60
 
 
