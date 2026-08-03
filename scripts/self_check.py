@@ -61,11 +61,24 @@ def main():
             ["powershell", "-NoProfile", "-Command",
              "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
              "Where-Object { $_.CommandLine -match 'mission_control|profit_scalp|chaos_monkey|uuid_ingest|fill_poller|supervisor' } | "
-             "ForEach-Object { $_.CommandLine }"],
+             "ForEach-Object { \"$($_.ProcessId)|$($_.ParentProcessId)|$($_.CommandLine)\" }"],
             capture_output=True, text=True, timeout=20).stdout
+        procs = []
+        pids = set()
+        for ln in out.splitlines():
+            parts = ln.split("|", 2)
+            if len(parts) == 3 and parts[0].strip().isdigit():
+                pid, ppid, cmd = int(parts[0]), int(parts[1]), parts[2]
+                procs.append((pid, ppid, cmd))
+                pids.add(pid)
+        # uv venv pairs share an identical command line as parent->child.
+        # Real dupes are siblings. Count "roots" inside each cmdline set:
+        # a venv pair roots once; true dupes root per sibling.
         for name, script in [("supervisor", "supervisor.py"), ("mc", "mission_control.py"), ("scalp", "profit_scalp.py"),
                              ("chaos", "chaos_monkey.py"), ("ingest", "uuid_ingest.py"), ("fills", "fill_poller.py")]:
-            n = out.count(script)
+            members = [(pid, ppid) for (pid, ppid, cmd) in procs if script in cmd]
+            member_pids = {pid for pid, _ in members}
+            n = sum(1 for pid, ppid in members if ppid not in member_pids)
             line(OK if n == 1 else (WARN if n > 1 else BAD), f"{name:10s} {'running' if n==1 else ('x'+str(n)+' (dupes!)' if n>1 else 'NOT RUNNING')}")
     except Exception as e:
         line(WARN, f"process enumeration failed: {repr(e)[:60]}")
