@@ -33,7 +33,7 @@ PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdige
 STREAM = ROOT / "data" / "uuid_stream.db"
 
 MOM_BPS, MOM2_BPS = 3.0, 6.0
-ENTRY_MAX, TTL_MIN = 60, 480
+ENTRY_MIN, ENTRY_MAX, TTL_MIN = 25, 60, 480
 TAKE, STOP = 15, 10
 FLOOR, SESSION_STOP, POLL = 20.00, -300, 5
 
@@ -173,9 +173,9 @@ def main():
                         mom = kraken_mom(cx)
                     m = window(cx)
                     if m and mom is not None and abs(mom) >= MOM_BPS:
-                        if mom > 0 and m["ya"] <= ENTRY_MAX:
+                        if mom > 0 and ENTRY_MIN <= m["ya"] <= ENTRY_MAX:
                             side, price = "yes", m["ya"]
-                        elif mom < 0 and (100 - m["yb"]) <= ENTRY_MAX:
+                        elif mom < 0 and ENTRY_MIN <= (100 - m["yb"]) <= ENTRY_MAX:
                             side, price = "no", 100 - m["yb"]
                         else:
                             side = None

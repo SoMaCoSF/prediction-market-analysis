@@ -35,7 +35,7 @@ STREAM = ROOT / "data" / "uuid_stream.db"
 
 MOM_BPS = 1.5            # near-continuous: fires on any real drift
 MOM2_BPS = 6.0           # strong-signal threshold -> 2 contracts
-ENTRY_MAX = 60
+ENTRY_MIN, ENTRY_MAX = 25, 60   # the proven pocket is 30-50c (4/4, +60.5c/trade)
 TTL_MIN = 480
 TAKE, STOP = 15, 10
 FLOOR = 5.00
@@ -193,9 +193,9 @@ def main():
                     if time.time() % 60 < POLL:
                         log(f"scan mom={f'{mom:+.1f}' if mom is not None else '—'}bps win={'Y' if m else 'N'}")
                     if m and mom is not None and abs(mom) >= MOM_BPS:
-                        if mom > 0 and m["ya"] <= ENTRY_MAX:
+                        if mom > 0 and ENTRY_MIN <= m["ya"] <= ENTRY_MAX:
                             side, price = "yes", m["ya"]
-                        elif mom < 0 and (100 - m["yb"]) <= ENTRY_MAX:
+                        elif mom < 0 and ENTRY_MIN <= (100 - m["yb"]) <= ENTRY_MAX:
                             side, price = "no", 100 - m["yb"]
                         else:
                             side = None
