@@ -44,7 +44,7 @@ def main():
     print(f"LANES OF RETURNS — equity ${cash + pv:.2f} (cash ${cash:.2f} + marks ${pv:.2f})")
     print("=" * 64)
     total_real = 0.0
-    for name, desc in LANES:
+    for name, desc, _pred in LANES:
         d = agg.get(name, {"open": 0, "cost": 0.0, "realized": 0})
         total_real += d["realized"]
         print(f"\n[{name}] — {desc}")
