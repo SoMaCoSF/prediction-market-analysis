@@ -107,20 +107,29 @@ def publish(sleeve, eq):
 
 
 def tails(cx, sleeve):
-    """Cheap tails on high-volume markets closing within 48h."""
+    """Cheap tails on high-volume markets closing within 48h (3 pages deep)."""
     out = []
+    cursor = None
     try:
-        r = cx.get(f"{KALSHI}/markets", params={"limit": 200, "status": "open"}, timeout=20)
-        for m in r.json().get("markets", []):
-            try:
-                ya = round(float(m.get("yes_ask_dollars") or 0) * 100)
-                vol = float(m.get("volume_24h_fp") or 0)
-                close = datetime.fromisoformat(m["close_time"].replace("Z", "+00:00")).astimezone(timezone.utc).timestamp()
-                ttl = close - time.time()
-                if TAIL_LO <= ya <= TAIL_HI and vol >= 25000 and 3600 < ttl < 48 * 3600:
-                    out.append({"ticker": m["ticker"], "ya": ya, "vol": vol, "title": (m.get("title") or "")[:40]})
-            except Exception:
-                continue
+        for _ in range(3):
+            params = {"limit": 200, "status": "open"}
+            if cursor:
+                params["cursor"] = cursor
+            r = cx.get(f"{KALSHI}/markets", params=params, timeout=20)
+            d = r.json()
+            for m in d.get("markets", []):
+                try:
+                    ya = round(float(m.get("yes_ask_dollars") or 0) * 100)
+                    vol = float(m.get("volume_24h_fp") or 0)
+                    close = datetime.fromisoformat(m["close_time"].replace("Z", "+00:00")).astimezone(timezone.utc).timestamp()
+                    ttl = close - time.time()
+                    if TAIL_LO <= ya <= TAIL_HI and vol >= 25000 and 3600 < ttl < 48 * 3600:
+                        out.append({"ticker": m["ticker"], "ya": ya, "vol": vol, "title": (m.get("title") or "")[:40]})
+                except Exception:
+                    continue
+            cursor = d.get("cursor")
+            if not cursor:
+                break
     except Exception:
         pass
     return sorted(out, key=lambda x: -x["vol"])[:5]
@@ -189,7 +198,9 @@ def main():
                         if len(shots) >= MAX_OPEN or budget < 1.0:
                             break
                         qty = max(1, int(budget * 100 / c["price"]))
-                        qty = min(qty, 10)
+                        qty = min(qty, int(sleeve * 100 / 10 / max(c["price"], 1)), 10)  # <=10% sleeve notional per shot
+                        if qty < 1:
+                            continue
                         r = fire(c["ticker"], c["side"], c["price"], qty)
                         if r["ok"] and r["filled"] > 0:
                             shots.append({"kind": "conviction", "ticker": c["ticker"], "side": c["side"], "price": c["price"], "qty": qty})

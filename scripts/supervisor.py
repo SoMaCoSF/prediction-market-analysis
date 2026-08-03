@@ -108,6 +108,7 @@ def main():
     last_beat = 0
     while True:
         try:
+            fleetlib.checkin("supervisor")   # self-heartbeat: the fleet's own liveness proof
             time.sleep(POLL_S)
             for name in DAEMONS:
                 if alive(name) and fleetlib.heartbeat_age(name) > 180:
