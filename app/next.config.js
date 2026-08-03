@@ -38,6 +38,12 @@ const nextConfig = {
           destination: '/tim/index.html',
           has: [{ type: 'host', value: 'tim.somacosf.com' }],
         },
+        // time.somacosf.com — the AI times magazine
+        {
+          source: '/',
+          destination: '/time/index.html',
+          has: [{ type: 'host', value: 'time.somacosf.com' }],
+        },
       ],
       afterFiles: [
         { source: '/thesis', destination: '/thesis/index.html' },

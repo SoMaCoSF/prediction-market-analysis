@@ -1,0 +1,138 @@
+<!-- =============================================================================== file_id: SOM-APP-0981-v1.0.0 name: time/index.html description: TIME — AI-centric living magazine: time-sorted articles, topic explorer, vote + discuss, wired to prediction markets. LCARS. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [time, magazine, ai, lcars, discussion] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TIME · SoMaCo — the AI times</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050508;--panel:#0c0c14;--line:#1e1e2e;--amber:#ff9000;--cyan:#00ccdd;--green:#00dd66;--red:#ff4d4d;--dim:#8a8aa0;--lav:#cc99ff}
+*{margin:0;box-sizing:border-box}
+body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-height:100vh}
+.wrap{display:flex;min-height:100vh}
+/* LCARS left rail */
+.rail{width:190px;min-width:190px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;border-radius:0 28px 0 0}
+.rail .logo{padding:22px 18px 14px;font-family:Orbitron;font-size:26px;font-weight:900;letter-spacing:3px;color:var(--amber)}
+.rail .logo small{display:block;font-size:9px;color:var(--dim);letter-spacing:2px;margin-top:4px;font-family:"IBM Plex Mono"}
+.rail .block{height:10px;margin:4px 14px;border-radius:5px}
+.topic{margin:3px 8px;padding:10px 14px;border-radius:18px 5px 5px 18px;font-size:11px;letter-spacing:1px;cursor:pointer;color:var(--dim);border:1px solid transparent;transition:.15s;text-transform:uppercase}
+.topic:hover{color:#fff;border-color:var(--line)}
+.topic.on{background:linear-gradient(90deg,rgba(255,144,0,.25),transparent);color:var(--amber);border-color:rgba(255,144,0,.4)}
+.rail .foot{margin-top:auto;padding:14px;font-size:9px;color:var(--dim);line-height:1.6}
+/* feed */
+.feed{flex:1;padding:22px 26px;max-width:900px}
+.feed h1{font-family:Orbitron;font-size:15px;letter-spacing:2px;color:var(--cyan);margin-bottom:14px}
+.stamp{font-size:10px;color:var(--dim);margin-bottom:16px}
+.art{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:12px;cursor:pointer;transition:.15s}
+.art:hover{border-color:var(--amber)}
+.art .t{font-size:14px;line-height:1.45;margin-bottom:8px}
+.art .meta{display:flex;gap:10px;align-items:center;font-size:10px;color:var(--dim);flex-wrap:wrap}
+.badge{padding:2px 8px;border-radius:10px;font-size:9px;letter-spacing:1px;text-transform:uppercase}
+.vote{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:12px;padding:3px 10px;cursor:pointer;font-size:10px;color:var(--dim)}
+.vote:hover{border-color:var(--green);color:var(--green)}
+.vote.voted{color:var(--green);border-color:var(--green)}
+.detail{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.art.open .detail{display:block}
+.detail .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.pill-link{font-size:10px;padding:5px 12px;border-radius:12px;border:1px solid var(--cyan);color:var(--cyan);text-decoration:none}
+.pill-link:hover{background:rgba(0,204,221,.1)}
+.mkts span{font-size:10px;color:var(--lav)}
+.comments{margin-top:8px}
+.comment{font-size:11px;padding:8px 10px;border-left:2px solid var(--line);margin-bottom:6px;color:#bbb}
+.comment b{color:var(--amber);font-size:10px}
+.cform{display:flex;gap:8px;margin-top:8px}
+.cform input{background:#080810;border:1px solid var(--line);border-radius:6px;color:#fff;padding:8px 10px;font-family:inherit;font-size:11px}
+.cform input:first-child{width:110px}
+.cform input:nth-child(2){flex:1}
+.cform button{background:var(--amber);color:#000;border:0;border-radius:6px;padding:8px 14px;font-family:Orbitron;font-size:10px;cursor:pointer}
+@media(max-width:720px){.rail{width:64px;min-width:64px}.rail .logo{font-size:13px;padding:14px 8px}.topic{padding:8px 6px;font-size:8px;border-radius:10px 4px 4px 10px}.rail .foot{display:none}.feed{padding:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="rail">
+    <div class="logo">TIME<small>THE AI TIMES · SOMACO</small></div>
+    <div class="block" style="background:var(--amber)"></div>
+    <div class="block" style="background:var(--cyan);width:60%"></div>
+    <div class="block" style="background:var(--lav);width:35%"></div>
+    <div id="topics"></div>
+    <div class="foot">LCARS · SoMaCoSF<br>articles via the news engine<br>votes + discussion on every story</div>
+  </div>
+  <div class="feed">
+    <h1>THE CURRENT TIME — AI EDITION</h1>
+    <div class="stamp" id="stamp">loading…</div>
+    <div id="feed"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+async function j(u,o){try{const r=await fetch(u,o);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+let ARTICLES=[],TOPIC="all",VOTED=new Set(JSON.parse(localStorage.getItem("time-votes")||"[]"));
+const TCOL={openai:"#00dd66",anthropic:"#cc99ff",nvidia:"#39ff14",agents:"#00ccdd",chips:"#ff9000",regulation:"#ff4d4d",models:"#66aaff",robotics:"#ffcc66","ai-general":"#8a8aa0"};
+
+async function tick(){
+  const d=await j("/api/time/articles");
+  if(!d)return;
+  ARTICLES=d.articles||[];
+  $("stamp").textContent=`${ARTICLES.length} stories · updated ${d.updated_at?new Date(d.updated_at).toLocaleTimeString():"—"} · sorted by votes then time`;
+  const topics=["all",...new Set(ARTICLES.map(a=>a.topic))];
+  $("topics").innerHTML=topics.map(t=>`<div class="topic ${TOPIC===t?"on":""}" onclick="setTopic('${t}')">${t}</div>`).join("");
+  const list=ARTICLES.filter(a=>TOPIC==="all"||a.topic===TOPIC);
+  $("feed").innerHTML=list.map(a=>{
+    const col=TCOL[a.topic]||"#8a8aa0";
+    return `<div class="art" id="a-${a.id}">
+      <div class="t" onclick="tog('${a.id}')">${a.title}</div>
+      <div class="meta">
+        <span class="badge" style="color:${col};border:1px solid ${col}">${a.topic}</span>
+        <span>${a.source}</span>
+        <span class="vote ${VOTED.has(a.id)?"voted":""}" onclick="vote('${a.id}',this)">▲ <b id="v-${a.id}">${a.votes||0}</b></span>
+        <span style="cursor:pointer" onclick="tog('${a.id}')">discuss ▸</span>
+      </div>
+      <div class="detail">
+        <div class="row">
+          <a class="pill-link" href="${a.link}" target="_blank" rel="noopener">read original ↗</a>
+          <span class="mkts" id="m-${a.id}"></span>
+        </div>
+        <div class="comments" id="c-${a.id}">loading…</div>
+        <div class="cform">
+          <input id="n-${a.id}" placeholder="name" maxlength="24">
+          <input id="b-${a.id}" placeholder="your take…" maxlength="500">
+          <button onclick="postComment('${a.id}')">POST</button>
+        </div>
+      </div>
+    </div>`;}).join("");
+}
+window.setTopic=t=>{TOPIC=t;tick();};
+window.tog=async id=>{
+  const el=$("a-"+id);el.classList.toggle("open");
+  if(el.classList.contains("open")){loadComments(id);loadMarkets(id);}
+};
+window.vote=async(id,el)=>{
+  if(VOTED.has(id))return;
+  const r=await j("/api/time/vote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});
+  if(r&&r.ok){VOTED.add(id);localStorage.setItem("time-votes",JSON.stringify([...VOTED]));
+    $("v-"+id).textContent=r.votes;el.classList.add("voted");}
+};
+async function loadComments(id){
+  const d=await j("/api/time/comments?id="+id);
+  $("c-"+id).innerHTML=(d&&d.comments&&d.comments.length)
+    ? d.comments.map(c=>`<div class="comment"><b>${c.name||"anon"}</b> · ${new Date((c.ts||0)*1000).toLocaleTimeString()}<br>${c.body}</div>`).join("")
+    : `<div class="comment" style="color:var(--dim)">no takes yet — be first.</div>`;
+}
+async function loadMarkets(id){
+  const a=ARTICLES.find(x=>x.id===id);
+  const d=await j("/api/time/markets?topic="+(a?a.topic:""));
+  $("m-"+id).innerHTML=(d&&d.markets&&d.markets.length)
+    ? "· markets: "+d.markets.slice(0,3).map(m=>`${m.ticker.slice(0,22)} ${m.yes_ask||"—"}¢`).join(" · ")
+    : "";
+}
+window.postComment=async id=>{
+  const name=$("n-"+id).value.trim()||"anon",body=$("b-"+id).value.trim();
+  if(!body)return;
+  const r=await j("/api/time/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,name,body})});
+  if(r&&r.ok){$("b-"+id).value="";loadComments(id);}
+};
+tick();setInterval(tick,30000);
+</script>
+</body>
+</html>
