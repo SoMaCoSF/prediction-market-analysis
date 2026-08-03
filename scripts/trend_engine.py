@@ -127,7 +127,7 @@ def window(cx):
 
 
 def main():
-    global session_pnl, pos
+    global session_pnl
     fleetlib.acquire_lock(LANE)
     log(f"start | {SERIES}/{PAIR} mom>={MOM_BPS}bps take+{TAKE} stop-{STOP} floor=${FLOOR}")
     with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:

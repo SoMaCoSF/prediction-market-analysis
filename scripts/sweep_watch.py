@@ -101,6 +101,7 @@ def main():
     runlog.log_event("sweep", f"sweep watch start trigger=${TRIGGER} sweep=${SWEEP}")
     print(f"[sweep] watching: cash >= ${TRIGGER:.0f} -> alert to sweep ${SWEEP:.0f} to Venmo", flush=True)
     pending_since = None
+    pending_pv = 0.0
     peak = 0.0
     while True:
         fleetlib.checkin("sweep")
@@ -113,6 +114,7 @@ def main():
             if pending_since is None and c >= TRIGGER:
                 pending_since = time.time()
                 peak = c
+                pending_pv = (kget("/portfolio/balance").get("portfolio_value") or 0) / 100
                 mc_put("sweep:pending", json.dumps({"since": pending_since, "peak": c, "amount": SWEEP}))
                 msg = f"SWEEP TIME: cash ${c:.2f} >= ${TRIGGER:.0f} — withdraw ${SWEEP:.0f} to Venmo in the Kalshi app (30s tap)"
                 mc_alert(msg)
@@ -120,7 +122,10 @@ def main():
                 print(f"[sweep] {msg}", flush=True)
             elif pending_since is not None:
                 peak = max(peak, c)
-                if c <= peak - 30:  # user swept (cash dropped materially)
+                # real sweep = cash down >=80% of SWEEP while positions didn't grow
+                bal = kget("/portfolio/balance")
+                pv_now = (bal.get("portfolio_value") or 0) / 100
+                if c <= peak - SWEEP * 0.8 and pv_now <= pending_pv + 20:
                     st = stats()
                     st["count"] = int(st.get("count", 0)) + 1
                     st["total"] = float(st.get("total", 0)) + SWEEP
