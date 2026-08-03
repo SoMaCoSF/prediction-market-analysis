@@ -6,11 +6,11 @@ export default async function handler(req, res) {
     const st = await q("SELECT v, updated_at FROM mc_state WHERE k='dry_run_state'");
     const ev = await q("SELECT ts, msg FROM mc_log WHERE kind='dry' ORDER BY id DESC LIMIT 60");
     let state = null;
-    if (st.rows.length) {
-      try { state = JSON.parse(st.rows[0].v); } catch { state = { raw: st.rows[0].v }; }
-      state.state_updated_at = st.rows[0].updated_at;
+    if (st.length) {
+      try { state = JSON.parse(st[0].v); } catch { state = { raw: st[0].v }; }
+      state.state_updated_at = st[0].updated_at;
     }
-    res.status(200).json({ state, events: ev.rows.reverse() });
+    res.status(200).json({ state, events: ev.reverse() });
   } catch (e) {
     res.status(200).json({ state: null, events: [], note: `dry feed unavailable: ${String(e).slice(0, 120)}` });
   }
