@@ -37,7 +37,9 @@ def supabase_dsn() -> str:
 
 def sb_conn():
     import psycopg2
-    return psycopg2.connect(supabase_dsn(), connect_timeout=15)
+    # statement_timeout: a blocked write aborts after 30s instead of hanging a daemon forever
+    return psycopg2.connect(supabase_dsn(), connect_timeout=15,
+                            options="-c statement_timeout=30000")
 
 
 def status_salt() -> str:
