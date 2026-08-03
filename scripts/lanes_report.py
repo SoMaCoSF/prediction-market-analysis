@@ -35,10 +35,10 @@ def main():
     cur.execute("SELECT ticker, net_count, avg_price_cents, realized_pnl_cents FROM uuid_positions")
     agg = defaultdict(lambda: {"open": 0, "cost": 0.0, "realized": 0})
     for t, net, avg, real in cur.fetchall():
-        l = lane_of(t)
-        agg[l]["open"] += net or 0
-        agg[l]["cost"] += (net or 0) * (avg or 0) / 100.0
-        agg[l]["realized"] += (real or 0) / 100.0
+        lane = lane_of(t)
+        agg[lane]["open"] += net or 0
+        agg[lane]["cost"] += (net or 0) * (avg or 0) / 100.0
+        agg[lane]["realized"] += (real or 0) / 100.0
     con.close()
     print("=" * 64)
     print(f"LANES OF RETURNS — equity ${cash + pv:.2f} (cash ${cash:.2f} + marks ${pv:.2f})")
