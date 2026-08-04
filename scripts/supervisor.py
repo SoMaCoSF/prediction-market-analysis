@@ -56,6 +56,9 @@ DAEMONS = {
     "dry-s15-8": "scripts/dry_run.py 60 15 8 dry-s15-8",
     "promoter": "scripts/promoter.py",
     "governor": "scripts/governor.py",
+    "agent-status": "scripts/agent_status.py",
+    "poly-exec": "scripts/poly_executor.py",
+    "funding": "scripts/funding_feed.py",
     "evidence": "scripts/evidence_engine.py",
     # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.

@@ -125,6 +125,13 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
       <div class="stat"><div class="v" id="s-top">—</div><div class="l">top-voted</div><div class="s" id="s-top-s"></div></div>
       <div class="stat"><div class="v" id="s-fc">—</div><div class="l">forecasts</div><div class="s" id="s-fc-s"></div></div>
     </div>
+    <div class="calls" id="agent-card">
+      <div class="hd"><span class="pulse"></span>AGENT STATUS — WHAT HERMES IS DOING<span class="up" id="ag-up"></span></div>
+      <div style="padding:10px 12px;font-size:11px;line-height:1.6">
+        <div id="ag-now" style="color:#ccd6dd">—</div>
+        <div style="margin-top:8px;color:#8a8aa0" id="ag-meta">—</div>
+      </div>
+    </div>
     <div class="calls">
       <div class="hd" onclick="var b=document.getElementById('callgrid');b.style.display=b.style.display==='none'?'grid':'none'"><span class="pulse"></span>OUR CALLS — THE FLEET'S LIVE FORECASTS<span class="up" id="fc-up"></span></div>
       <div id="callgrid-wrap"><div class="callgrid" id="callgrid"></div><div class="empty" id="calls-empty" style="display:none">no forecasts published yet — the news engine republishes on its next pass.</div></div>
@@ -177,7 +184,40 @@ function renderStats(){
   $("s-top-s").textContent=top?esc(top.title.slice(0,40)):"—";
 }
 
+async function agentStatus(){
+  const d=await j("/api/time/status");
+  if(!d)return;
+  const h=d.hermes_status||{};
+  const g=d.governor_state||{};
+  $("ag-now").textContent=h.now||"—";
+  $("ag-meta").textContent=`equity $${(h.equity||0).toFixed(2)} · fleet ${h.fleet_alive||0}/${h.fleet_total||0}${(h.fleet_down||[]).length?" · down: "+h.fleet_down.join(","):""} · governor ${g.state||"—"} · ${h.commit||""}`;
+  $("ag-up").textContent=h.ts?new Date(h.ts*1000).toLocaleTimeString():"";
+}
+async function loadAgentStatus(){
+  const d=await j("/api/time/status");
+  if(!d)return;
+  const h=d.hermes_status||{},g=d.governor_state||{};
+  if(h.now)$("ag-now").textContent=h.now;
+  $("ag-meta").textContent=`equity $${(h.equity||0).toFixed(2)} · fleet ${h.fleet_alive||0}/${h.fleet_total||0}${h.fleet_down&&h.fleet_down.length?" · down: "+h.fleet_down.join(","):""} · governor ${g.state||"—"} · ${h.commit||""}`;
+  $("ag-up").textContent=h.ts?new Date(h.ts*1000).toLocaleTimeString():"";
+}
+async function loadAgent(){
+  const s=await j("/api/time/status");
+  if(!s)return;
+  const h=s.hermes_status||{},g=s.governor_state||{};
+  if(h.now)$("ag-now").textContent=h.now;
+  $("ag-meta").textContent=`equity $${(h.equity||0).toFixed(2)} · fleet ${h.fleet_alive||0}/${h.fleet_total||0} · governor ${g.state||"—"} (dd ${g.dd_pct||0}%) · ${h.commit||""}`;
+  if(h.fleet_down&&h.fleet_down.length)$("ag-meta").textContent+=` · down: ${h.fleet_down.join(",")}`;
+  $("ag-up").textContent=h.age_s!=null?` (${h.age_s}s)`:"";
+}
 async function tick(){
+  const st=await j("/api/time/status");
+  if(st&&st.hermes_status){
+    const h=st.hermes_status;
+    $("ag-now").textContent=h.now||"—";
+    $("ag-meta").textContent=`equity $${(h.equity||0).toFixed(2)} · fleet ${h.fleet_alive}/${h.fleet_total}${h.fleet_down&&h.fleet_down.length?" · down: "+h.fleet_down.join(","):""} · ${h.commit||""} · ${h.age_s!=null?h.age_s+"s ago":""}`;
+    $("ag-up").textContent=(st.governor_state||{}).state||"";
+  }
   const d=await j("/api/time/articles");
   if(!d)return;
   ARTICLES=d.articles||[];
@@ -295,7 +335,7 @@ window.postComment=async id=>{
   if(r&&r.ok){$("b-"+id).value="";loadComments(id);}
 };
 tick();loadForecasts();
-setInterval(tick,30000);setInterval(loadForecasts,60000);
+setInterval(tick,30000);setInterval(loadForecasts,60000);setInterval(loadAgent,30000);loadAgent();setInterval(loadAgentStatus,60000);loadAgentStatus();setInterval(agentStatus,30000);agentStatus();
 </script>
 </body>
 </html>
