@@ -55,10 +55,13 @@ def publish(state, eq, peak):
 
 
 def seed_peak():
+    """Rolling 24h peak — a historic peak must not freeze recovery forever.
+    After the tail-book incident the all-time peak ($182) would hold STOP at $6
+    indefinitely; the governor must govern the CURRENT regime."""
     try:
         con = sb.sb_conn()
         cur = con.cursor()
-        cur.execute("SELECT max(equity) FROM equity_history")
+        cur.execute("SELECT max(equity) FROM equity_history WHERE ts > now() - interval '24 hours'")
         mx = cur.fetchone()[0]
         con.close()
         return float(mx) if mx else 0.0
@@ -77,6 +80,11 @@ def main():
             eq = equity()
             if eq > peak:
                 peak = eq
+            # rolling-peak decay: if the peak is older than 24h of data, re-seed
+            if time.time() % 900 < POLL_S:  # re-check every ~15 min
+                rp = seed_peak()
+                if rp and rp < peak:
+                    peak = rp
             ratio = eq / peak if peak > 0 else 1.0
             new = "STOP" if ratio < STOP_AT else "HALT" if ratio < HALT_AT else "NORMAL"
             if new != state:

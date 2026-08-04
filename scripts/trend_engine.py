@@ -263,7 +263,9 @@ def main():
                         else:
                             side = None
                         if side:
-                            qty = 2 if abs(mom) >= MOM2_BPS else 1
+                            # equity ladder: base size follows the bankroll, strong signal doubles
+                            base = 2 if (c or 0) >= 25 else 1
+                            qty = min(4, base * (2 if abs(mom) >= MOM2_BPS else 1))
                             r = fire(m["ticker"], side, price, qty)
                             if r["ok"] and r["filled"] > 0:
                                 positions.append({"ticker": m["ticker"], "side": side, "entry_c": price, "close": m["close"], "qty": qty})
