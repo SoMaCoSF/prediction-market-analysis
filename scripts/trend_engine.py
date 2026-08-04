@@ -36,7 +36,7 @@ STREAM = ROOT / "data" / "uuid_stream.db"
 MOM_BPS, MOM2_BPS = 3.0, 6.0
 ENTRY_MIN, ENTRY_MAX, TTL_MIN = 25, 60, 480
 TAKE, STOP = 15, 10
-FLOOR, SESSION_STOP, POLL = 20.00, -300, 5   # FLOOR = fallback when vault state missing/stale
+FLOOR, SESSION_STOP, POLL = 2.50, -300, 5   # FLOOR = fallback when vault state missing/stale (grind mode: 2.50)
 
 # promoter handoff: data/engine_params.json {"take","stop","source","n","ts"}
 PARAMS_FILE = ROOT / "data" / "engine_params.json"

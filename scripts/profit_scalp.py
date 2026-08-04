@@ -41,7 +41,7 @@ SERIES = [("KXBTC15M", "XBTUSD"), ("KXETH15M", "ETHUSD"), ("KXSOL15M", "SOLUSD")
 DRIFT_MIN, ENTRY_MIN, ENTRY_MAX, TTL_MIN = 0.20, 25, 60, 540
 SCALP_C = 15               # take-profit: exit when bid >= entry + this many cents
 STOP_C = 10                # stop-loss: exit when bid <= entry - this many cents
-CASH_FLOOR = 20.00       # fallback when vault state missing/stale
+CASH_FLOOR = 2.50       # fallback when vault state missing/stale (grind mode)
 SESSION_STOP = -300
 POLL = 5
 MAX_OPEN = 8
