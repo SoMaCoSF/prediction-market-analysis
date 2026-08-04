@@ -1,0 +1,79 @@
+<!-- =============================================================================== file_id: SOM-APP-1001-v1.0.0 name: time/oracle.html description: THE ORACLE — the live edition: the fleet's 15M BTC call pre-committed to the ledger before the window closes; countdown, hit rate, the track record that cannot lie project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [oracle, live, predictions, lcars] created: 2026-08-04 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE ORACLE · live edition — time.somacosf.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050508;--panel:#0c0c14;--line:#1e1e2e;--amber:#ff9000;--cyan:#00ccdd;--green:#00dd66;--red:#ff4d4d;--dim:#8a8aa0}
+*{margin:0;box-sizing:border-box}
+body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-height:100vh}
+header{display:flex;align-items:baseline;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
+header h1{font-family:Orbitron;font-size:20px;letter-spacing:3px;color:var(--amber)}
+.sub{font-size:10px;color:var(--dim)}#stamp{margin-left:auto;font-size:10px;color:var(--green)}
+main{padding:20px 22px;max-width:900px;margin:0 auto;display:grid;gap:16px}
+.callcard{background:var(--panel);border:1px solid var(--amber);border-radius:10px;padding:26px;text-align:center}
+.callcard .lab{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase}
+.callcard .call{font-family:Orbitron;font-size:52px;font-weight:900;letter-spacing:4px;margin:10px 0}
+.up{color:var(--green)}.dn{color:var(--red)}
+.meta{font-size:11px;color:var(--dim);margin-top:8px}
+.count{font-family:Orbitron;font-size:18px;color:var(--cyan);margin-top:12px}
+.rate{display:flex;gap:14px;justify-content:center;margin-top:14px}
+.rate .cell{min-width:90px}
+.rate .n{font-family:Orbitron;font-size:22px;font-weight:700}
+.hist{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.hist h3{font-family:Orbitron;font-size:10px;letter-spacing:2px;color:var(--cyan);margin-bottom:8px}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:11px}
+.row:last-child{border-bottom:0}
+.hit{color:var(--green)}.miss{color:var(--red)}
+a{color:var(--cyan);font-size:10px}
+nav{display:flex;gap:14px;padding:10px 22px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--amber)}
+</style>
+</head>
+<body>
+<header><h1>THE ORACLE</h1><span class="sub">LIVE EDITION · EVERY CALL PRE-COMMITTED TO THE LEDGER BEFORE THE WINDOW CLOSES</span><span id="stamp">—</span></header>
+<nav><a href="/">TIME</a><a href="/funds">FUNDS</a><a href="/about">ABOUT</a><a href="/oracle">ORACLE</a><a href="https://trade.somacosf.com/status">STATUS</a><a href="https://poly.somacosf.com">POLY</a></nav>
+<main>
+  <div class="callcard">
+    <div class="lab">the current call · <span id="tick">—</span></div>
+    <div class="call" id="call">—</div>
+    <div class="meta" id="callmeta">—</div>
+    <div class="count" id="count">—</div>
+    <div class="rate">
+      <div class="cell"><div class="n" id="r-rate">—</div><div class="lab">hit rate</div></div>
+      <div class="cell"><div class="n" id="r-n">—</div><div class="lab">calls scored</div></div>
+    </div>
+  </div>
+  <div class="hist"><h3>THE RECORD — SCORED CALLS (hits and misses, both published)</h3><div id="hist"></div></div>
+  <div style="font-size:10px;color:var(--dim);text-align:center">each call mints a UUIDv8 at commit time — the timestamp is the proof. <a href="/about">the manifesto →</a></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+async function j(u){try{const r=await fetch(u);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+async function tick(){
+  $("stamp").textContent=new Date().toLocaleTimeString();
+  const d=await j("/api/time/oracle");
+  if(!d)return;
+  const c=d.oracle_current;
+  if(c){
+    $("tick").textContent=c.ticker;
+    const el=$("call");el.textContent=c.call||"—";
+    el.className="call "+(c.call==="UP"?"up":"dn");
+    $("callmeta").textContent=`committed ${c.ts?new Date(c.ts*1000).toLocaleTimeString():"—"} · mom ${c.mom_bps}bps · uuid ${(c.uuid||"").slice(0,18)}…`;
+    const left=Math.max(0,Math.round((c.close_ts||0)-Date.now()/1000));
+    $("count").textContent=left>0?`resolves in ${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}`:"resolving…";
+  }
+  const s=d.stats||{};
+  $("r-rate").textContent=s.rate!=null?s.rate+"%":"—";
+  $("r-n").textContent=s.n||0;
+  const h=(d.oracle_history||[]).slice(-14).reverse();
+  $("hist").innerHTML=h.map(x=>
+    `<div class="row"><span>${x.ticker.slice(0,26)}</span><span>${x.call}</span><b class="${x.won?"hit":"miss"}">${x.won?"HIT":"MISS"}</b></div>`).join("")
+    ||'<div class="row"><span class="dim">first calls scoring now…</span></div>';
+}
+tick();setInterval(tick,5000);
+</script>
+</body>
+</html>

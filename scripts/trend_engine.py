@@ -33,7 +33,7 @@ KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
 PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdigest()
 STREAM = ROOT / "data" / "uuid_stream.db"
 
-MOM_BPS, MOM2_BPS = 3.0, 6.0
+MOM_BPS, MOM2_BPS = 1.5, 6.0
 ENTRY_MIN, ENTRY_MAX, TTL_MIN = 25, 60, 480
 TAKE, STOP = 15, 10
 FLOOR, SESSION_STOP, POLL = 2.50, -300, 5   # FLOOR = fallback when vault state missing/stale (grind mode: 2.50)

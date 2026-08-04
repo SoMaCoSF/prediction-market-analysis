@@ -57,6 +57,7 @@ DAEMONS = {
     "promoter": "scripts/promoter.py",
     "governor": "scripts/governor.py",
     "agent-status": "scripts/agent_status.py",
+    "oracle": "scripts/oracle.py",
     "poly-exec": "scripts/poly_executor.py",
     "funding": "scripts/funding_feed.py",
     "evidence": "scripts/evidence_engine.py",
