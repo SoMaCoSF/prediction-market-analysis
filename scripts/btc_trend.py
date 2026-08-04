@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import os
 import sqlite3
 import sys
@@ -38,7 +39,7 @@ MOM2_BPS = 6.0           # strong-signal threshold -> 2 contracts
 ENTRY_MIN, ENTRY_MAX = 25, 60   # the proven pocket is 30-50c (4/4, +60.5c/trade)
 TTL_MIN = 480
 TAKE, STOP = 15, 10
-FLOOR = 5.00
+FLOOR = 5.00            # fallback only; live floor comes from vault:state (reserve->floor $0.50)
 SESSION_STOP = -300
 POLL = 5
 
@@ -103,6 +104,32 @@ def kget(path):
 
 def cash():
     return float(kget("/portfolio/balance").get("balance_dollars") or 0)
+
+
+def vault_floor() -> float:
+    """Live cash floor from vault:state (reserve->floor $0.50), cached 30s.
+    Falls back to FLOOR when vault state missing/stale."""
+    global _floor_cache
+    if time.time() - _floor_cache["ts"] > 30:
+        try:
+            con = sb.sb_conn()
+            cur = con.cursor()
+            cur.execute("SELECT v FROM mc_state WHERE k='vault:state'")
+            row = cur.fetchone()
+            con.close()
+            val = FLOOR
+            if row:
+                st = json.loads(row[0])
+                if time.time() - float(st.get("ts") or 0) <= 300:
+                    val = float(st.get("floor") or st.get("reserve") or FLOOR)
+            _floor_cache["v"] = val
+        except Exception:
+            pass
+        _floor_cache["ts"] = time.time()
+    return _floor_cache["v"]
+
+
+_floor_cache = {"v": FLOOR, "ts": 0.0}
 
 
 def fire(ticker, side, price, count=1):
@@ -183,7 +210,8 @@ def main():
                 # ---- entries ----
                 if not pos:
                     c = cash()
-                    if c and c < FLOOR:
+                    floor = vault_floor()
+                    if c and c < floor:
                         time.sleep(POLL * 6)
                         continue
                     mom = tape_momentum_bps()
