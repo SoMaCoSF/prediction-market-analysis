@@ -7,7 +7,15 @@
 ---
 
 ## 0. THE ONE-LINE STATUS
-Engine is CAPABLE and PROVEN (4/4 live wins, +$2.42 realized). It is STARVED of capital ($0.10 cash, governor HALT at -34.6% DD), NOT broken. Everything is committed + pushed to GitHub. Fleet auto-recovers via Registry Run. After reboot: redeploy both Vercel apps (the only unfinished item was `/status`, blocked by an OOM build). User deposits $20 Kalshi → grind resumes.
+Engine is CAPABLE and PROVEN (4/4 live wins, +$2.42 realized). It is STARVED of capital (~$0.01 cash), NOT broken. Governor is NORMAL (rolling-1h peak reset the -34.6% HALT). Everything is committed + pushed to GitHub. Fleet auto-recovered via Registry Run (verified post-reboot: 44 daemons alive). After reboot you need to: (1) relaunch Hermes desktop app, (2) redeploy both Vercel apps — the `/status` page was blocked by a Vercel build OOM that is NOW FIXED (see §4). User deposits $20 Kalshi → grind resumes.
+
+---
+
+## 0b. POST-REBOOT REALITY CHECK (updated 2026-08-04)
+- Fleet auto-recovered: `pythonw.exe scripts/supervisor.py` (Registry Run) spawned all daemons. Verified 44 logical daemons alive (88 procs = launcher+interpreter pairs).
+- Governor state = **NORMAL** (dd_pct ~4%), NOT HALT. The -30% HALT cleared on its own because peak is a rolling 1h window and equity flatlined during downtime.
+- Savings sleeve = **$2.42** (was $0.60) — 25% sweep compounding.
+- **THE OOM FIX:** the `vercel --prod` build was NOT a RAM problem (9.4 GB free). It was Node's default ~2GB V8 old-space cap during the Next.js build. Fix: `NODE_OPTIONS=--max-old-space-size=8192 vercel --prod --yes`. A relaunch helper exists at `scripts/relaunch_fleet.ps1`.
 
 ---
 
@@ -48,10 +56,10 @@ cd D:/somacosf/outputs/prediction-market-analysis
 - **GlobalNav** persistent across all platform pages.
 
 ## 4. WHAT IS BUILT BUT NOT YET DEPLOYED
-- **/status page** (`app/public/time/status.html`): real-time fleet + performance + bridge view, auto-refresh 10s, nav wired, rewrite added to `app/next.config.js` (`/status` → `/time/status.html` on `time.somacosf.com`). **BLOCKED ONLY BY OOM on `vercel --prod` build** (fleet competes for RAM). After reboot + RAM free, redeploy trading app → `/status` goes live.
+- **/status page** (`app/public/time/status.html`): real-time fleet + performance + bridge view, auto-refresh 10s, nav wired, rewrite added to `app/next.config.js` (`/status` → `/time/status.html` on `time.somacosf.com`). Was blocked by a Vercel build OOM — NOW FIXED with `NODE_OPTIONS=--max-old-space-size=8192`. Redeploy trading app to bring it live. Helper: `scripts/relaunch_fleet.ps1 -Deploy`.
 
 ## 5. WHAT IS PENDING / GAPS
-1. **Capital** — equity ~$1.89, cash ~$0.10, governor HALT at -34.6% DD (peak $2.89). User deposits $20 Kalshi (Venmo card) → HALT clears within rolling 1h, grind resumes.
+1. **Capital** — equity ~$1.80, cash ~$0.01. Governor is NORMAL (rolling-1h peak reset the HALT). User deposits $20 Kalshi (Venmo card) → grind resumes (vault floor $0.50, so entries restart once cash clears it).
 2. **Polymarket unfunded** — wallet `0xbC6662be0803F28C827BC405477F0b5AB8c6Dd40`, USDC $0.00. `poly_executor` armed, fires on USDC.
 3. **somacosf.com apex domain** — CLI token expired; needs user dashboard click in Vercel. Pages live on vercel.app + subdomains.
 4. **numba GPU bitmask** + WS tape — WS firehose feeding tick plane half done.

@@ -161,27 +161,6 @@ def publish_account():
         pass
 
 
-def expire_stale_orders(con, max_age_s: int = 600):
-    """Mark 'submitted' orders with no fill after max_age_s as 'expired'.
-    Kalshi auto-expires unfilled orders at market close, but the ledger keeps
-    them as 'submitted' forever — that's the 18k phantom-row bloat. Exchange
-    truth is the order's absence from open positions; a submitted order with no
-    fill for 10 min is dead. Never touches filled/expired rows."""
-    try:
-        cur = con.cursor()
-        cur.execute(
-            "UPDATE uuid_orders SET status='expired' "
-            "WHERE status='submitted' AND ts < extract(epoch from now())::big - %s "
-            "AND exchange_order_id IS NULL",
-            (max_age_s,))
-        n = cur.rowcount
-        if n:
-            con.commit()
-            runlog.log_event("fills", f"expired {n} stale submitted orders (no fill >{max_age_s}s)", expired=n)
-    except Exception as e:
-        runlog.log_event("fills", f"expire warn {repr(e)[:80]}", kind="warn")
-
-
 def main():
     fleetlib.acquire_lock("fills")
     runlog.log_event("fills", "fill_poller start", poll_s=POLL_S)
@@ -193,12 +172,6 @@ def main():
                 runlog.log_event("fills", f"sync cycle: {n} new fills", new=n)
         except Exception as e:
             runlog.log_event("fills", f"sync warn {repr(e)[:80]}", kind="warn")
-        try:
-            con = sb.sb_conn()
-            expire_stale_orders(con)
-            con.close()
-        except Exception as e:
-            runlog.log_event("fills", f"expire warn {repr(e)[:80]}", kind="warn")
         try:
             publish_account()   # decoupled: account feed must flow even when sync fails
         except Exception as e:

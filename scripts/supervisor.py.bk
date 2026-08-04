@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import fleetlib  # noqa: E402
 import runlog  # noqa: E402
 
-PY = ROOT / ".venv311" / "Scripts" / "pythonw.exe"  # headless — no visible console windows
+PY = ROOT / ".venv311" / "Scripts" / "python.exe"
 LOGDIR = ROOT / "logs"
 LOGDIR.mkdir(exist_ok=True)
 

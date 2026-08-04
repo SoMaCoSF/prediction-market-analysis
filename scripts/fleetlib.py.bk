@@ -21,54 +21,11 @@ ROOT = Path(__file__).resolve().parent.parent
 LOGDIR = ROOT / "logs"
 LOGDIR.mkdir(exist_ok=True)
 
-# lock name -> the script it guards (relative to repo root). Used by
-# acquire_lock to verify a held pid is actually running THIS daemon, not a
-# recycled pid owned by some other python process. Keys match the DAEMONS dict
-# in supervisor.py.
-DAEMON_SCRIPTS = {
-    "mc": "scripts/mission_control.py",
-    "vault": "scripts/vault.py",
-    "scalp": "scripts/profit_scalp.py",
-    "btctrend": "scripts/btc_trend.py",
-    "xwatch": "scripts/x_watcher.py",
-    "shadow": "scripts/shadow_index.py",
-    "maker": "scripts/maker_engine.py",
-    "sweep": "scripts/sweep_watch.py",
-    "news": "scripts/news_supply_engine.py",
-    "dry": "scripts/dry_run.py",
-    "trend-eth": "scripts/trend_engine.py",
-    "trend-sol": "scripts/trend_engine.py",
-    "trend-xrp": "scripts/trend_engine.py",
-    "trend-doge": "scripts/trend_engine.py",
-    "copier": "scripts/whale_copier.py",
-    "ws": "scripts/kalshi_ws.py",
-    "tick": "scripts/tick_service.py",
-    "xvenue": "scripts/crossvenue_engine.py",
-    "calendar": "scripts/calendar_engine.py",
-    "dry-t10": "scripts/dry_run.py",
-    "dry-t20": "scripts/dry_run.py",
-    "dry-t25": "scripts/dry_run.py",
-    "dry-s15-8": "scripts/dry_run.py",
-    "promoter": "scripts/promoter.py",
-    "governor": "scripts/governor.py",
-    "agent-status": "scripts/agent_status.py",
-    "oracle": "scripts/oracle.py",
-    "poly-exec": "scripts/poly_executor.py",
-    "funding": "scripts/funding_feed.py",
-    "bridge": "scripts/bridge_coordinator.py",
-    "evidence": "scripts/evidence_engine.py",
-    "ingest": "scripts/ingest.py",
-    "fills": "scripts/fill_poller.py",
-    "supervisor": "scripts/supervisor.py",
-}
 
-
-def _pid_alive(pid: int, expect_script: str = "") -> bool:
-    """True if pid is a live process running the EXPECTED daemon script.
-    Windows: tasklist + cmdline check. The cmdline must contain the specific
-    script name (not just 'python') — a dead daemon's pid recycled to ANY
-    python process (e.g. hermes, another daemon) previously read as 'alive'
-    and zombie-locked the lane. Expecting the script name kills that bug."""
+def _pid_alive(pid: int) -> bool:
+    """True if pid is a live PYTHON process. Windows: tasklist + cmdline check
+    (pid reuse made bare tasklist lie — a dead daemon's pid recycled by any
+    process read as 'alive' and zombie-locked the lane). POSIX: os.kill(pid, 0)."""
     if pid <= 0:
         return False
     if os.name == "nt":
@@ -78,10 +35,7 @@ def _pid_alive(pid: int, expect_script: str = "") -> bool:
                  f"(Get-CimInstance Win32_Process -Filter \"ProcessId={pid}\").CommandLine"],
                 capture_output=True, text=True, timeout=8,
             ).stdout or ""
-            cmd = out.lower()
-            if expect_script:
-                return expect_script.lower() in cmd
-            return "python" in cmd
+            return "python" in out.lower()
         except Exception:
             return False
     try:
@@ -92,18 +46,13 @@ def _pid_alive(pid: int, expect_script: str = "") -> bool:
 
 
 def acquire_lock(name: str) -> None:
-    """Take logs/<name>.lock (pid inside). If a LIVE pid already holds it AND
-    that pid is running THIS daemon's script, refuse to double-run. Otherwise
-    (dead pid, recycled pid, or wrong script) take over cleanly."""
     lock = LOGDIR / f"{name}.lock"
-    # map lock name -> the script it guards (so the alive check is precise)
-    expect = DAEMON_SCRIPTS.get(name, "")
     if lock.exists():
         try:
             pid = int(lock.read_text().strip())
         except Exception:
             pid = -1
-        if _pid_alive(pid, expect):
+        if _pid_alive(pid):
             print(f"[{name}] another instance alive (pid={pid}) — refusing to double-run", flush=True)
             sys.exit(0)
     # atomic create — simultaneous boots can't both win
@@ -114,7 +63,7 @@ def acquire_lock(name: str) -> None:
             pid = int(lock.read_text().strip())
         except Exception:
             pid = -1
-        if _pid_alive(pid, expect):
+        if _pid_alive(pid):
             print(f"[{name}] another instance alive (pid={pid}) — refusing to double-run", flush=True)
             sys.exit(0)
         fd = os.open(str(lock), os.O_WRONLY | os.O_TRUNC)
