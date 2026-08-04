@@ -47,6 +47,15 @@ def load_wallets():
     return []
 
 
+def kalshi_cash() -> float:
+    try:
+        from run_report import kget
+        b = kget("/portfolio/balance")
+        return float(b.get("balance_dollars") or 0)
+    except Exception:
+        return -1.0
+
+
 def usdc_balance(chain: str, addr: str) -> float:
     data = "0x70a08231" + "0" * 24 + addr[2:].lower()
     for rpc in RPCS.get(chain, []):
@@ -88,11 +97,40 @@ def publish(feed):
 
 def main():
     fleetlib.acquire_lock("funding")
-    log("start | watching wallets for inbound slurps")
+    log("start | watching wallets for inbound slurps + Kalshi cash deltas")
     feed: list[dict] = []
+    last_kalshi_cash = None
     while True:
         try:
             fleetlib.checkin("funding")
+            # Kalshi-side reload detection (exchange cash rising = deposit landed)
+            try:
+                from run_report import kget
+                b = kget("/portfolio/balance")
+                kc = float(b.get("balance_dollars") or 0)
+                if last_kalshi_cash is not None and kc > last_kalshi_cash + 1.0:
+                    delta = kc - last_kalshi_cash
+                    u = mint_funding("kalshi-reload", "exchange", delta)
+                    feed.append({"label": "kalshi-reload", "chain": "exchange", "delta": round(delta, 2),
+                                 "balance": round(kc, 2), "uuid": u, "ts": int(time.time())})
+                    log(f"RELOAD DETECTED +${delta:.2f} -> cash ${kc:.2f} | ladder stepping up")
+                last_kalshi_cash = kc
+            except Exception:
+                pass
+            # Kalshi-side: a cash jump = a deposit landed
+            try:
+                from run_report import kget
+                kb = kget('/portfolio/balance')
+                kcash = float(kb.get('balance_dollars') or 0)
+                if 'kalshi' in balances and kcash > balances['kalshi'] + 0.50:
+                    delta = kcash - balances['kalshi']
+                    u = mint_funding('kalshi-deposit', 'kalshi', delta)
+                    feed.append({'label': 'kalshi-deposit', 'chain': 'kalshi', 'delta': round(delta, 2),
+                                 'balance': round(kcash, 2), 'uuid': u, 'ts': int(time.time())})
+                    log(f'RELOAD DETECTED Kalshi +${delta:.2f} -> ${kcash:.2f}')
+                balances['kalshi'] = kcash
+            except Exception:
+                pass
             for w in load_wallets():
                 label, chain, addr = w.get("label", "?"), w.get("chain", "polygon"), w.get("address", "")
                 if not addr:
@@ -109,6 +147,16 @@ def main():
                     log(f"SLURP {label} ({chain}) +${delta:.2f} -> ${bal:.2f} | uuid {str(u)[:18] if u else '—'}")
                 balances[key] = bal
             publish(feed)
+            # Kalshi-side deposit detection: cash rising with no engine spend context = a reload
+            kc = kalshi_cash()
+            if kc >= 0:
+                if "kalshi" in balances and kc > balances["kalshi"] + 5.0:
+                    delta = kc - balances["kalshi"]
+                    u = mint_funding("kalshi-deposit", "kalshi", delta)
+                    feed.append({"label": "kalshi-deposit", "chain": "kalshi", "delta": round(delta, 2),
+                                 "balance": round(kc, 2), "uuid": u, "ts": int(time.time())})
+                    log(f"RELOAD DETECTED +${delta:.2f} -> Kalshi cash ${kc:.2f} — ladder steps up")
+                balances["kalshi"] = kc
         except Exception as e:
             log(f"warn {repr(e)[:60]}")
         time.sleep(POLL_S)

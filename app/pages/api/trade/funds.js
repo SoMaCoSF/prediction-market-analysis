@@ -27,6 +27,24 @@ export default async function handler(req, res) {
     out.lanes = agg;
     const curve = await q("SELECT ts, equity FROM equity_history ORDER BY ts DESC LIMIT 200");
     out.curve = curve.reverse().map((r) => ({ ts: r.ts, equity: Number(r.equity) }));
+    // micro-calc: the grind math — today's entries, pace, projection
+    const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+    const ts0 = Math.floor(dayStart.getTime() / 1000);
+    const entries = await q(
+      "SELECT count(*) AS n, avg(price_cents) AS avg_px, sum(count) AS contracts FROM uuid_orders WHERE mode='live' AND ts > $1", [ts0]);
+    const fillsToday = await q("SELECT count(*) AS n FROM uuid_fills WHERE ts > $1", [ts0]);
+    const eqNow = out.curve.length ? out.curve[out.curve.length - 1].equity : 0;
+    const eqStart = (await q("SELECT equity FROM equity_history WHERE ts > to_timestamp($1) ORDER BY ts ASC LIMIT 1", [ts0]))[0];
+    const hrs = Math.max(1, (Date.now() / 1000 - ts0) / 3600);
+    const pnlToday = eqStart ? eqNow - Number(eqStart.equity) : 0;
+    out.micro = {
+      entries_today: Number(entries[0].n), contracts_today: Number(entries[0].contracts || 0),
+      avg_entry_c: Math.round(Number(entries[0].avg_px || 0)),
+      fills_today: Number(fillsToday[0].n),
+      pnl_today_usd: Math.round(pnlToday * 100) / 100,
+      pace_per_day_usd: Math.round((pnlToday / hrs) * 24 * 100) / 100,
+      days_to_10k: pnlToday > 0 ? Math.ceil(Math.log(10000 / Math.max(eqNow, 1)) / Math.log(1 + pnlToday / hrs / Math.max(eqNow, 1))) : null,
+    };
   } catch (e) {
     out.error = String(e).slice(0, 200);
   }
