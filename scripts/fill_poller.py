@@ -106,8 +106,36 @@ def sync_once() -> int:
             runlog.log_event("fills", f"BUY synced {ticker[:36]} {side} x{cnt} @ {eff_px}c fee={fee}c", ticker=ticker)
         con.commit()
         new += 1
+    reconcile_phantom_positions(con)
     con.close()
     return new
+
+
+def reconcile_phantom_positions(con):
+    """Exchange truth wins. Any ledger uuid_positions row the exchange no longer
+    carries is expired/settled-and-netted — clear it so 'in play' stops lying.
+    Fetches live positions once, diffs against the ledger by ticker+side."""
+    try:
+        d = kget("/portfolio/positions?limit=200")
+        live = {}
+        for p in (d.get("positions") or []):
+            t = p.get("ticker")
+            s = "yes" if (p.get("position") or 0) > 0 else "no"
+            live[(t, s)] = live.get((t, s), 0) + abs(int(p.get("position") or 0))
+        cur = con.cursor()
+        cur.execute("SELECT ticker, side, net_contracts FROM uuid_positions WHERE net_contracts != 0")
+        rows = cur.fetchall()
+        cleared = 0
+        for t, s, net in rows:
+            if (t, s) not in live:
+                cur.execute("DELETE FROM uuid_positions WHERE ticker=%s AND side=%s", (t, s))
+                cleared += 1
+                runlog.log_event("fills", f"RECONCILED phantom {t[:38]} {s} net={net} (exchange no longer carries)", ticker=t)
+        if cleared:
+            runlog.assert_event(cleared < 200, "fills", f"reconcile cleared {cleared} phantom rows (sanity)", cleared=cleared)
+            con.commit()
+    except Exception as e:
+        runlog.log_event("fills", f"reconcile warn {repr(e)[:80]}", kind="warn")
 
 
 def publish_account():

@@ -109,7 +109,7 @@ def cash_floor() -> float:
             if row:
                 st = json.loads(row[0])
                 if time.time() - float(st.get("ts") or 0) <= 300:
-                    val = float(st.get("reserve") or FLOOR)
+                    val = float(st.get("floor") or st.get("reserve") or FLOOR)
             _floor_cache["v"] = val
         except Exception:
             pass

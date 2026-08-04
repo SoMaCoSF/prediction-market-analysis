@@ -31,7 +31,8 @@ load_dotenv(ROOT / ".env")
 KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
 POLL = 60
 RESERVE_CAP = 100.0     # reserve never exceeds $100
-RESERVE_FRAC = 0.5      # reserve is half of equity, up to the cap
+RESERVE_FRAC = 0.30     # 30% reserve at small bankrolls (your rule); 50% strangles entries to $0
+FLOOR_MIN = 0.50        # cash floor never exceeds this — sub-$1 bankrolls can still grind
 
 
 def log(m):
@@ -71,9 +72,10 @@ def snapshot() -> dict | None:
     pv = (bal.get("portfolio_value") or 0) / 100
     equity = cash + pv
     reserve = min(RESERVE_CAP, equity * RESERVE_FRAC)
+    floor = min(FLOOR_MIN, reserve)   # engine cash floor — never blocks sub-$1 grind
     allowance = max(0.0, cash - reserve)
     return {"reserve": round(reserve, 2), "allowance": round(allowance, 2),
-            "equity": round(equity, 2), "ts": time.time()}
+            "floor": round(floor, 2), "equity": round(equity, 2), "ts": time.time()}
 
 
 def publish(state: dict) -> None:
