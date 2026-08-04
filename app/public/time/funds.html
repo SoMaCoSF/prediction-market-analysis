@@ -25,9 +25,13 @@ main{padding:18px 22px;max-width:1000px;display:grid;gap:14px}
 .dim{color:var(--dim)}
 canvas{width:100%;height:64px;display:block}
 a{color:var(--cyan);font-size:10px}
+nav.bar{display:flex;gap:14px;padding:10px 22px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px}
+nav.bar a{color:var(--dim);text-decoration:none}nav.bar a:hover{color:var(--amber)}
+nav.bar a.act{color:var(--amber)}
 </style>
 </head>
 <body>
+<nav class="bar"><a href="/">TIME</a><a href="/funds" class="act">FUNDS</a><a href="/about">ABOUT</a><a href="/oracle">ORACLE</a><a href="/status">STATUS</a><a href="https://trade.somacosf.com/status">STATUS</a><a href="https://poly.somacosf.com">POLY</a></nav>
 <header><h1>FUNDS</h1><span class="sub">KALSHI × POLYMARKET · LIVE FROM THE LEDGER + EXCHANGE</span><span id="stamp">—</span></header>
 <main>
   <div class="hero">
@@ -70,9 +74,10 @@ async function tick(){
   }
   $("lanes").innerHTML=Object.entries(d.lanes||{}).map(([k,v])=>
     `<div class="row"><span>${k}</span><span class="dim">${v.open} open · $${v.cost_usd.toFixed(0)} in play</span><b class="${v.realized_usd>=0?"up":"dn"}">$${v.realized_usd.toFixed(2)}</b></div>`).join("")||'<div class="row dim">no positions yet</div>';
-  const vt=d.vault_state||{},ms=d.moonshot_sleeve||{};
-  $("sleeves").innerHTML=
+  const vt = d.vault_state || {}, ms = d.moonshot_sleeve || {};
+  $("sleeves").innerHTML =
     `<div class="row"><span>Vault reserve (locked)</span><b class="c-cyan">$${(vt.reserve||0).toFixed(2)}</b></div>
+     <div class="row"><span>Savings sleeve (protected)</span><b class="up">$${(vt.savings||0).toFixed(2)}</b></div>
      <div class="row"><span>Trading allowance</span><b>$${(vt.allowance||0).toFixed(2)}</b></div>
      <div class="row"><span>Moonshot sleeve (${((ms.pct||0.25)*100).toFixed(0)}% of equity)</span><b class="up">$${(ms.sleeve||0).toFixed(2)} · ${ms.open||0} open</b></div>`;
   const xv=d.xvenue_latest||[],bd=d.copier_board||[];

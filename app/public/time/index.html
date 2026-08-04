@@ -105,9 +105,13 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
   .callgrid{grid-template-columns:1fr}
   input[type=range]{width:110px}
 }
+nav.bar{display:flex;gap:14px;padding:10px 22px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px}
+nav.bar a{color:var(--dim);text-decoration:none}nav.bar a:hover{color:var(--amber)}
+nav.bar a.act{color:var(--amber)}
 </style>
 </head>
 <body>
+<nav class="bar"><a href="/">TIME</a><a href="/funds" class="act">FUNDS</a><a href="/about">ABOUT</a><a href="/oracle">ORACLE</a><a href="/status">STATUS</a><a href="https://trade.somacosf.com/status">STATUS</a><a href="https://poly.somacosf.com">POLY</a></nav>
 <div class="wrap">
   <div class="rail">
     <div class="logo">TIME<small>THE AI TIMES · SOMACO</small></div>

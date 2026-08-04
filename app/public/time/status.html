@@ -1,0 +1,118 @@
+<!-- =============================================================================== file_id: SOM-APP-1007-v1.0.0 name: time/status.html description: STATUS — real-time fleet + performance + cross-account view. Live from the ledger + exchange. Auto-refresh 10s. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [status, live, fleet, performance, bridge] created: 2026-08-04 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STATUS · SoMaCo — live fleet</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050508;--panel:#0c0c14;--line:#1e1e2e;--amber:#ff9000;--cyan:#00ccdd;--green:#00dd66;--red:#ff4d4d;--dim:#8a8aa0;--lav:#cc99ff}
+*{margin:0;box-sizing:border-box}
+body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-height:100vh}
+nav.bar{display:flex;gap:14px;padding:10px 22px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px}
+nav.bar a{color:var(--dim);text-decoration:none}nav.bar a:hover{color:var(--amber)}nav.bar a.act{color:var(--amber)}
+header{display:flex;align-items:baseline;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
+header h1{font-family:Orbitron;font-size:20px;letter-spacing:3px;color:var(--amber)}
+header .sub{font-size:10px;color:var(--dim);letter-spacing:1px}
+.live{margin-left:auto;font-size:10px;color:var(--green)}
+main{padding:18px 22px;display:grid;grid-template-columns:1fr;gap:14px;max-width:1100px}
+@media(min-width:900px){main{grid-template-columns:1fr 1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h3{font-family:Orbitron;font-size:11px;letter-spacing:2px;color:var(--cyan);margin-bottom:10px;text-transform:uppercase}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:11px}
+.row:last-child{border-bottom:0}
+.dim{color:var(--dim)}.c-green{color:var(--green)}.c-cyan{color:var(--cyan)}.c-lav{color:var(--lav)}.c-red{color:var(--red)}.c-amber{color:var(--amber)}
+.empty{color:var(--dim);font-size:11px;padding:8px 0}
+.big{font-family:Orbitron;font-size:30px;font-weight:700}
+.pass{color:var(--green)}.fail{color:var(--red)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.dcell{background:var(--s-raise,#0e0e14);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font-size:10px}
+.dcell .n{color:var(--amber);font-weight:700}
+.dcell .s{color:var(--green)}
+.dcell .old{color:var(--dim)}
+.dcell .dead{color:var(--red)}
+a{color:var(--cyan)}
+</style>
+</head>
+<body>
+<nav class="bar"><a href="/">TIME</a><a href="/funds">FUNDS</a><a href="/about">ABOUT</a><a href="/oracle">ORACLE</a><a href="/status" class="act">STATUS</a><a href="https://poly.somacosf.com">POLY</a></nav>
+<header><h1>STATUS</h1><span class="sub">REAL-TIME FLEET · PERFORMANCE · CROSS-ACCOUNT</span><span class="live" id="stamp">—</span></header>
+<main>
+  <div class="card" style="grid-column:1/-1"><h3>Equity &amp; performance</h3>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end">
+      <div><div class="dim" style="font-size:9px">EQUITY</div><div class="big c-amber" id="equity">—</div></div>
+      <div><div class="dim" style="font-size:9px">CASH</div><div class="big c-cyan" id="cash">—</div></div>
+      <div><div class="dim" style="font-size:9px">SAVINGS</div><div class="big c-green" id="savings">—</div></div>
+      <div><div class="dim" style="font-size:9px">GOVERNOR</div><div class="big" id="gov">—</div></div>
+    </div>
+    <div id="perf" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card"><h3>System checks (live)</h3><div id="checks"><div class="empty">evaluating…</div></div></div>
+
+  <div class="card"><h3>Cross-account bridge</h3><div id="bridge"><div class="empty">watching…</div></div></div>
+
+  <div class="card" style="grid-column:1/-1"><h3>Fleet (32 daemons)</h3><div id="fleet" class="dgrid"><div class="empty">loading…</div></div></div>
+
+  <div class="card" style="grid-column:1/-1"><h3>Evidence lanes</h3><div id="evidence"><div class="empty">loading…</div></div></div>
+
+  <div class="card" style="grid-column:1/-1"><h3>Last live order / fills</h3><div id="orders"><div class="empty">loading…</div></div></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+async function j(u){try{const r=await fetch(u);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+async function tick(){
+  $("stamp").textContent="updated "+new Date().toLocaleTimeString();
+  const s=await j("/api/trade/status");
+  if(!s)return;
+  // checks
+  if(s.checks&&s.checks.length){
+    $("checks").innerHTML=s.checks.map(c=>`<div class="row"><span>${c.name}</span><b class="${c.pass?'pass':'fail'}">${c.pass?'PASS':'FAIL'}</b></div><div class="row dim" style="border:0;padding-top:0"><span class="dim">${c.detail||""}</span></div>`).join("");
+  }
+  // fleet
+  if(s.fleet){
+    $("fleet").innerHTML=s.fleet.map(d=>{
+      const dead=d.age_s>400||d.state!=="alive";
+      const cls=dead?"dead":(d.age_s<120?"s":"old");
+      return `<div class="dcell"><div class="n">${d.name}</div><div class="${cls}">${d.state} · ${d.age_s}s</div></div>`;
+    }).join("");
+  }
+  // orders + fills
+  if(s.last_order||s.fills){
+    let h="";
+    if(s.fills)h+=`<div class="row"><span>Total fills</span><b class="c-green">${s.fills.total}</b></div><div class="row"><span>Last fill</span><span class="dim">${s.fills.last_age_s}s ago</span></div>`;
+    if(s.last_order)h+=`<div class="row"><span>Last live order</span><b>${s.last_order.ticker}</b></div><div class="row"><span>Side / price</span><span class="dim">${s.last_order.side} @ ${s.last_order.price_cents}¢ (${s.last_order.status})</span></div>`;
+    if(s.recent_realized&&s.recent_realized.length)h+=s.recent_realized.map(r=>`<div class="row"><span>${r.ticker}</span><b class="${r.realized_pnl_cents>=0?'c-green':'c-red'}">${r.realized_pnl_cents>=0?'+':''}${(r.realized_pnl_cents/100).toFixed(2)}</b></div>`).join("");
+    $("orders").innerHTML=h||'<div class="empty">no orders yet</div>';
+  }
+  // funds for equity/cash/savings + governor
+  const f=await j("/api/trade/funds");
+  if(f){
+    const eq=f.account_equity||{}; const vt=f.vault_state||{};
+    $("equity").textContent="$"+(eq.equity||0).toFixed(2);
+    $("cash").textContent="$"+(eq.cash||0).toFixed(2);
+    $("savings").textContent="$"+(vt.savings||0).toFixed(2);
+    const g=f.governor||{}; const gstate=(g.state||"NORMAL").toUpperCase();
+    const gc=gstate.includes("HALT")?"c-red":gstate.includes("STOP")?"c-red":"c-green";
+    $("gov").textContent=gstate; $("gov").className="big "+gc;
+    if(f.evidence_lanes&&f.evidence_lanes.lanes){
+      $("evidence").innerHTML=Object.entries(f.evidence_lanes.lanes).map(([k,v])=>
+        `<div class="row"><span>${k}</span><span class="dim">n=${v.n} · ${((v.winrate||0)*100).toFixed(0)}% · CI ${((v.ci_low||0)*100).toFixed(0)}-${((v.ci_high||0)*100).toFixed(0)}%</span><b class="${v.winrate>=0.55?'c-green':'c-amber'}">${v.verdict||""}</b></div>`).join("");
+    }
+  }
+  // bridge
+  const b=await j("/api/trade/bridge");
+  if(b&&b.bridge_state){
+    const br=b.bridge_state; const rec=(br.recommendation||"BALANCED");
+    const rc=rec==="BALANCED"?"c-green":rec.includes("POLY")?"c-lav":"c-cyan";
+    $("bridge").innerHTML=
+      `<div class="row"><span>Kalshi cash</span><b class="c-cyan">$${(br.kalshi_cash||0).toFixed(2)}</b></div>`+
+      `<div class="row"><span>Poly USDC</span><b class="c-lav">$${(br.poly_usdc||0).toFixed(2)}</b></div>`+
+      `<div class="row"><span>Recommendation</span><b class="${rc}">${rec}</b></div>`+
+      `<div class="row"><span>Action</span><span class="dim">${br.message||"—"}</span></div>`;
+  }
+}
+tick();setInterval(tick,10000);
+</script>
+</body>
+</html>

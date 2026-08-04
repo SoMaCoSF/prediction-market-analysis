@@ -60,6 +60,7 @@ DAEMONS = {
     "oracle": "scripts/oracle.py",
     "poly-exec": "scripts/poly_executor.py",
     "funding": "scripts/funding_feed.py",
+    "bridge": "scripts/bridge_coordinator.py",
     "evidence": "scripts/evidence_engine.py",
     # chaos REMOVED: budget exhaustion -> clean exit -> supervisor relaunches
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.

@@ -1,14 +1,16 @@
-<!-- =============================================================================== file_id: SOM-APP-0987-v1.0.0 name: poly/index.html description: POLY — the Polymarket control panel: whale flow, cross-venue divergences, copier leaderboard. LCARS-dark. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [poly, polymarket, whales, panel, lcars] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!-- =============================================================================== file_id: SOM-APP-1004-v1.0.0 name: poly/index.html description: POLY — the Polymarket portal: live markets (keyless Gamma API), wallet arm status, cross-venue divergences, copier leaderboard, and the CLOB execution lane. Real integration, not a placeholder. project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [poly, polymarket, whales, portal, clob, lcars] created: 2026-08-04 version: 1.0.0 agent_id: HERMES-AGENT =============================================================================== -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>POLY · SoMaCo — polymarket control</title>
+<title>POLY · SoMaCo — polymarket portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050508;--panel:#0c0c14;--line:#1e1e2e;--amber:#ff9000;--cyan:#00ccdd;--green:#00dd66;--red:#ff4d4d;--dim:#8a8aa0;--lav:#cc99ff}
 *{margin:0;box-sizing:border-box}
 body{background:var(--bg);color:#ddd;font-family:"IBM Plex Mono",monospace;min-height:100vh}
+nav.bar{display:flex;gap:14px;padding:10px 22px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px}
+nav.bar a{color:var(--dim);text-decoration:none}nav.bar a:hover{color:var(--amber)}nav.bar a.act{color:var(--lav)}
 header{display:flex;align-items:baseline;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
 header h1{font-family:Orbitron;font-size:20px;letter-spacing:3px;color:var(--lav)}
 header .sub{font-size:10px;color:var(--dim);letter-spacing:1px}
@@ -19,22 +21,48 @@ main{padding:18px 22px;display:grid;grid-template-columns:1fr;gap:14px;max-width
 .card h3{font-family:Orbitron;font-size:11px;letter-spacing:2px;color:var(--amber);margin-bottom:10px;text-transform:uppercase}
 .row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:11px}
 .row:last-child{border-bottom:0}
-.dim{color:var(--dim)}.c-green{color:var(--green)}.c-cyan{color:var(--cyan)}.c-lav{color:var(--lav)}
+.dim{color:var(--dim)}.c-green{color:var(--green)}.c-cyan{color:var(--cyan)}.c-lav{color:var(--lav)}.c-red{color:var(--red)}
 .empty{color:var(--dim);font-size:11px;padding:8px 0}
 a{color:var(--cyan)}
+.mkt{display:block;padding:9px 0;border-bottom:1px solid var(--line);font-size:11px;text-decoration:none;color:#ddd}
+.mkt:hover{color:var(--lav)}
+.mkt .q{color:var(--dim);font-size:10px;display:block;margin-bottom:3px}
+.mkt .p{color:var(--green);font-weight:700}
+.bar-btn{display:inline-block;background:var(--lav);color:#050508;padding:6px 12px;border-radius:5px;font-size:11px;font-weight:700;text-decoration:none;margin-top:8px}
+code{color:var(--cyan);font-size:10px;word-break:break-all}
 </style>
 </head>
 <body>
-<header><h1>POLY</h1><span class="sub">POLYMARKET CONTROL · WHALE FLOW · CROSS-VENUE</span><span class="live" id="stamp">—</span></header>
+<nav class="bar"><a href="/">TIME</a><a href="/funds">FUNDS</a><a href="/about">ABOUT</a><a href="/oracle">ORACLE</a><a href="https://trade.somacosf.com/status">STATUS</a><a href="/" class="act">POLY</a></nav>
+<header><h1>POLY</h1><span class="sub">POLYMARKET PORTAL · LIVE MARKETS · CLOB LANE</span><span class="live" id="stamp">—</span></header>
 <main>
-  <div class="card"><h3>Whale flow (≥$10k prints)</h3><div id="shadow"><div class="empty">no prints yet — the shadow lane watches top-12 markets</div></div></div>
-  <div class="card"><h3>Cross-venue divergences</h3><div id="xvenue"><div class="empty">no divergences — fires when poly vs kalshi disagree >5¢</div></div></div>
+  <div class="card" style="grid-column:1/-1"><h3>Wallet &amp; execution lane</h3>
+    <div id="exec"><div class="empty">checking executor…</div></div>
+    <div class="row"><span>Wallet</span><code id="wallet">0xbC66…Dd40</code></div>
+    <div class="row"><span>Fund to arm</span><b class="c-cyan">USDC on Polygon → 0xbC6662be0803F28C827BC405477F0b5AB8c6Dd40</b></div>
+    <div class="row"><span>Execution mode</span><b class="c-lav">micro CLOB — $1-2/order, house-money only</b></div>
+    <a class="bar-btn" href="https://polymarket.com/portfolio" target="_blank">OPEN POLYMARKET PORTFOLIO ↗</a>
+  </div>
+
+  <div class="card"><h3>Live Polymarket markets (Gamma API)</h3><div id="mkts"><div class="empty">loading…</div></div></div>
+
+  <div class="card"><h3>Cross-venue divergences (poly vs kalshi &gt;5¢)</h3><div id="xvenue"><div class="empty">no divergences — fires when poly and kalshi disagree</div></div></div>
+
+  <div class="card"><h3>Whale flow (≥$10k prints)</h3><div id="shadow"><div class="empty">no prints yet — the shadow lane watches top markets</div></div></div>
+
   <div class="card"><h3>Copier leaderboard (tracked wallets)</h3><div id="board"><div class="empty">building the board — wallets ranked by flow</div></div></div>
-  <div class="card"><h3>About this panel</h3>
-    <div class="row"><span>Signal venue</span><b class="c-lav">Polymarket (keyless public APIs)</b></div>
-    <div class="row"><span>Execution venue</span><b class="c-cyan">Kalshi (our account)</b></div>
-    <div class="row"><span>Every signal</span><b class="c-green">minted as a UUIDv8 object</b></div>
-    <div class="row"><span>CLOB execution on poly</span><b class="dim">wallet funded? pending</b></div>
+
+  <div class="card" style="grid-column:1/-1"><h3>Cross-account bridge (awareness)</h3>
+    <div id="bridge"><div class="empty">watching both venues…</div></div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1"><h3>How the integration works</h3>
+    <div class="row"><span>Signal</span><b class="c-lav">Polymarket Gamma API (keyless) + whale copier</b></div>
+    <div class="row"><span>Divergence</span><b class="c-cyan">poly vs Kalshi &gt;5¢ → 0x3D5 DIVERGENCE event, bet the deep side</b></div>
+    <div class="row"><span>Execution</span><b class="c-green">py-clob-client, wallet-signed orders (armed when USDC lands)</b></div>
+    <div class="row"><span>Cross-funding</span><b class="c-lav">bridge coordinator watches both; manual taps OK, system talks</b></div>
+    <div class="row"><span>Risk</span><b class="c-red">spend capped at house-money allowance — never principal</b></div>
+    <div class="row"><span>Status</span><b id="intg-state" class="c-green">LIVE (signal) · ARMED (execution)</b></div>
   </div>
 </main>
 <script>
@@ -42,14 +70,44 @@ const $=id=>document.getElementById(id);
 async function j(u){try{const r=await fetch(u);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
 async function tick(){
   $("stamp").textContent=new Date().toLocaleTimeString();
+  // executor / wallet state
+  const ex=await j("/api/trade/poly/exec");
+  if(ex){
+    const st=(ex.state||"").toUpperCase();
+    const col=st.includes("ARMED")?"c-green":st.includes("DORMANT")?"c-red":"c-cyan";
+    $("exec").innerHTML=`<div class="row"><span>State</span><b class="${col}">${st}</b></div><div class="row"><span>USDC</span><b class="c-green">$${(ex.usdc||0).toFixed(2)}</b></div>`;
+    if(ex.usdc>0) $("intg-state").textContent="LIVE (signal) · ARMED (execution) · $"+(ex.usdc||0).toFixed(2)+" USDC";
+  }
+  // bridge awareness
+  const br=await j("/api/trade/bridge");
+  if(br&&br.bridge_state){
+    const b=br.bridge_state; const rec=(b.recommendation||"BALANCED");
+    const rcol=rec==="BALANCED"?"c-green":rec.includes("POLY")?"c-lav":"c-cyan";
+    $("bridge").innerHTML=
+      `<div class="row"><span>Kalshi cash</span><b class="c-cyan">$${(b.kalshi_cash||0).toFixed(2)}</b></div>`+
+      `<div class="row"><span>Poly USDC</span><b class="c-lav">$${(b.poly_usdc||0).toFixed(2)}</b></div>`+
+      `<div class="row"><span>Recommendation</span><b class="${rcol}">${rec}</b></div>`+
+      `<div class="row"><span>Action</span><span class="dim">${b.message||"—"}</span></div>`;
+  }
+  // live markets from Gamma (keyless)
+  const m=await j("https://gamma-api.polymarket.com/markets?limit=12&active=true&closed=false&order=volume24hr");
+  if(m&&m.length){
+    $("mkts").innerHTML=m.map(x=>
+      `<a class="mkt" href="https://polymarket.com/event/${x.slug||''}" target="_blank">
+        <span class="q">${String(x.question||'').slice(0,72)}</span>
+        <span class="p">${((x.bestBid||0)*100).toFixed(0)}–${((x.bestAsk||0)*100).toFixed(0)}¢</span>
+        <span class="dim"> · vol $${(x.volume24hr||0).toLocaleString()}</span></a>`).join("");
+  }
+  // divergences + whale flow + board
   const d=await j("/api/trade/poly");
-  if(!d)return;
-  if(d.shadow&&d.shadow.length)$("shadow").innerHTML=d.shadow.slice(0,10).map(e=>
-    `<div class="row"><span class="dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</span><span>${(e.detail||JSON.stringify(e)).slice(0,64)}</span></div>`).join("");
-  if(d.divergences&&d.divergences.length)$("xvenue").innerHTML=d.divergences.slice(-10).reverse().map(e=>
-    `<div class="row"><span class="c-lav">${e.coin}</span><span>poly ${e.poly_c}¢ vs kalshi ${e.kalshi_c}¢ (<b class="c-green">${e.diverge_c>0?"+":""}${e.diverge_c}¢</b>)</span><span class="dim">${e.side} @${e.price}¢</span></div>`).join("");
-  if(d.board&&d.board.length)$("board").innerHTML=d.board.map(w=>
-    `<div class="row"><span class="c-cyan">#${w.rank||""} ${w.wallet}</span><span class="dim">flow $${(w.flow_usd||0).toLocaleString()}</span></div>`).join("");
+  if(d){
+    if(d.divergences&&d.divergences.length)$("xvenue").innerHTML=d.divergences.slice(-10).reverse().map(e=>
+      `<div class="row"><span class="c-lav">${e.coin}</span><span>poly ${e.poly_c}¢ vs kalshi ${e.kalshi_c}¢ (<b class="c-green">${e.diverge_c>0?"+":""}${e.diverge_c}¢</b>)</span><span class="dim">${e.side} @${e.price}¢</span></div>`).join("");
+    if(d.shadow&&d.shadow.length)$("shadow").innerHTML=d.shadow.slice(0,10).map(e=>
+      `<div class="row"><span class="dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</span><span>${(e.detail||JSON.stringify(e)).slice(0,64)}</span></div>`).join("");
+    if(d.board&&d.board.length)$("board").innerHTML=d.board.map(w=>
+      `<div class="row"><span class="c-cyan">#${w.rank||""} ${w.wallet}</span><span class="dim">flow $${(w.flow_usd||0).toLocaleString()}</span></div>`).join("");
+  }
 }
 tick();setInterval(tick,15000);
 </script>

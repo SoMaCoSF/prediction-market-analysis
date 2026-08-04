@@ -20,6 +20,7 @@ const nextConfig = {
         { source: '/about', destination: '/time/about.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },
         { source: '/funds', destination: '/time/funds.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },
         { source: '/oracle', destination: '/time/oracle.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },
+        { source: '/status', destination: '/time/status.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },
         // poly.somacosf.com — polymarket control panel
         { source: '/', destination: '/poly/index.html', has: [{ type: 'host', value: 'poly.somacosf.com' }] },
       ],

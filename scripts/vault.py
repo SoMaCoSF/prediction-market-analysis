@@ -33,6 +33,8 @@ POLL = 60
 RESERVE_CAP = 100.0     # reserve never exceeds $100
 RESERVE_FRAC = 0.30     # 30% reserve at small bankrolls (your rule); 50% strangles entries to $0
 FLOOR_MIN = 0.50        # cash floor never exceeds this — sub-$1 bankrolls can still grind
+SAVE_FRAC = 0.25        # of every realized win, sweep into the protected savings sleeve
+SAVE_KEY = "savings:state"
 
 
 def log(m):
@@ -63,8 +65,48 @@ def kget(path):
         return {}
 
 
+def _load_savings() -> float:
+    try:
+        con = sb.sb_conn()
+        cur = con.cursor()
+        cur.execute("SELECT v FROM mc_state WHERE k=%s", (SAVE_KEY,))
+        row = cur.fetchone()
+        con.close()
+        return float(json.loads(row[0])["total"]) if row else 0.0
+    except Exception:
+        return 0.0
+
+
+def _store_savings(total: float) -> None:
+    try:
+        con = sb.sb_conn()
+        con.autocommit = True
+        cur = con.cursor()
+        cur.execute(
+            "INSERT INTO mc_state (k, v, updated_at) VALUES (%s, %s, now()) "
+            "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
+            (SAVE_KEY, json.dumps({"total": round(total, 4), "ts": time.time()})))
+        con.close()
+    except Exception:
+        pass
+
+
+def _realized_total() -> float:
+    """Total realized P&L across all closed positions (the ledger truth)."""
+    try:
+        con = sb.sb_conn()
+        cur = con.cursor()
+        cur.execute("SELECT COALESCE(SUM(realized_pnl_cents),0) FROM uuid_positions WHERE realized_pnl_cents != 0")
+        v = float(cur.fetchone()[0]) / 100.0
+        con.close()
+        return v
+    except Exception:
+        return 0.0
+
+
 def snapshot() -> dict | None:
-    """Exchange truth -> vault state. None when the balance read failed."""
+    """Exchange truth -> vault state. None when the balance read failed.
+    Also sweeps a fraction of new realized wins into the protected savings sleeve."""
     bal = kget("/portfolio/balance")
     if not bal or "balance_dollars" not in bal:
         return None
@@ -74,8 +116,22 @@ def snapshot() -> dict | None:
     reserve = min(RESERVE_CAP, equity * RESERVE_FRAC)
     floor = min(FLOOR_MIN, reserve)   # engine cash floor — never blocks sub-$1 grind
     allowance = max(0.0, cash - reserve)
+    # --- savings sleeve: bank a slice of every new realized win ---
+    try:
+        realized = _realized_total()
+        saved = _load_savings()
+        new_win = max(0.0, realized - saved)   # only previously-unbanked wins
+        if new_win > 0:
+            sweep = new_win * SAVE_FRAC
+            saved += sweep
+            _store_savings(saved)
+            log(f"SAVINGS +${sweep:.2f} from new realized win (total saved ${saved:.2f})")
+    except Exception as e:
+        log(f"savings warn {repr(e)[:60]}")
+        saved = _load_savings()
     return {"reserve": round(reserve, 2), "allowance": round(allowance, 2),
-            "floor": round(floor, 2), "equity": round(equity, 2), "ts": time.time()}
+            "floor": round(floor, 2), "savings": round(saved, 2),
+            "equity": round(equity, 2), "ts": time.time()}
 
 
 def publish(state: dict) -> None:
@@ -91,7 +147,7 @@ def publish(state: dict) -> None:
 
 def main():
     fleetlib.acquire_lock("vault")
-    log(f"vault start | reserve=min(${RESERVE_CAP:.0f}, equity*{RESERVE_FRAC}) poll={POLL}s")
+    log(f"vault start | reserve=min(${RESERVE_CAP:.0f}, equity*{RESERVE_FRAC}) + savings {SAVE_FRAC:.0%} of wins | poll={POLL}s")
     while True:
         fleetlib.checkin("vault")
         try:
@@ -105,7 +161,7 @@ def main():
                     "vault", "reserve within [0, cap] and allowance non-negative",
                     reserve=state["reserve"], allowance=state["allowance"], equity=state["equity"])
                 log(f"equity ${state['equity']:.2f} | reserve ${state['reserve']:.2f} locked | "
-                    f"allowance ${state['allowance']:.2f}")
+                    f"savings ${state.get('savings', 0):.2f} | allowance ${state['allowance']:.2f}")
         except Exception as e:
             log(f"cycle warn {repr(e)[:60]}")
         time.sleep(POLL)
