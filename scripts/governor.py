@@ -61,7 +61,7 @@ def seed_peak():
     try:
         con = sb.sb_conn()
         cur = con.cursor()
-        cur.execute("SELECT max(equity) FROM equity_history WHERE ts > now() - interval '24 hours'")
+        cur.execute("SELECT max(equity) FROM equity_history WHERE ts > now() - interval '1 hour'")
         mx = cur.fetchone()[0]
         con.close()
         return float(mx) if mx else 0.0
