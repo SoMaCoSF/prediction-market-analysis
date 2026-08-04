@@ -89,10 +89,21 @@ def alive(name: str) -> bool:
     p = procs.get(name)
     if p is not None and p.poll() is None:
         return True
-    # adopt: a live pid holds this daemon's lock (spawned by a previous supervisor)
+    # adopt: a live pid holds this daemon's lock (spawned by a previous supervisor).
+    # MUST verify the pid actually runs THIS daemon's script — a recycled pid from
+    # another process would falsely report the daemon alive and skip spawning.
     try:
         pid = int((LOGDIR / f"{name}.lock").read_text().strip())
-        return fleetlib._pid_alive(pid)
+        if not fleetlib._pid_alive(pid):
+            return False
+        # confirm the process command line actually contains this daemon's script
+        import subprocess as _sp
+        try:
+            out = _sp.run(["ps", "-p", str(pid), "-o", "args=", "-h"],
+                          capture_output=True, text=True, timeout=5).stdout
+            return name.split("-")[0] in out or DAEMONS[name].split()[0].replace("scripts/", "") in out
+        except Exception:
+            return fleetlib._pid_alive(pid)
     except Exception:
         return False
 
