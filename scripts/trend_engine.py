@@ -40,6 +40,21 @@ FLOOR, SESSION_STOP, POLL = 2.50, -300, 5   # FLOOR = fallback when vault state 
 
 # promoter handoff: data/engine_params.json {"take","stop","source","n","ts"}
 PARAMS_FILE = ROOT / "data" / "engine_params.json"
+
+
+def governor_ok():
+    """Circuit breaker: entries blocked when governor is HALT/STOP. Exits never blocked."""
+    try:
+        con = sb.sb_conn()
+        cur = con.cursor()
+        cur.execute("SELECT v FROM mc_state WHERE k='governor:state'")
+        row = cur.fetchone()
+        con.close()
+        if not row:
+            return True
+        return json.loads(row[0]).get("state") == "NORMAL"
+    except Exception:
+        return True
 _start_ts = time.time()        # this process's own start time
 _params_ts = _start_ts         # only adopt params FRESHER than this watermark
 
@@ -231,6 +246,9 @@ def main():
                 if len(positions) < MAX_CONC:
                     c = cash()
                     if c and c < cash_floor():
+                        time.sleep(POLL * 6)
+                        continue
+                    if not governor_ok():
                         time.sleep(POLL * 6)
                         continue
                     mom = tape_mom()

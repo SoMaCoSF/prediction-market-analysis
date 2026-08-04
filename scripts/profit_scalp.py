@@ -42,6 +42,21 @@ DRIFT_MIN, ENTRY_MIN, ENTRY_MAX, TTL_MIN = 0.20, 25, 60, 540
 SCALP_C = 15               # take-profit: exit when bid >= entry + this many cents
 STOP_C = 10                # stop-loss: exit when bid <= entry - this many cents
 CASH_FLOOR = 2.50       # fallback when vault state missing/stale (grind mode)
+
+
+def governor_ok():
+    """Circuit breaker: entries blocked when governor is HALT/STOP. Exits never blocked."""
+    try:
+        con = sb.sb_conn()
+        cur = con.cursor()
+        cur.execute("SELECT v FROM mc_state WHERE k='governor:state'")
+        row = cur.fetchone()
+        con.close()
+        if not row:
+            return True
+        return json.loads(row[0]).get("state") == "NORMAL"
+    except Exception:
+        return True
 SESSION_STOP = -300
 POLL = 5
 MAX_OPEN = 8
@@ -225,6 +240,9 @@ def main():
                 floor = cash_floor()
                 if c and c < floor:
                     log(f"cash ${c:.2f} < floor ${floor:.2f} — entries paused")
+                    time.sleep(POLL * 6)
+                    continue
+                if not governor_ok():
                     time.sleep(POLL * 6)
                     continue
                 for series, pair in SERIES:
