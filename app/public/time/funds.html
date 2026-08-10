@@ -31,7 +31,7 @@ nav.bar a.act{color:var(--amber)}
 </style>
 </head>
 <body>
-<nav class="bar"><a href="/">TIME</a><a href="/funds" class="act">FUNDS</a><a href="/about">ABOUT</a><a href="/oracle">ORACLE</a><a href="/status">STATUS</a><a href="https://trade.somacosf.com/status">STATUS</a><a href="https://poly.somacosf.com">POLY</a></nav>
+<nav class="bar"><a href="/">TIME</a><a href="/funds" class="act">FUNDS</a><a href="/about">ABOUT</a><a href="/oracle">ORACLE</a><a href="/status">STATUS</a><a href="https://trade.somacosf.com/status">STATUS</a><a href="https://poly.somacosf.com">POLY</a><span style="margin-left:auto;font-size:10px;color:var(--green)">5-CHANNEL LIVE · $38 · FLOOR $25</span></nav>
 <header><h1>FUNDS</h1><span class="sub">KALSHI × POLYMARKET · LIVE FROM THE LEDGER + EXCHANGE</span><span id="stamp">—</span></header>
 <main>
   <div class="hero">
@@ -44,6 +44,30 @@ nav.bar a.act{color:var(--amber)}
   <div class="card"><h3>Equity curve (today)</h3><canvas id="curve"></canvas></div>
   <div class="card"><h3>Returns by lane</h3><div id="lanes"></div></div>
   <div class="card"><h3>The vault + the sleeve</h3><div id="sleeves"></div></div>
+  <div class="card"><h3>Dry-run watch — paper (live)</h3><div id="dryruns"></div>
+    <div class="dim" style="font-size:10px;margin-top:8px">4 parallel 2h paper sims · $1 crypto clip, $3 crypto clip, $1 cheap-NO clip ×2 · zero real money · 15s refresh</div>
+  </div>
+  <div class="card"><h3>How fees work — the grind tax</h3><div id="fees"></div>
+    <div class="dim" style="font-size:10px;margin-top:10px;line-height:1.5">
+      <b style="color:var(--amber)">The trap:</b> Kalshi charges a fee <b>per contract, per fill</b> — roughly $0.007–$0.01 fixed + 10% of any winnings.
+      It does NOT scale down with your bet size. So a <b>$0.01</b> micro-clip pays the same ~$0.007 fee as analysis allows,
+      meaning <b>fees can be 50–150% of your trade</b> before any price edge. We lost $48 to fees on $34 of volume (143% drag).
+      <br><br>
+      <b style="color:var(--cyan)">The rule we now enforce:</b> never trade a clip where <b>edge &lt; fee</b>. Minimum clip = <b>$1.00</b>.
+      At $1.00 the same ~$0.01 fee is only ~1% of the trade — survivable. Below ~$0.50/clip the math can never win.
+      <br><br>
+      <b style="color:var(--green)">Sweet spot (this account):</b> $1–$3 per clip, 15-min crypto momentum only, edge&gt;fee gate on every entry.
+      10% of bankroll per position, hard $25 cash backstop (never spend the last $25).
+    </div>
+    <table style="width:100%;font-size:10px;margin-top:12px;border-collapse:collapse">
+      <tr style="color:var(--dim)"><td style="padding:4px 0">clip size</td><td>fee % of trade</td><td>verdict</td></tr>
+      <tr><td style="padding:4px 0">$0.01</td><td style="color:var(--red)">~70%</td><td style="color:var(--red)">DEATH — never</td></tr>
+      <tr><td style="padding:4px 0">$0.25</td><td style="color:var(--red)">~4%</td><td style="color:var(--red)">too thin</td></tr>
+      <tr><td style="padding:4px 0">$1.00</td><td style="color:var(--green)">~1%</td><td style="color:var(--green)">MINIMUM — OK</td></tr>
+      <tr><td style="padding:4px 0">$2–$3</td><td style="color:var(--green)">~0.3–0.5%</td><td style="color:var(--green)">SWEET SPOT</td></tr>
+      <tr><td style="padding:4px 0">$5+</td><td style="color:var(--cyan)">&lt;0.2%</td><td style="color:var(--cyan)">safe but slow build</td></tr>
+    </table>
+  </div>
   <div class="card"><h3>Polymarket side (signal flow)</h3><div id="poly"></div></div>
   <div class="card"><h3>Sweep rule ($100 to Venmo at $200)</h3><div id="sweep"></div></div>
   <div style="font-size:10px" class="dim">live orders <span id="m-live">—</span> · paper <span id="m-paper">—</span> · evidence verdict: <span id="verdict">—</span> · <a href="/">TIME</a> · <a href="https://trade.somacosf.com/status">STATUS</a></div>
@@ -80,7 +104,32 @@ async function tick(){
      <div class="row"><span>Savings sleeve (protected)</span><b class="up">$${(vt.savings||0).toFixed(2)}</b></div>
      <div class="row"><span>Trading allowance</span><b>$${(vt.allowance||0).toFixed(2)}</b></div>
      <div class="row"><span>Moonshot sleeve (${((ms.pct||0.25)*100).toFixed(0)}% of equity)</span><b class="up">$${(ms.sleeve||0).toFixed(2)} · ${ms.open||0} open</b></div>`;
-  const xv=d.xvenue_latest||[],bd=d.copier_board||[];
+     const xv=d.xvenue_latest||[],bd=d.copier_board||[];
+     const fs=d.fee_stats||{};
+     // --- Dry-run live watch (per-lane paper sims) ---
+     const dr=d.dry_runs||{};
+     const drKeys=Object.keys(dr).sort();
+     const LANE_NAME = (k) => k==="dry-clip1" ? "CRYPTO · $1 clip" : k==="dry-clip3" ? "CRYPTO · $3 clip" : k==="dry-no-cheap-1" ? "NO CHEAP · $1 clip" : k==="dry-no-cheap-2" ? "NO CHEAP · $1 clip" : k==="dry-noncrypto" ? "NON-CRYPTO (stocks/commodities) · $2 clip" : k;
+     $("dryruns").innerHTML = drKeys.length ? drKeys.map(k=>{
+       const s=dr[k];
+       const net=(s.net!=null?s.net:(s.realized||0)-(s.fees||0));
+       const cls=net>=0?"up":"dn";
+       const open=s.open||[];
+       const openTxt=open.length?open.map(o=>`${o.side.toUpperCase()}@${o.entry_c}c`).join(", "):"—";
+       const stalled=(s.age_s||0)>120;
+       const minsLeft=Math.max(0,Math.round((s.run_minutes||0)-((s.ts?(Date.now()/1000-s.ts):0)/60)));
+       return `<div style="border-bottom:1px solid var(--line);padding:8px 0">
+         <div class="row" style="border:0"><span><b style="color:var(--cyan)">${LANE_NAME(k)}</b> ${stalled?'<span style="color:var(--red)">· STALLED</span>':'<span style="color:var(--green)">· live</span>'}</span><b class="${cls}">net $${net.toFixed(2)}</b></div>
+         <div class="row" style="border:0;font-size:10px"><span class="dim">entries ${s.entries||0} · scalps ${s.scalps||0} · settles ${s.settles||0} · W/L ${s.wins||0}/${s.losses||0}</span><span class="dim">eq $${(s.equity||0).toFixed(2)} · fees $${(s.fees||0).toFixed(2)} · DD $${(s.max_dd||0).toFixed(2)}</span></div>
+         <div class="row" style="border:0;font-size:10px"><span class="dim">open(${open.length}): ${openTxt}</span><span class="dim">${minsLeft}m left · ${Math.round(s.age_s||0)}s old</span></div>
+       </div>`;
+     }).join("") : '<div class="row dim">no dry runs publishing — start with: pythonw scripts/dry_run.py 120 15 0 dry-clip1 100 &nbsp;·&nbsp; non-crypto (oil/energy) windows on Kalshi have no usable intra-window drift signal right now, so they are not in the paper sim</div>';
+     $("fees").innerHTML = fs.fills
+    ? `<div class="row"><span>Total fills (lifetime)</span><b>${fs.fills.toLocaleString()}</b></div>
+       <div class="row"><span>Total fees paid</span><b class="dn">$${fs.total_fee_usd.toFixed(2)}</b></div>
+       <div class="row"><span>Total volume traded</span><b>$${(fs.total_notional_usd||0).toFixed(2)}</b></div>
+       <div class="row"><span>Fee drag (% of volume)</span><b class="dn">${fs.drag_pct}%</b></div>`
+    : '<div class="row dim">fee data unavailable</div>';
   $("poly").innerHTML=(Array.isArray(xv)&&xv.length?xv.slice(-5).reverse().map(e=>
     `<div class="row"><span class="c-lav">${e.coin}</span><span>poly ${e.poly_c}¢ vs kalshi ${e.kalshi_c}¢ (${e.diverge_c>0?"+":""}${e.diverge_c}¢)</span><span class="dim">${e.side} @${e.price}¢</span></div>`).join(""):'<div class="row dim">no divergences traded yet</div>')
     +(Array.isArray(bd)&&bd.length?`<div class="row"><span class="dim">whales tracked</span><b>${bd.length}</b></div>`:"");

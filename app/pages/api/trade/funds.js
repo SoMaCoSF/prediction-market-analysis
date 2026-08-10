@@ -10,7 +10,7 @@ export default async function handler(req, res) {
       try { out[r.k.replace(":", "_")] = { ...JSON.parse(r.v), age_s: Math.round(Number(r.age_s)) }; }
       catch { out[r.k.replace(":", "_")] = { raw: r.v, age_s: Math.round(Number(r.age_s)) }; }
     }
-    const modes = await q("SELECT mode, count(*) AS n FROM uuid_orders GROUP BY mode");
+    const modes = await q("SELECT mode, count(*) AS n FROM uuid_orders WHERE status NOT IN ('submitted','filled','expired','rejected','error','settled') GROUP BY mode");
     out.orders_by_mode = Object.fromEntries(modes.map((r) => [r.mode, Number(r.n)]));
     const rl = await q("SELECT count(*) AS n, count(*) FILTER (WHERE realized_pnl_cents > 0) AS wins, sum(realized_pnl_cents) AS total FROM uuid_positions WHERE realized_pnl_cents != 0");
     out.realized = { n: Number(rl[0].n), wins: Number(rl[0].wins), total_usd: Number(rl[0].total || 0) / 100 };
@@ -45,6 +45,22 @@ export default async function handler(req, res) {
       pace_per_day_usd: Math.round((pnlToday / hrs) * 24 * 100) / 100,
       days_to_10k: pnlToday > 0 ? Math.ceil(Math.log(10000 / Math.max(eqNow, 1)) / Math.log(1 + pnlToday / hrs / Math.max(eqNow, 1))) : null,
     };
+    // === FEE TRUTH — the grind tax, straight from the fill ledger ===
+    const feeRows = await q("SELECT count(*) AS n, sum(fee_cents) AS tf, sum(price_cents * count) AS tn FROM uuid_fills");
+    const fn = Number(feeRows[0].n || 0);
+    const ft = Number(feeRows[0].tf || 0) / 100;
+    const ftn = Number(feeRows[0].tn || 0) / 100;
+    // === DRY RUNS — live paper watch (per-lane, $1 vs $3 clip comparison) ===
+    const dryRows = await q("SELECT k, v, EXTRACT(EPOCH FROM (now()-updated_at)) AS age_s FROM mc_state WHERE k LIKE 'dry_run_state:%'");
+    const dry = {};
+    for (const r of dryRows) {
+      try {
+        const v = JSON.parse(r.v);
+        v.age_s = Math.round(Number(r.age_s));
+        dry[r.k.replace("dry_run_state:", "")] = v;
+      } catch { /* skip */ }
+    }
+    out.dry_runs = dry;
   } catch (e) {
     out.error = String(e).slice(0, 200);
   }

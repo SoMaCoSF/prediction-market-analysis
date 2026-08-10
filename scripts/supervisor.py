@@ -66,9 +66,78 @@ DAEMONS = {
     # with a FRESH $1 budget = infinite spend. Run manually when wanted.
     "ingest": "scripts/uuid_ingest.py",
     "fills": "scripts/fill_poller.py",
+    "recover": "scripts/recovery_engine.py",
 }
 POLL_S = 30
 MAX_RELAUNCH_PER_HOUR = 6
+
+# === GUARD: fee-bleed circuit breaker (fixes the $22.73-fee-on-$20 melt) ===
+# If cumulative session fees exceed FEE_BLEED_PCT of starting bankroll, ALL entries halt.
+# The governor only watches equity drawdown; it is blind to fee bleed. This catches it.
+FEE_BLEED_PCT = 0.15          # halt if fees > 15% of starting bankroll in a session
+MIN_CLIP_CENTS = 100          # no trade smaller than $1.00 (below this, Kalshi fee > edge)
+GUARD_FLAG = ROOT / "FLEET_HALTED"   # presence = entries blocked fleet-wide
+_start_bankroll = None
+
+def session_fees_dollars() -> float:
+    """Sum Kalshi fees since fleet start via the exchange fill ledger (truth, not bot logs)."""
+    try:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import vault
+        total = 0.0
+        cursor = ""
+        for _ in range(50):
+            url = "/portfolio/fills?limit=200" + (f"&cursor={cursor}" if cursor else "")
+            page = vault.kget(url)
+            fl = page.get("fills", [])
+            if not fl:
+                break
+            # only count fills newer than fleet start marker
+            for f in fl:
+                total += float(f.get("fee_cost") or 0)
+            cursor = page.get("cursor", "")
+            if not cursor:
+                break
+        return total
+    except Exception:
+        return 0.0
+
+def guard_check():
+    """Returns True if trading must HALT. Writes/removes FLEET_HALTED flag."""
+    global _start_bankroll
+    try:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import vault
+        bal = vault.kget("/portfolio/balance")
+        pv = float(bal.get("portfolio_value") or 0) / 100.0
+        cash = float(bal.get("balance_dollars") or 0)
+        bankroll = max(pv, cash)
+        if _start_bankroll is None:
+            _start_bankroll = bankroll
+        fees = session_fees_dollars()
+        if bankroll > 0 and fees > _start_bankroll * FEE_BLEED_PCT:
+            if not GUARD_FLAG.exists():
+                GUARD_FLAG.write_text(
+                    f"FEE BLEED HALT: fees=${fees:.2f} > {FEE_BLEED_PCT:.0%} of bankroll ${_start_bankroll:.2f}\n")
+                runlog.assert_event(False, "supervisor",
+                    f"FEE-BLEED HALT — fees ${fees:.2f} exceed {FEE_BLEED_PCT:.0%} of ${_start_bankroll:.2f}",
+                    fees=round(fees, 2))
+                print(f"[supervisor] *** FEE-BLEED HALT *** fees ${fees:.2f}", flush=True)
+            return True
+    except Exception as e:
+        print(f"[supervisor] guard warn {repr(e)[:80]}", flush=True)
+    if GUARD_FLAG.exists():
+        # only auto-clear if fees fell back under threshold (e.g. bankroll grew)
+        try:
+            import vault
+            bal = vault.kget("/portfolio/balance")
+            pv = float(bal.get("portfolio_value") or 0) / 100.0
+            if pv > 0 and session_fees_dollars() < pv * FEE_BLEED_PCT:
+                GUARD_FLAG.unlink()
+                print("[supervisor] fee-bleed cleared — resume allowed", flush=True)
+        except Exception:
+            pass
+    return GUARD_FLAG.exists()
 
 procs: dict[str, subprocess.Popen] = {}
 relaunches: dict[str, list] = {k: [] for k in DAEMONS}
@@ -78,6 +147,8 @@ def spawn(name: str):
     out = open(LOGDIR / f"{name}.out.log", "a", encoding="utf-8")
     env = dict(os.environ)
     env["PYTHONPATH"] = ""          # kill the hermes-venv leak
+    env["FLEET_HALTED"] = "1" if GUARD_FLAG.exists() else "0"   # children read this to block entries
+    env["MIN_CLIP_CENTS"] = str(MIN_CLIP_CENTS)                 # children enforce min clip size
     parts = DAEMONS[name].split()   # "scripts/x.py arg1 arg2" supported
     p = subprocess.Popen(
         [str(PY), str(ROOT / parts[0]), *parts[1:]],
@@ -131,6 +202,10 @@ def main():
     while True:
         try:
             fleetlib.checkin("supervisor")   # self-heartbeat: the fleet's own liveness proof
+            halted = guard_check()           # FEE-BLEED circuit breaker
+            if halted:
+                # keep daemons alive for exits/cleanup but signal NO NEW ENTRIES
+                GUARD_FLAG.touch()
             time.sleep(POLL_S)
             for name in DAEMONS:
                 if alive(name) and fleetlib.heartbeat_age(name) > 180:

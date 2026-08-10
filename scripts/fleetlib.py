@@ -60,6 +60,7 @@ DAEMON_SCRIPTS = {
     "ingest": "scripts/ingest.py",
     "fills": "scripts/fill_poller.py",
     "supervisor": "scripts/supervisor.py",
+    "watcher": "scripts/fleet_watcher.py",
 }
 
 

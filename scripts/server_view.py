@@ -17,6 +17,7 @@ import glob
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -31,6 +32,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 from uuid_service_turboquant import PROV_POLY_MAKER, decode_gyst, encode_gyst  # noqa: E402
+
+# ---- Kalshi live portfolio client ----
+try:
+    from mission_control import KALSHI_HOST, kalshi_keys, kalshi_sign  # noqa: E402
+    HAVE_KALSHI = True
+except Exception:
+    HAVE_KALSHI = False
 
 # ---- Postgres (local, no-admin) connection for uuid_trades ----
 try:
@@ -238,6 +246,97 @@ def api_turso(limit: int = Query(100, ge=1, le=1000)) -> JSONResponse:
         return JSONResponse({"rows": rows, "count": len(rows)})
     except Exception as exc:
         return JSONResponse({"rows": [], "error": str(exc)})
+
+
+@app.get("/api/portfolio")
+def api_portfolio() -> JSONResponse:
+    """Live Kalshi portfolio: balance, positions, recent orders."""
+    if not HAVE_KALSHI:
+        return JSONResponse({"error": "Kalshi keys not configured"}, status_code=400)
+    try:
+        kid, kpath = kalshi_keys()
+        ts = str(int(time.time() * 1000))
+        sig = kalshi_sign("GET", "/portfolio/balance", ts, kpath)
+        h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+        r = httpx.get(f"{KALSHI_HOST}/portfolio/balance", headers=h, timeout=20)
+        balance = r.json()
+    except Exception as exc:
+        return JSONResponse({"error": "balance fetch failed: " + repr(exc)[:120]}, status_code=502)
+    try:
+        kid, kpath = kalshi_keys()
+        ts = str(int(time.time() * 1000))
+        sig = kalshi_sign("GET", "/portfolio/positions", ts, kpath)
+        h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+        r = httpx.get(f"{KALSHI_HOST}/portfolio/positions", headers=h, timeout=20)
+        positions = r.json()
+    except Exception as exc:
+        positions = {"error": repr(exc)[:120]}
+    try:
+        kid, kpath = kalshi_keys()
+        ts = str(int(time.time() * 1000))
+        sig = kalshi_sign("GET", "/portfolio/orders", ts, kpath)
+        h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+        r = httpx.get(f"{KALSHI_HOST}/portfolio/orders", headers=h, timeout=20, params={"limit": 50})
+        orders = r.json()
+    except Exception as exc:
+        orders = {"error": repr(exc)[:120]}
+    return JSONResponse({"balance": balance, "positions": positions, "orders": orders})
+
+
+@app.get("/api/venue_health")
+def api_venue_health() -> JSONResponse:
+    """Live venue health: Kalshi + Polymarket depth/balance snapshot."""
+    result = {"kalshi": None, "polymarket": None}
+    if HAVE_KALSHI:
+        try:
+            kid, kpath = kalshi_keys()
+            ts = str(int(time.time() * 1000))
+            sig = kalshi_sign("GET", "/portfolio/balance", ts, kpath)
+            h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+            r = httpx.get(f"{KALSHI_HOST}/portfolio/balance", headers=h, timeout=20)
+            bal = r.json()
+            pos_r = httpx.get(f"{KALSHI_HOST}/portfolio/positions", headers=h, timeout=20)
+            pos = pos_r.json()
+            ord_r = httpx.get(f"{KALSHI_HOST}/portfolio/orders", headers=h, timeout=20, params={"limit": 20})
+            ords = ord_r.json()
+            result["kalshi"] = {
+                "ok": r.status_code == 200,
+                "cash_dollars": bal.get("balance_dollars"),
+                "portfolio_value": bal.get("portfolio_value"),
+                "positions_count": len(pos.get("market_positions", [])),
+                "open_orders": len(ords.get("orders", [])),
+            }
+        except Exception as exc:
+            result["kalshi"] = {"ok": False, "error": repr(exc)[:120]}
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(PROJECT_ROOT / ".env")
+        POLY_KEY = os.getenv("POLY_KEY")
+        if POLY_KEY:
+            from web3 import Web3
+            rpc_url = os.getenv("POLY_RPC_URL") or os.getenv("POLYGON_RPC_URL") or "https://polygon-rpc.com"
+            try:
+                w3 = Web3(Web3.HTTPProvider(rpc_url))
+                acct = w3.eth.account.from_key(POLY_KEY)
+                bal_wei = w3.eth.get_balance(acct.address)
+                result["polymarket"] = {
+                    "ok": True,
+                    "address": acct.address,
+                    "rpc_url": rpc_url,
+                    "native_balance": str(bal_wei),
+                }
+            except Exception as exc:
+                result["polymarket"] = {
+                    "ok": False,
+                    "address": None,
+                    "rpc_url": rpc_url,
+                    "error": "balance check failed: " + repr(exc)[:80],
+                }
+        else:
+            result["polymarket"] = {"ok": False, "error": "POLY_KEY not set"}
+    except Exception as exc:
+        result["polymarket"] = {"ok": False, "error": repr(exc)[:120]}
+    return JSONResponse(result)
 
 
 @app.get("/api/status")

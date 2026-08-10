@@ -1,0 +1,18 @@
+[
+  {
+    "ticker": "BTC-SHORT-PAPER-1",
+    "side": "short",
+    "entry_spot": 64900,
+    "notional_usd": 100,
+    "status": "open",
+    "created_at": "2026-08-08T22:00:00Z"
+  },
+  {
+    "ticker": "BTC-SHORT-PAPER-2",
+    "side": "short",
+    "entry_spot": 65100,
+    "notional_usd": 100,
+    "status": "open",
+    "created_at": "2026-08-08T22:05:00Z"
+  }
+]

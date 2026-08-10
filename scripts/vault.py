@@ -65,6 +65,32 @@ def kget(path):
         return {}
 
 
+def kpost(path, body):
+    """RSA-PSS signed POST to Kalshi trade API. Returns parsed JSON or {} on failure."""
+    try:
+        ts = str(int(time.time() * 1000))
+        full = "/trade-api/v2" + path.split("?")[0]
+        h = {"KALSHI-ACCESS-KEY": os.getenv("KALSHI_KEY_ID"),
+             "KALSHI-ACCESS-SIGNATURE": _sign("POST", full, ts),
+             "KALSHI-ACCESS-TIMESTAMP": ts,
+             "Content-Type": "application/json"}
+        r = httpx.post(KALSHI + path, headers=h, json=body, timeout=15)
+        return r.json() if "json" in r.headers.get("content-type", "") else {}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def korder(ticker, side, action, count, price_c=None):
+    """Place a Kalshi order directly (fallback when MC is unreachable).
+    side: 'yes'/'no', action: 'buy'/'sell'. price_c in cents for limit orders."""
+    body = {"ticker": ticker, "side": side, "action": action, "count": int(count),
+            "type": "market" if price_c is None else "limit",
+            "client_order_id": f"recover-{int(time.time()*1000)}"}
+    if price_c is not None:
+        body["limit_price_cents"] = int(price_c)
+    return kpost("/portfolio/orders", body)
+
+
 def _load_savings() -> float:
     try:
         con = sb.sb_conn()

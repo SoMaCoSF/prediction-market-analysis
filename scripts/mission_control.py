@@ -94,10 +94,13 @@ def kalshi_sign(method: str, path: str, ts_ms: str, key_path: str) -> str:
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding
     key = serialization.load_pem_private_key(Path(key_path).read_bytes(), password=None)
-    msg = f"{ts_ms}{method.upper()}{path}".encode()
-    sig = key.sign(msg, padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-                                    salt_length=padding.PSS.DIGEST_LENGTH),
-                   hashes.SHA256())
+    full = "/trade-api/v2" + path.split("?")[0]
+    msg = f"{ts_ms}{method.upper()}{full}".encode()
+    sig = key.sign(
+        msg,
+        padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH),
+        hashes.SHA256(),
+    )
     return base64.b64encode(sig).decode()
 
 
@@ -110,9 +113,12 @@ def kalshi_post_order(req_body: dict):
     dollar string, count as a fixed-point string. (Buying YES = 'bid'.)
     """
     kid, kpath = kalshi_keys()
-    path = "/trade-api/v2/portfolio/events/orders"
     side_v1 = req_body["side"].lower()
-    price_cents = req_body.get("yes_price", req_body.get("no_price"))
+    price_raw = req_body.get("yes_price", req_body.get("no_price"))
+    try:
+        price_cents = float(price_raw) * 100 if isinstance(price_raw, str) and "." in price_raw else int(price_raw)
+    except Exception:
+        price_cents = 0
     # V2 unified book trades the YES contract. Buying NO at P¢ is selling YES
     # at (100-P)¢ — the price MUST be mirrored for the no side.
     if side_v1 == "yes":
@@ -139,7 +145,7 @@ def kalshi_post_order(req_body: dict):
     ts = str(int(time.time() * 1000))
     headers = {
         "KALSHI-ACCESS-KEY": kid,
-        "KALSHI-ACCESS-SIGNATURE": kalshi_sign("POST", path, ts, kpath),
+        "KALSHI-ACCESS-SIGNATURE": kalshi_sign("POST", "/portfolio/events/orders", ts, kpath),
         "KALSHI-ACCESS-TIMESTAMP": ts,
         "Content-Type": "application/json",
     }
@@ -193,6 +199,25 @@ def corpus_stats():
 
 
 _mkt_cache = {"ts": 0, "data": None}
+
+
+CASH_FLOOR = 10.00
+
+
+def _floor_blocked() -> bool:
+    try:
+        con, cur = sb_cur()
+        cur.execute("SELECT v FROM mc_state WHERE k=%s", ("watcher:state",))
+        row = cur.fetchone()
+        con.close()
+        if not row:
+            return False
+        import json
+
+        d = json.loads(row[0])
+        return float(d.get("cash", 9999)) <= CASH_FLOOR
+    except Exception:
+        return False
 
 
 def _cents(v) -> int | None:
@@ -317,6 +342,45 @@ async def api_positions():
     return {"positions": rows}
 
 
+@app.get("/api/kalshi/balance")
+async def api_kalshi_balance():
+    kid, kpath = kalshi_keys()
+    if not kid or not kpath:
+        return JSONResponse({"error": "KALSHI keys not configured"}, status_code=400)
+    ts = str(int(time.time() * 1000))
+    sig = kalshi_sign("GET", "/portfolio/balance", ts, kpath)
+    h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+    async with httpx.AsyncClient(timeout=20) as cx:
+        r = await cx.get(f"{KALSHI_HOST}/portfolio/balance", headers=h)
+    return JSONResponse(r.json(), status_code=r.status_code)
+
+
+@app.get("/api/kalshi/positions")
+async def api_kalshi_positions():
+    kid, kpath = kalshi_keys()
+    if not kid or not kpath:
+        return JSONResponse({"error": "KALSHI keys not configured"}, status_code=400)
+    ts = str(int(time.time() * 1000))
+    sig = kalshi_sign("GET", "/portfolio/positions", ts, kpath)
+    h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+    async with httpx.AsyncClient(timeout=20) as cx:
+        r = await cx.get(f"{KALSHI_HOST}/portfolio/positions", headers=h)
+    return JSONResponse(r.json(), status_code=r.status_code)
+
+
+@app.get("/api/kalshi/orders")
+async def api_kalshi_orders(limit: int = 50):
+    kid, kpath = kalshi_keys()
+    if not kid or not kpath:
+        return JSONResponse({"error": "KALSHI keys not configured"}, status_code=400)
+    ts = str(int(time.time() * 1000))
+    sig = kalshi_sign("GET", "/portfolio/orders", ts, kpath)
+    h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+    async with httpx.AsyncClient(timeout=20) as cx:
+        r = await cx.get(f"{KALSHI_HOST}/portfolio/orders", headers=h, params={"limit": min(limit, 200)})
+    return JSONResponse(r.json(), status_code=r.status_code)
+
+
 @app.get("/api/pnl")
 async def api_pnl():
     con, cur = sb_cur()
@@ -388,6 +452,10 @@ async def api_order(req: Request):
     if body.get("confirm") != "FIRE":
         con.close()
         return JSONResponse({"error": "live requires confirm=FIRE"}, status_code=400)
+    if _floor_blocked():
+        con.close()
+        log("LIVE order BLOCKED by cash floor", "floor")
+        return JSONResponse({"error": "cash floor engaged"}, status_code=423)
     if not keys_present():
         con.close()
         return JSONResponse({"error": "KALSHI keys not configured (.kalshi_key.pem / KALSHI_KEY_ID)"}, status_code=400)

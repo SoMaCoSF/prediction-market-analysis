@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -21,6 +22,12 @@ import fleetlib  # noqa: E402
 import httpx  # noqa: E402
 import runlog  # noqa: E402
 import sb  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv(ROOT / ".env")
+MC = os.getenv("MC_URL", "http://127.0.0.1:8420")
+KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
+PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdigest()
 
 WALLETS_JSON = ROOT / "data" / "wallets.json"
 POLL_S = 90
@@ -31,7 +38,7 @@ USDC = {"polygon": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
 TYPE_FUNDING = 0x3D6
 
 balances: dict[str, float] = {}
-kalshi_cash: float | None = None
+last_kalshi_cash: float | None = None
 
 
 def log(m):
@@ -48,21 +55,31 @@ def load_wallets():
     return []
 
 
-def kalshi_cash() -> float:
-    """Kalshi-side deposit detection: cash delta = a reload landing."""
+def kget(path):
+    """Local Kalshi auth — same signing as profit_scalp/run_report."""
     try:
-        from run_report import kget
-        b = kget("/portfolio/balance")
-        return float(b.get("balance_dollars") or 0)
+        import base64 as _b64
+
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import padding
+        ts = str(int(time.time() * 1000))
+        full = "/trade-api/v2" + path.split("?")[0]
+        key = serialization.load_pem_private_key((ROOT / ".kalshi_key.pem").read_bytes(), password=None)
+        sig = key.sign(f"{ts}GET{full}".encode(),
+                       padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH),
+                       hashes.SHA256())
+        h = {"KALSHI-ACCESS-KEY": os.getenv("KALSHI_KEY_ID"),
+             "KALSHI-ACCESS-SIGNATURE": _b64.b64encode(sig).decode(),
+             "KALSHI-ACCESS-TIMESTAMP": ts}
+        r = httpx.get(KALSHI + path, headers=h, timeout=15)
+        return r.json() if "json" in r.headers.get("content-type", "") else {}
     except Exception:
-        return -1.0
+        return {}
 
 
 def kalshi_cash() -> float:
     try:
-        from run_report import kget
-        b = kget("/portfolio/balance")
-        return float(b.get("balance_dollars") or 0)
+        return float(kget("/portfolio/balance").get("balance_dollars") or 0)
     except Exception:
         return -1.0
 
@@ -86,7 +103,7 @@ def mint_funding(label: str, chain: str, delta: float):
     try:
         import uuid_ledger
         content = hashlib.sha256(f"funding|{label}|{chain}|{delta:.6f}|{int(time.time())}".encode()).digest()
-        u = uuid_ledger.mint(TYPE_FUNDING, content, provenance=0xE)  # 0xE = external capital
+        u = uuid_ledger.mint(TYPE_FUNDING, content, provenance=0xE)
         uuid_ledger.store(u, f"FUNDING {label} {chain} +${delta:.2f}")
         return u
     except Exception:
@@ -107,41 +124,31 @@ def publish(feed):
 
 
 def main():
+    global last_kalshi_cash
     fleetlib.acquire_lock("funding")
     log("start | watching wallets for inbound slurps + Kalshi cash deltas")
     feed: list[dict] = []
-    last_kalshi_cash = None
+
     while True:
         try:
             fleetlib.checkin("funding")
-            # Kalshi-side reload detection (exchange cash rising = deposit landed)
+
+            # ---- Kalshi balance delta (single check per cycle) ----
             try:
-                from run_report import kget
-                b = kget("/portfolio/balance")
-                kc = float(b.get("balance_dollars") or 0)
-                if last_kalshi_cash is not None and kc > last_kalshi_cash + 1.0:
-                    delta = kc - last_kalshi_cash
-                    u = mint_funding("kalshi-reload", "exchange", delta)
-                    feed.append({"label": "kalshi-reload", "chain": "exchange", "delta": round(delta, 2),
-                                 "balance": round(kc, 2), "uuid": u, "ts": int(time.time())})
-                    log(f"RELOAD DETECTED +${delta:.2f} -> cash ${kc:.2f} | ladder stepping up")
-                last_kalshi_cash = kc
+                kc = kalshi_cash()
+                if kc >= 0:
+                    if last_kalshi_cash is not None and kc > last_kalshi_cash + 0.50:
+                        delta = kc - last_kalshi_cash
+                        u = mint_funding("kalshi-deposit", "kalshi", delta)
+                        feed.append({"label": "kalshi-deposit", "chain": "kalshi",
+                                     "delta": round(delta, 2), "balance": round(kc, 2),
+                                     "uuid": u, "ts": int(time.time())})
+                        log(f"RELOAD DETECTED +${delta:.2f} -> Kalshi cash ${kc:.2f}")
+                    last_kalshi_cash = kc
             except Exception:
                 pass
-            # Kalshi-side: a cash jump = a deposit landed
-            try:
-                from run_report import kget
-                kb = kget('/portfolio/balance')
-                kcash = float(kb.get('balance_dollars') or 0)
-                if 'kalshi' in balances and kcash > balances['kalshi'] + 0.50:
-                    delta = kcash - balances['kalshi']
-                    u = mint_funding('kalshi-deposit', 'kalshi', delta)
-                    feed.append({'label': 'kalshi-deposit', 'chain': 'kalshi', 'delta': round(delta, 2),
-                                 'balance': round(kcash, 2), 'uuid': u, 'ts': int(time.time())})
-                    log(f'RELOAD DETECTED Kalshi +${delta:.2f} -> ${kcash:.2f}')
-                balances['kalshi'] = kcash
-            except Exception:
-                pass
+
+            # ---- Wallet USDC slurp detection ----
             for w in load_wallets():
                 label, chain, addr = w.get("label", "?"), w.get("chain", "polygon"), w.get("address", "")
                 if not addr:
@@ -157,33 +164,8 @@ def main():
                                  "balance": round(bal, 2), "uuid": u, "ts": int(time.time())})
                     log(f"SLURP {label} ({chain}) +${delta:.2f} -> ${bal:.2f} | uuid {str(u)[:18] if u else '—'}")
                 balances[key] = bal
+
             publish(feed)
-            # Kalshi-side: a cash jump with no fills = a deposit landing (the reload)
-            global kalshi_cash
-            try:
-                from run_report import kget
-                b = kget("/portfolio/balance")
-                cash_now = float(b.get("balance_dollars") or 0)
-                if kalshi_cash is not None and cash_now > kalshi_cash + 5.0:
-                    delta = cash_now - kalshi_cash
-                    u = mint_funding("kalshi-deposit", "kalshi", delta)
-                    feed.append({"label": "kalshi-deposit", "chain": "kalshi", "delta": round(delta, 2),
-                                 "balance": round(cash_now, 2), "uuid": u, "ts": int(time.time())})
-                    log(f"RELOAD DETECTED +${delta:.2f} -> cash ${cash_now:.2f} — the ladder steps up")
-                    publish(feed)
-                kalshi_cash = cash_now
-            except Exception:
-                pass
-            # Kalshi-side deposit detection: cash rising with no engine spend context = a reload
-            kc = kalshi_cash()
-            if kc >= 0:
-                if "kalshi" in balances and kc > balances["kalshi"] + 5.0:
-                    delta = kc - balances["kalshi"]
-                    u = mint_funding("kalshi-deposit", "kalshi", delta)
-                    feed.append({"label": "kalshi-deposit", "chain": "kalshi", "delta": round(delta, 2),
-                                 "balance": round(kc, 2), "uuid": u, "ts": int(time.time())})
-                    log(f"RELOAD DETECTED +${delta:.2f} -> Kalshi cash ${kc:.2f} — ladder steps up")
-                balances["kalshi"] = kc
         except Exception as e:
             log(f"warn {repr(e)[:60]}")
         time.sleep(POLL_S)
