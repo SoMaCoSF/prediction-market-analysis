@@ -5,16 +5,17 @@ markets approach close_time or resolution changes.
 
 Runs every 5 minutes, logs to logs/settlement_watcher.out.
 """
-import os, sys, time, json
+import sys
+import time
+from datetime import datetime, timezone
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
 
 import httpx
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from mission_control import KALSHI_HOST, kalshi_keys, kalshi_sign
+from mission_control import KALSHI_HOST, kalshi_keys, kalshi_sign  # noqa: E402
 
 LOG = ROOT / "logs" / "settlement_watcher.out"
 ALERT_HOURS = 24  # alert if market closes within 24h

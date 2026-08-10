@@ -511,9 +511,9 @@ async def api_settlements():
         log_path = ROOT / "logs" / "settlement_watcher.out"
         if log_path.exists():
             lines = log_path.read_text(encoding="utf-8").splitlines()
-            alerts = [l for l in lines if "SETTLEMENT ALERT" in l or "Checked" in l]
+            alerts = [line for line in lines if "SETTLEMENT ALERT" in line or "Checked" in line]
             return {"alerts": alerts[-50:], "total": len(alerts)}
-    except Exception as e:
+    except Exception:
         pass
     return {"alerts": [], "total": 0}
 
@@ -524,9 +524,9 @@ async def api_whale_signals(limit: int = 50):
         log_path = ROOT / "logs" / "whale_follower.out"
         if log_path.exists():
             lines = log_path.read_text(encoding="utf-8").splitlines()
-            signals = [l for l in lines if "WHALE" in l]
+            signals = [line for line in lines if "WHALE" in line]
             return {"signals": signals[-limit:], "total": len(signals)}
-    except Exception as e:
+    except Exception:
         pass
     return {"signals": [], "total": 0}
 

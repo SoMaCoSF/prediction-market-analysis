@@ -10,16 +10,19 @@ Strategy:
 - Deduplicate signals per ticker within 60s cooldown
 - Log to logs/whale_follower.out
 """
-import os, sys, time, json, hashlib, hmac
-from pathlib import Path
+import hashlib
+import json
+import sys
+import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 import httpx
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from mission_control import KALSHI_HOST, kalshi_keys, kalshi_sign
+from mission_control import KALSHI_HOST, kalshi_keys, kalshi_sign  # noqa: E402
 
 LOG = ROOT / "logs" / "whale_follower.out"
 STATE = ROOT / "data" / "whale_state.json"
