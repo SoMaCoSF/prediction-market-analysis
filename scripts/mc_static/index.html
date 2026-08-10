@@ -1,12 +1,203 @@
 <!DOCTYPE html>
 <html>
-<head><title>Mission Control</title></head>
+<head>
+  <title>mc.somacosf.com — Mission Control</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0c10;
+      color: #c8d2dc;
+      padding: 24px;
+      font-size: 13px;
+    }
+    h1 { color: #FF9000; font-size: 24px; margin-bottom: 20px; letter-spacing: 1; }
+    h2 { color: #00CCDD; font-size: 14px; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 1; border-bottom: 1px solid #1d2630; padding-bottom: 6px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card {
+      background: #10141b;
+      border: 1px solid #1d2630;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .card-title { color: #6b7785; font-size: 10px; text-transform: uppercase; margin-bottom: 8px; }
+    .card-value { color: #39ff14; font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+    .card-sub { color: #6b7785; font-size: 11px; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+    .badge-live { background: #39ff1433; color: #39ff14; border: 1px solid #39ff14; }
+    .badge-paper { background: #FF900033; color: #FF9000; border: 1px solid #FF9000; }
+    .badge-form { background: #ffaa5533; color: #ffaa55; border: 1px solid #ffaa55; }
+    .badge-dead { background: #ff444433; color: #ff4444; border: 1px solid #ff4444; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { color: #6b7785; font-size: 10px; text-transform: uppercase; text-align: left; padding: 6px 4px; border-bottom: 1px solid #1d2630; }
+    td { padding: 6px 4px; border-bottom: 1px solid #1d263033; font-size: 12px; }
+    .positive { color: #39ff14; }
+    .negative { color: #ff4444; }
+    .neutral { color: #6b7785; }
+    #whale-log, #settlement-log { max-height: 300px; overflow-y: auto; font-size: 11px; line-height: 1.6; }
+    .refresh { color: #6b7785; font-size: 10px; margin-top: 10px; }
+    a { color: #00CCDD; }
+  </style>
+</head>
 <body>
-<h1>Mission Control</h1>
-<p>API: <a href="/api/stats">/api/stats</a> | <a href="/api/kalshi/balance">/api/kalshi/balance</a> | <a href="/api/kalshi/positions">/api/kalshi/positions</a> | <a href="/api/kalshi/orders">/api/kalshi/orders</a></p>
-<pre id="out">Loading...</pre>
-<script>
-fetch('/api/stats').then(r=>r.json()).then(d=>document.getElementById('out').textContent=JSON.stringify(d,null,2));
-</script>
+  <h1>◉ mc.somacosf.com <span class="badge badge-live">LIVE</span></h1>
+
+  <!-- Top Stats -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Account Cash</div>
+      <div class="card-value" id="cash">—</div>
+      <div class="card-sub" id="cash-sub">loading...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Portfolio Value</div>
+      <div class="card-value" id="portfolio">—</div>
+      <div class="card-sub" id="portfolio-sub">loading...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Realized P&L</div>
+      <div class="card-value" id="pnl">—</div>
+      <div class="card-sub">4W / 0L · net</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Positions</div>
+      <div class="card-value" id="positions-count">—</div>
+      <div class="card-sub" id="positions-sub">loading...</div>
+    </div>
+  </div>
+
+  <!-- Live Markets -->
+  <h2>Live Kalshi Markets (Top Volume)</h2>
+  <div class="card">
+    <table id="markets-table">
+      <thead>
+        <tr><th>Ticker</th><th>Bid</th><th>Ask</th><th>Vol</th></tr>
+      </thead>
+      <tbody id="markets-body"><tr><td colspan="4" class="neutral">loading...</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- Whale Signals -->
+  <h2>🐋 Whale Signals</h2>
+  <div class="card">
+    <div id="whale-log"><span class="neutral">loading...</span></div>
+  </div>
+
+  <!-- Settlement Watcher -->
+  <h2>⏳ Settlement Watcher</h2>
+  <div class="card">
+    <div id="settlement-log"><span class="neutral">loading...</span></div>
+  </div>
+
+  <div class="refresh">Auto-refresh: 10s · Source: Kalshi V2 API · <a href="/api/kalshi/balance">raw balance</a> · <a href="/api/whale/signals">whale JSON</a> · <a href="/api/settlements">settlements JSON</a></div>
+
+  <script>
+    async function fetchJSON(path) {
+      try {
+        const r = await fetch(path);
+        if (!r.ok) throw new Error(r.status);
+        return await r.json();
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function updateBalance() {
+      const data = await fetchJSON('/api/kalshi/balance');
+      if (!data) return;
+      const cash = data.balance_dollars || '0';
+      const portfolio = data.portfolio_value || '0';
+      document.getElementById('cash').textContent = '$' + cash;
+      document.getElementById('portfolio').textContent = '$' + portfolio;
+      document.getElementById('cash-sub').textContent = `balance=${data.balance} · updated ${new Date(data.updated_ts * 1000).toLocaleTimeString()}`;
+      document.getElementById('portfolio-sub').textContent = `portfolio value · unrealized until exits`;
+    }
+
+    async function updatePositions() {
+      const data = await fetchJSON('/api/kalshi/positions');
+      if (!data) return;
+      const positions = data.event_positions || [];
+      document.getElementById('positions-count').textContent = positions.length;
+
+      // Show top positions by exposure
+      const sorted = positions.sort((a, b) => parseFloat(b.event_exposure_dollars) - parseFloat(a.event_exposure_dollars)).slice(0, 10);
+      const tbody = document.getElementById('positions-body');
+      if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="neutral">no open positions</td></tr>';
+        return;
+      }
+      tbody.innerHTML = sorted.map(p => `
+        <tr>
+          <td>${(p.event_ticker || '').slice(0, 50)}</td>
+          <td>${parseFloat(p.total_cost_dollars).toFixed(2)}¢</td>
+          <td class="${parseFloat(p.realized_pnl_dollars) >= 0 ? 'positive' : 'negative'}">${parseFloat(p.realized_pnl_dollars).toFixed(2)}¢</td>
+          <td>${parseFloat(p.event_exposure_dollars).toFixed(2)}¢</td>
+          <td>${p.total_cost_shares_fp}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function updateMarkets() {
+      const data = await fetchJSON('/api/markets?limit=10&status=open');
+      if (!data) return;
+      const markets = data.markets || [];
+      const tbody = document.getElementById('markets-body');
+      if (markets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="neutral">no active markets</td></tr>';
+        return;
+      }
+      tbody.innerHTML = markets.map(m => `
+        <tr>
+          <td>${(m.ticker || '').slice(0, 50)}</td>
+          <td class="${parseFloat(m.yes_bid_dollars || 0) > 0 ? 'positive' : 'neutral'}">${(parseFloat(m.yes_bid_dollars || 0) * 100).toFixed(1)}¢</td>
+          <td class="${parseFloat(m.yes_ask_dollars || 0) > 0 ? 'negative' : 'neutral'}">${(parseFloat(m.yes_ask_dollars || 0) * 100).toFixed(1)}¢</td>
+          <td>${parseFloat(m.volume_24h || 0).toFixed(0)}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function updateWhales() {
+      const data = await fetchJSON('/api/whale/signals?limit=20');
+      if (!data) return;
+      const signals = data.signals || [];
+      const el = document.getElementById('whale-log');
+      if (signals.length === 0) {
+        el.innerHTML = '<span class="neutral">no whale signals yet — watching...</span>';
+        return;
+      }
+      el.innerHTML = signals.reverse().map(s => `<div>${s}</div>`).join('');
+    }
+
+    async function updateSettlements() {
+      const data = await fetchJSON('/api/settlements');
+      if (!data) return;
+      const alerts = data.alerts || [];
+      const el = document.getElementById('settlement-log');
+      if (alerts.length === 0) {
+        el.innerHTML = '<span class="neutral">no imminent settlements</span>';
+        return;
+      }
+      el.innerHTML = alerts.reverse().slice(0, 20).map(a => `<div>${a}</div>`).join('');
+    }
+
+    async function updateAll() {
+      await updateBalance();
+      await updatePositions();
+      await updateMarkets();
+      await updateWhales();
+      await updateSettlements();
+    }
+
+    updateAll();
+    setInterval(updateAll, 10000);
+  </script>
 </body>
 </html>
