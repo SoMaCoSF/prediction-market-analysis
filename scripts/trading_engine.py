@@ -267,10 +267,12 @@ async def main():
     engine = TradingEngine()
 
     # Register strategies
-    # from strategies.panic_fade import PanicFadeStrategy
-    # from strategies.whale_follow import WhaleFollowStrategy
-    # engine.add_strategy(PanicFadeStrategy())
-    # engine.add_strategy(WhaleFollowStrategy())
+    from strategies.arb import ArbStrategy
+    from strategies.panic_fade import PanicFadeStrategy
+    from strategies.whale_follow import WhaleFollowStrategy
+    engine.add_strategy(PanicFadeStrategy())
+    engine.add_strategy(WhaleFollowStrategy())
+    engine.add_strategy(ArbStrategy())
 
     await engine.start()
 
