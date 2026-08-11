@@ -17,6 +17,8 @@ const nextConfig = {
         { source: '/', destination: '/tim/index.html', has: [{ type: 'host', value: 'tim.somacosf.com' }] },
         // time.somacosf.com — the AI times magazine
         { source: '/', destination: '/time/index.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },
+        // time.somacosf.com — timelines
+        { source: '/timelines', destination: '/time/timelines.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },
         { source: '/about', destination: '/time/about.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },
         { source: '/funds', destination: '/time/funds.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },
         { source: '/oracle', destination: '/time/oracle.html', has: [{ type: 'host', value: 'time.somacosf.com' }] },

@@ -67,6 +67,7 @@ DAEMONS = {
     "ingest": "scripts/uuid_ingest.py",
     "fills": "scripts/fill_poller.py",
     "recover": "scripts/recovery_engine.py",
+    "uptick": "scripts/uptick_spiral.py",
 }
 POLL_S = 30
 MAX_RELAUNCH_PER_HOUR = 6

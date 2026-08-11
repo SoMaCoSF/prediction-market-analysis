@@ -10,6 +10,7 @@ editable. Zero tokens, pure stdlib+httpx XML parse.
 """
 from __future__ import annotations
 
+import json
 import sqlite3
 import sys
 import time
@@ -29,6 +30,20 @@ TYPE_FORECAST = 0x326
 TYPE_ARTICLE = 0x3D4
 PROV_NEWS = 0xD
 POLL_S = 300
+
+# --- uptick spiral integration: read adjusted weights if available ---
+WEIGHTS_FILE = ROOT / "data" / "uptick_weights.json"
+
+def load_uptick_shifts() -> dict[str, float]:
+    """Read adjusted node shifts from uptick_spiral. Falls back to ATLAS base shifts."""
+    try:
+        if WEIGHTS_FILE.exists():
+            w = json.loads(WEIGHTS_FILE.read_text())
+            return {node: data.get("shift", data.get("base_shift", 0.0))
+                    for node, data in w.items()}
+    except Exception:
+        pass
+    return {node: shift for node, (_, shift) in ATLAS.items()}
 
 # --- forecast-bet linkage: back each prediction with a position ---
 import hashlib  # noqa: E402
@@ -257,11 +272,13 @@ def main():
                 con = sqlite3.connect(DB)
                 cur = con.cursor()
                 items = headlines(cx)
+                uptick_shifts = load_uptick_shifts()  # adjusted by uptick_spiral
                 for _src, title, _link in items:
                     low = title.lower()
                     for node, (kws, chain, hint, shift) in ATLAS.items():
                         if any(k in low for k in kws):
-                            prob = 0.5 + shift
+                            # Use uptick-adjusted shift if available, else ATLAS base
+                            prob = 0.5 + uptick_shifts.get(node, shift)
                             detail = f"{node}: {title[:70]} | chain: {chain} | hint {hint} | p={prob:.2f}"
                             made += store(cur, mint_forecast(node, prob, f"fc|{node}|{title[:40]}", ts),
                                           ts, node, detail)

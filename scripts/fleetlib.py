@@ -61,6 +61,7 @@ DAEMON_SCRIPTS = {
     "fills": "scripts/fill_poller.py",
     "supervisor": "scripts/supervisor.py",
     "watcher": "scripts/fleet_watcher.py",
+    "uptick": "scripts/uptick_spiral.py",
 }
 
 

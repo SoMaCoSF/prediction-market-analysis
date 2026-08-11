@@ -283,6 +283,24 @@ def api_portfolio() -> JSONResponse:
     return JSONResponse({"balance": balance, "positions": positions, "orders": orders})
 
 
+@app.get("/api/fills")
+def api_fills(limit: int = 100) -> JSONResponse:
+    """Live Kalshi fills."""
+    if not HAVE_KALSHI:
+        return JSONResponse({"fills": []})
+    try:
+        kid, kpath = kalshi_keys()
+        ts = str(int(time.time() * 1000))
+        sig = kalshi_sign("GET", "/portfolio/fills", ts, kpath)
+        h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+        r = httpx.get(f"{KALSHI_HOST}/portfolio/fills", headers=h, timeout=20, params={"limit": limit})
+        data = r.json()
+        fills = data.get("fills", []) if isinstance(data, dict) else []
+        return JSONResponse({"fills": fills})
+    except Exception:
+        return JSONResponse({"fills": []})
+
+
 @app.get("/api/venue_health")
 def api_venue_health() -> JSONResponse:
     """Live venue health: Kalshi + Polymarket depth/balance snapshot."""

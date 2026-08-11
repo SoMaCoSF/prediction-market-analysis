@@ -1,4 +1,4 @@
-<!-- =============================================================================== file_id: SOM-APP-0919-v4.0.0 name: trade/index.html description: SOMACO TRADE CONTROL v4 — live daemon beats, Kalshi edge-finder, fleet health, real winnings, Three.js backdrop project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [mission-control, live, betting, threejs, terminal, edge-finder, daemons] created: 2026-08-02 modified: 2026-08-11 version: 4.0.0 agent_id: HERMES-AGENT =============================================================================== -->
+<!-- =============================================================================== file_id: SOM-APP-0919-v3.0.0 name: trade/index.html description: SOMACO TRADE CONTROL v3 — LIVE: real winnings hero, one-tap live bet tile, auto-follow super trends, calm Three.js event-reactive backdrop project_id: PREDICTION-MARKET-ANALYSIS category: app tags: [mission-control, live, betting, threejs, terminal] created: 2026-08-02 modified: 2026-08-03 version: 3.0.0 agent_id: HERMES-AGENT =============================================================================== -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +9,6 @@
   :root{
     --bg:#05070a; --panel:#0a0e14; --panel2:#0e131c; --line:#1e2836;
     --cyan:#06b6d4; --green:#39ff14; --mag:#ff10f0; --amber:#ffb020; --red:#ff4d4d;
-    --blue:#3b82f6; --purple:#a855f7;
     --txt:#c9d4e3; --dim:#6b7a8f; --mono:'Consolas','SF Mono','Cascadia Mono',monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
@@ -47,7 +46,7 @@
   table{width:100%;border-collapse:collapse;font-size:11px}
   th{color:var(--dim);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1px;text-transform:uppercase}
   td{padding:4px 6px;border-bottom:1px solid rgba(30,40,54,.5);vertical-align:top;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
-  .c-cyan{color:var(--cyan)} .c-green{color:var(--green)} .c-amber{color:var(--amber)} .c-red{color:var(--red)} .c-dim{color:var(--dim)} .c-blue{color:var(--blue)} .c-purple{color:var(--purple)}
+  .c-cyan{color:var(--cyan)} .c-green{color:var(--green)} .c-amber{color:var(--amber)} .c-red{color:var(--red)} .c-dim{color:var(--dim)}
   .bigbtns{display:flex;gap:8px;margin:8px 0}
   .bb{flex:1;padding:14px 0;border-radius:6px;border:1px solid;font-family:var(--mono);font-size:16px;font-weight:bold;text-align:center;cursor:pointer;background:transparent}
   .bb.yes{color:var(--green);border-color:var(--green)} .bb.yes.sel{background:rgba(57,255,20,.18)}
@@ -59,44 +58,6 @@
   #logbox .l{margin:1px 0;white-space:pre-wrap;word-break:break-all}
   #logbox .t{color:var(--dim);margin-right:8px}
   .mono-sm{font-size:10px;color:var(--dim)}
-  /* Daemon beats */
-  .daemon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
-  .daemon-chip{border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:10px;background:rgba(5,7,10,.6)}
-  .daemon-chip.live{border-color:rgba(57,255,20,.3)}
-  .daemon-chip.dead{border-color:rgba(255,77,77,.3)}
-  .daemon-chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
-  .daemon-chip .dot.live{background:var(--green);box-shadow:0 0 4px var(--green)}
-  .daemon-chip .dot.dead{background:var(--red)}
-  .daemon-chip .name{color:#fff;font-weight:bold;letter-spacing:.5px}
-  .daemon-chip .watches{color:var(--dim);font-size:9px;margin-top:2px;line-height:1.3}
-  .daemon-chip .age{font-size:9px;margin-top:2px}
-  .daemon-chip .age.fresh{color:var(--green)} .daemon-chip .age.stale{color:var(--amber)} .daemon-chip .age.dead{color:var(--red)}
-  /* Edge table */
-  .edge-row{cursor:pointer;transition:background .15s}
-  .edge-row:hover{background:rgba(6,182,212,.08)}
-  .edge-badge{padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;letter-spacing:.5px}
-  .edge-badge.strong{color:var(--green);border:1px solid rgba(57,255,20,.4);background:rgba(57,255,20,.08)}
-  .edge-badge.moderate{color:var(--amber);border:1px solid rgba(255,176,32,.4);background:rgba(255,176,32,.08)}
-  .edge-badge.weak{color:var(--dim);border:1px solid var(--line)}
-  .edge-badge.negative{color:var(--red);border:1px solid rgba(255,77,77,.4);background:rgba(255,77,77,.08)}
-  .cat-badge{padding:1px 5px;border-radius:2px;font-size:9px;font-weight:bold;letter-spacing:.5px;text-transform:uppercase}
-  .cat-badge.core{color:var(--cyan);border:1px solid rgba(6,182,212,.4)}
-  .cat-badge.trading{color:var(--green);border:1px solid rgba(57,255,20,.4)}
-  .cat-badge.signal{color:var(--purple);border:1px solid rgba(168,85,247,.4)}
-  .cat-badge.paper{color:var(--amber);border:1px solid rgba(255,176,32,.4)}
-  .cat-badge.ops{color:var(--blue);border:1px solid rgba(59,130,246,.4)}
-  .cat-badge.other{color:var(--dim);border:1px solid var(--line)}
-  /* Docs section */
-  .docs-section{padding:0 18px 12px}
-  .docs-section .card{cursor:pointer;transition:border-color .15s}
-  .docs-section .card:hover{border-color:var(--cyan)}
-  .docs-section .card h3::after{content:" ▼";font-size:9px;color:var(--dim)}
-  .docs-content{display:none;margin-top:10px;font-size:11px;line-height:1.6;color:var(--txt)}
-  .docs-content.show{display:block}
-  .docs-content h4{color:var(--cyan);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:8px 0 4px}
-  .docs-content ul{margin-left:16px}
-  .docs-content li{margin:3px 0}
-  .docs-content code{color:var(--amber);font-size:10px}
 </style>
 </head>
 <body>
@@ -133,24 +94,7 @@
 
 <div id="sweep-banner" style="display:none;margin:10px 18px 0;padding:12px 14px;border:1px solid var(--amber);border-radius:6px;background:rgba(255,176,32,.12);color:var(--amber);font-weight:bold;letter-spacing:1px"></div>
 
-<!-- ===== EDGE FINDER ===== -->
 <div style="padding:12px 18px 0">
-  <div class="card">
-    <h3>Edge Finder — Kalshi MLB — where betting makes more</h3>
-    <div class="mono-sm" style="margin-bottom:8px">Compares model win probabilities to live Kalshi market prices. Positive edge = model sees value the market doesn't.</div>
-    <div id="edge-finder" class="mono-sm">loading edge analysis…</div>
-  </div>
-</div>
-
-<!-- ===== DAEMON BEATS ===== -->
-<div style="padding:10px 18px 0">
-  <div class="card">
-    <h3>Daemon Beats — live fleet heartbeats <span class="c-dim" id="daemon-summary" style="letter-spacing:0;text-transform:none"></span></h3>
-    <div id="daemon-beats" class="daemon-grid">loading…</div>
-  </div>
-</div>
-
-<div style="padding:10px 18px 0">
   <div class="card">
     <h3>Engine lanes — live fleet + returns</h3>
     <div id="lanes" style="display:flex;flex-wrap:wrap;gap:8px"></div>
@@ -168,7 +112,7 @@
     <h3>Live Kalshi Markets (top volume)</h3>
     <table id="markets"><thead><tr><th>Ticker</th><th>Title</th><th>Bid</th><th>Ask</th><th>Vol</th></tr></thead><tbody></tbody></table>
     <h3 style="margin-top:12px">Settles — our real wins <span class="c-dim" id="settles-tally" style="letter-spacing:0;text-transform:none"></span></h3>
-    <table id="wins"><thead><tr><th>When</th><th>Ticker</th><th>Side</th><th>P&L</th></tr></thead><tbody></tbody></table>
+    <table id="wins"><thead><tr><th>When</th><th>Ticker</th><th>Side</th><th>P&amp;L</th></tr></thead><tbody></tbody></table>
     <h3 style="margin-top:12px">whale flow <span class="c-dim" style="letter-spacing:0;text-transform:none">(shadow signals — not our money)</span></h3>
     <table id="whale"><thead><tr><th>When</th><th>Event</th></tr></thead><tbody></tbody></table>
   </div>
@@ -198,7 +142,7 @@
     <div class="mono-sm" style="margin-top:6px" id="f-result"></div>
   </div>
   <div class="card">
-    <h3>Positions & P&L</h3>
+    <h3>Positions &amp; P&amp;L</h3>
     <table id="positions"><thead><tr><th>Ticker</th><th>Side</th><th>Net</th><th>Avg¢</th><th>Realized¢</th></tr></thead><tbody></tbody></table>
   </div>
 </main>
@@ -232,49 +176,6 @@
         <h4 style="color:var(--cyan);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">Moonshot & Sweep</h4>
         <div id="d-moonshot" class="mono-sm">loading…</div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== DOCS / ARCHITECTURE ===== -->
-<div class="docs-section">
-  <div class="card" onclick="var d=this.querySelector('.docs-content');d.classList.toggle('show')">
-    <h3>System Architecture — what we built</h3>
-    <div class="docs-content">
-      <h4>Overview</h4>
-      <p>SoMaCo Trade Control is a prediction-market trading engine built on Kalshi (live, CFTC-regulated) and Polymarket (on-chain, dormant until funded). The system runs 34+ autonomous Python daemons on a Windows host, supervised by a process manager, with a Vercel-hosted Next.js dashboard that reads from a Supabase Postgres ledger (the shared source of truth).</p>
-      <h4>Substrate</h4>
-      <ul>
-        <li><code>GYST UUIDv8</code> — every order, fill, position, and settlement gets a 128-bit self-describing UUID with embedded type codes and bitmask routing. Not auto-increment IDs.</li>
-        <li><code>Supabase Postgres</code> — the cloud ledger (uuid_orders, uuid_fills, uuid_positions, equity_history, mc_state). Vercel reads this; local daemons write to it.</li>
-        <li><code>mc_state</code> — a key-value state table where every daemon publishes its heartbeat and state (daemon:*, account:equity, evidence:lanes, sweep:pending, etc.)</li>
-      </ul>
-      <h4>Daemon Fleet (34+ processes)</h4>
-      <ul>
-        <li><strong>Core</strong>: supervisor, mission_control, vault, ws (WebSocket), tick_service, governor, oracle, bridge, evidence, ingest</li>
-        <li><strong>Trading</strong>: scalp (mean-reversion), trend_engine x4 (BTC/ETH/SOL/XRP), maker, xvenue (cross-venue arb), promoter, btctrend, poly_exec, moonshot, parlay, speed-btc/eth</li>
-        <li><strong>Signal</strong>: x_watcher (X/Twitter), shadow_index (whale tracking), news_supply_engine, copier, uptick_spiral (forecast scoring)</li>
-        <li><strong>Paper</strong>: dry_run x4 ($1/$3 clip comparison at 10s/20s/25s/$1.50x8 cycles)</li>
-        <li><strong>Ops</strong>: sweep_watch, calendar_engine, funding_feed, recovery_engine, agent_status</li>
-      </ul>
-      <h4>Trading Lanes</h4>
-      <ul>
-        <li><code>momentum-15M</code> — 15-minute crypto directional bets (BTC/ETH/SOL/XRP/DOGE)</li>
-        <li><code>parlay-tails</code> — multi-game MLB composite bets (KXMV series)</li>
-        <li><code>sports</code> — individual game markets (KXMLBGAME)</li>
-        <li><code>supply-chain</code> — WTI/CPI economic event markets</li>
-        <li><code>news</code> — NASDAQ/SP500/WHEAT event markets</li>
-      </ul>
-      <h4>Edge Finder</h4>
-      <p>The /api/trade/edge endpoint fetches live Kalshi KXMLBGAME markets and compares each market's YES/NO ask price to a model win probability. The edge = model_prob - market_price. If the edge is positive, the model thinks the market is mispriced — betting there has positive expected value.</p>
-      <h4>Failure Harness</h4>
-      <p>After two bluescreen crashes (bugcheck 0x124 WHEA — hardware PCIe fault), we built a failure harness at /d/somacosf/scripts/failure_harness/ that captures crash data, takes system snapshots, generates recovery reports, and auto-restarts the daemon fleet. 51/51 verification checks pass.</p>
-      <h4>Deployment</h4>
-      <ul>
-        <li><code>Vercel</code> — Next.js 14 app at mc.somacosf.com (trade terminal) + time.somacosf.com (AI Times) + tim.somacosf.com (guest)</li>
-        <li><code>Supabase</code> — cloud Postgres ledger (TRADE_DATABASE_URL env var)</li>
-        <li><code>Local</code> — Windows OMEN-01, Python daemons via uv venv, supervisor.py launches all daemons headless via pythonw.exe</li>
-      </ul>
     </div>
   </div>
 </div>
@@ -317,124 +218,91 @@ let pulses=[];
   }catch(e){/* no webgl — panel works anyway */}
 })();
 
-/* ---------- edge badge class ---------- */
-function edgeBadgeClass(cents){
-  if(cents>=5) return "strong";
-  if(cents>=2) return "moderate";
-  if(cents>0) return "weak";
-  return "negative";
+/* ---------- enhanced live tick with deep dashboard ---------- */
+async function tick(){
+  $("clock").textContent=new Date().toLocaleTimeString();
+  const s=await j("/api/trade/stats");
+  if(s){
+    $("p-keys").textContent=s.keys?"KEYS ARMED":"KEYS MISSING";$("p-keys").className="pill "+(s.keys?"ok":"bad");
+    $("p-kill").textContent=s.kill?"KILL ENGAGED":"KILL OFF";$("p-kill").className="pill "+(s.kill?"bad":"ok");
+    if(s&&!s.account){$("h-eq").textContent="feed…";}
+    if(s&&s.account){$("h-eq").textContent="$"+s.account.equity.toFixed(2);
+      const d=s.account.equity-24.98;$("h-day").innerHTML=`day <b class="${d>=0?"up":"dn"}">${d>=0?"+":""}$${d.toFixed(2)} (${(d/24.98*100).toFixed(0)}%)</b> · <span class="c-dim">from $24.98</span>`;
+      $("h-cash").textContent="$"+s.account.cash.toFixed(2);}
+    if(s.ledger){$("h-pnl").textContent=(s.ledger.realized_pnl_cents/100).toFixed(2)+"$";
+      $("h-pnl").className=s.ledger.realized_pnl_cents>=0?"up":"dn";
+      if(lastFills&&s.ledger.fills>lastFills){window.__pulse&&window.__pulse(0x39ff14);}
+      lastFills=s.ledger.fills||lastFills;}
+  }
+  const d=await j("/api/trade/dry");
+  if(d&&d.state){$("h-dry").textContent=`${d.state.wins}/${d.state.losses} · $${(d.state.equity||0).toFixed(2)}`;}
+  const f=await j("/api/trade/fleet");
+  if(f&&f.daemons){const up=f.daemons.filter(x=>x.state==="alive"&&x.age_s<400);
+    $("h-fleet").textContent=up.length+"/"+f.daemons.length+" live";}
+  const m=await j("/api/trade/markets");
+  if(m&&m.markets){
+    $("markets").querySelector("tbody").innerHTML=m.markets.slice(0,14).map(x=`
+      <tr><td class="c-cyan">${x.ticker.slice(0,30)}</td><td>${(x.title||"").slice(0,42)}</td><td>${x.yes_bid}</td><td>${x.yes_ask}</td><td class="c-dim">${x.volume?Math.round(x.volume/1000)+"k":"—"}</td></tr>`).join("");
+    const btc=m.markets.find(x=>x.ticker.includes("KXBTC15M")&&x.yes_ask>0&&x.yes_ask<99);
+    if(btc){betMkt=btc;$("bet-mkt").textContent=btc.ticker+" · "+(btc.title||"").slice(0,50);
+      $("bb-yes").textContent="YES "+btc.yes_ask+"¢";$("bb-no").textContent="NO "+(100-(btc.yes_bid||0))+"¢";}
+  }
+  const st=await j("/api/trade/settles");
+  if(st){
+    $("settles-tally").textContent=`— ${st.wins||0}W / ${st.losses||0}L · net ${(st.total_pnl_cents||0)>=0?"+":""}$${((st.total_pnl_cents||0)/100).toFixed(2)}`;
+    $("wins").querySelector("tbody").innerHTML=(st.settles||[]).map(e=>{
+      const win=e.pnl_cents>0;
+      return`<tr><td class="c-dim">${e.ts?new Date(e.ts*1000).toLocaleTimeString():"—"}</td><td class="c-cyan">${(e.ticker||"").slice(0,26)}</td><td>${(e.side||"").toUpperCase()}</td><td class="${win?"up":"dn"}">${win?"+":""}$${(e.pnl_cents/100).toFixed(2)}</td></tr>`;}).join("")
+      ||'<tr><td colspan="4" class="c-dim">no settles yet</td></tr>';
+  }
+  const sh=await j("/api/trade/shadow");
+  if(sh&&sh.latest){$("whale").querySelector("tbody").innerHTML=sh.latest.slice(0,6).map(e=`
+    <tr><td class="c-dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</td><td>${(e.detail||"").slice(0,60)}</td></tr>`).join("");}
+  const L=await j("/api/trade/lanes");
+  if(L){
+    if(L.sweep_pending){const b=$("sweep-banner");b.style.display="block";
+      b.textContent=`⚠ SWEEP TIME — cash $${(L.sweep_pending.peak||0).toFixed(2)} ≥ $200 → withdraw $${L.sweep_pending.amount||100} to Venmo in the Kalshi app`;}
+    else $("sweep-banner").style.display="none";
+    if(L.fleet){$("lanes").innerHTML=L.fleet.map(d=>{
+      const live=d.state==="alive"&&d.age_s<400;
+      return`<div style="border:1px solid ${live?"rgba(57,255,20,.4)":"rgba(255,77,77,.4)"};border-radius:5px;padding:5px 10px;font-size:10px">
+        <b style="color:${live?"var(--green)":"var(--red)"}">${live?"●":"○"}</b> ${d.name}</div>`;}).join("");}
+    if(L.lanes){$("lanes").innerHTML+=Object.entries(L.lanes).map(([n,d])=>`
+      <div style="border:1px solid var(--line);border-radius:5px;padding:5px 10px;font-size:10px">
+        <span class="c-cyan">${n}</span> open ${d.open} · <span class="${d.realized_usd>=0?"c-green":"c-red"}">$${d.realized_usd.toFixed(2)}</span></div>`).join("");}
+  }
+  const ev=await j("/api/trade/evidence");
+  if(ev&&ev.evidence){const e=ev.evidence;
+    $("evidence").innerHTML=`<div style="font-size:12px;margin-bottom:6px">OVERALL: <b class="${e.overall==="EDGE-PROVEN"?"c-green":"c-amber"}">${e.overall}</b>
+      <span class="c-dim"> · gates: ${e.gates&&e.gates.PROVEN}</span></div>`+
+      Object.entries(e.lanes||{}).map(([n,v])=>`<div>${n}: n=${v.n} wr=${(v.winrate*100).toFixed(0)}% CI[${(v.ci[0]*100).toFixed(0)}-${(v.ci[1]*100).toFixed(0)}] exp=${v.expectancy_c}c/trade → <b class="${v.verdict==="PROVEN"?"c-green":v.verdict==="DEAD"?"c-red":"c-amber"}">${v.verdict}</b></div>`).join("");}
+  const eqh=await j("/api/trade/equity");
+  if(eqh&&eqh.history&&eqh.history.length>1){
+    const cv=$("eq-spark"),ctx=cv.getContext("2d"),vals=eqh.history.map(r=>Number(r.equity));
+    const mn=Math.min(...vals),mx=Math.max(...vals),rg=(mx-mn)||1;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.strokeStyle=vals[vals.length-1]>=vals[0]?"#39ff14":"#ff4d4d";ctx.lineWidth=1.5;ctx.beginPath();
+    vals.forEach((v,i)=>{const x=i/(vals.length-1)*cv.width,y=cv.height-3-((v-mn)/rg)*(cv.height-6);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+  }
+
+  // ---- deep dashboard refresh ----
+  const f2=await j("/api/trade/funds");
+  if(f2){
+    const fl2=await j("/api/trade/fleet");
+    const st2=await j("/api/trade/status");
+    renderDeep({
+      vault_state:f2.vault_state,
+      governor_state: st2&&st2.governor?st2.governor:null,
+      evidence_lanes:f2.evidence_lanes,
+      dry_runs:f2.dry_runs,
+      copier_board:f2.copier_board,
+      xvenue_latest:f2.xvenue_latest,
+      moonshot_sleeve:f2.moonshot_sleeve,
+      sweep_pending:f2.sweep_pending,
+      daemons: fl2&&fl2.daemons?fl2.daemons:[]
+    });
+  }
 }
-
-/* ---------- edge finder render ---------- */
-async function renderEdge(){
-  const e=await j("/api/trade/edge");
-  if(!e||!e.edges||!e.edges.length){$("edge-finder").innerHTML='<span class="c-dim">no edge data (market may be closed)</span>';return;}
-  let html=`<div style="margin-bottom:6px;font-size:11px">Games scanned: ${e.edges.length} · positive edges: <b class="c-green">${e.summary.positive_edges}</b></div>`;
-  html+='<table style="width:100%;font-size:11px"><thead><tr><th>Game</th><th>Pick</th><th>Model%</th><th>Mkt YES</th><th>Best Side</th><th>Edge¢</th><th>ROI%</th><th></th></tr></thead><tbody>';
-  for(const g of e.edges){
-    const cls=edgeBadgeClass(g.best_edge_cents);
-    html+=`<tr class="edge-row" onclick="window.open('${g.kalshi_url}','_blank')">
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${g.game}</td>
-      <td class="c-cyan">${g.pick}</td>
-      <td><b>${g.model_prob}%</b></td>
-      <td>${g.market_yes_ask}¢</td>
-      <td>${g.best_side==='YES'?'<span class="c-green">YES</span>':'<span class="c-red">NO</span>'}</td>
-      <td><span class="edge-badge ${cls}">${g.best_edge_cents>0?'+':''}${g.best_edge_cents}¢</span></td>
-      <td class="${g.roi_pct>0?'c-green':'c-dim'}">${g.roi_pct>0?'+':''}${g.roi_pct}%</td>
-      <td><a href="${g.kalshi_url}" target="_blank" style="color:var(--cyan);font-size:10px;text-decoration:none">trade ↗</a></td>
-    </tr>`;
-  }
-  html+='</tbody></table>';
-  html+=`<div class="mono-sm" style="margin-top:6px">Click any row to open the Kalshi market. Edge = model_prob − market_price. Positive edge means the model predicts value the market hasn't priced in.</div>`;
-  $("edge-finder").innerHTML=html;
-}
-
-/* ---------- daemon beats render ---------- */
-async function renderDaemons(){
-  const d=await j("/api/trade/daemons");
-  if(!d||!d.daemons){$("daemon-beats").innerHTML='<span class="c-dim">no daemon data</span>';return;}
-  $("daemon-summary").textContent=` — ${d.summary.live}/${d.summary.total} live`;
-  let html="";
-  for(const dm of d.daemons){
-    const live=dm.live;
-    const ageCls=dm.age_s<60?"fresh":dm.age_s<400?"stale":"dead";
-    const ageTxt=dm.age_s<60?dm.age_s+"s":Math.round(dm.age_s/60)+"m";
-    html+=`<div class="daemon-chip ${live?"live":"dead"}">
-      <div><span class="dot ${live?"live":"dead"}"></span><span class="name">${dm.name}</span> <span class="cat-badge ${dm.category}">${dm.category}</span></div>
-      <div class="watches">${dm.watches}</div>
-      <div class="age ${ageCls}">${live?"alive":"dead"} · ${ageTxt} ago</div>
-    </div>`;
-  }
-  $("daemon-beats").innerHTML=html;
-}
-
-/* ---------- deep dashboard render ---------- */
-function renderDeep(data){
-  // Fleet & Vault
-  let f="";
-  if(data.daemons){
-    const live=data.daemons.filter(d=>d.state==="alive"&&d.age_s<400);
-    f=`<div class="c-green">Fleet: ${live.length}/${data.daemons.length} live</div>`;
-    for(const d of data.daemons.slice(0,12)){
-      const l=d.state==="alive"&&d.age_s<400;
-      f+=`<div>${l?"<span class='c-green'>●</span>":"<span class='c-red'>○</span>"} ${d.name} (${d.age_s}s)</div>`;
-    }
-    if(data.daemons.length>12) f+=`<div class="c-dim">… +${data.daemons.length-12} more</div>`;
-  }
-  $("d-fleet").innerHTML=f||"no fleet data";
-  if(data.vault_state) $("d-fleet").innerHTML+=`<div style="margin-top:6px">vault: ${data.vault_state}</div>`;
-
-  // Evidence Lanes
-  let ev="";
-  if(data.evidence_lanes){
-    try{
-      const lanes=typeof data.evidence_lanes==="string"?JSON.parse(data.evidence_lanes):data.evidence_lanes;
-      ev=Object.entries(lanes||{}).map(([n,v])=>`<div>${n}: n=${v.n} wr=${(v.winrate*100).toFixed(0)}% → <b class="${v.verdict==="PROVEN"?"c-green":v.verdict==="DEAD"?"c-red":"c-amber"}">${v.verdict}</b></div>`).join("");
-    }catch{ev="parse error";}
-  }
-  $("d-evidence").innerHTML=ev||"no evidence data";
-
-  // Dry-Run Watch
-  let dr="";
-  if(data.dry_runs){
-    dr=Object.entries(data.dry_runs).map(([n,v])=>`<div>${n}: ${v.wins||0}W/${v.losses||0}L $${((v.equity||0)).toFixed(2)} <span class="c-dim">(${v.age_s}s)</span></div>`).join("");
-  }
-  $("d-dry").innerHTML=dr||"no dry-run data";
-
-  // Whale Flow
-  if(data.copier_board){
-    try{
-      const board=typeof data.copier_board==="string"?JSON.parse(data.copier_board):data.copier_board;
-      const items=Array.isArray(board)?board.slice(0,6):(board.latest||board.signals||[]).slice(0,6);
-      $("d-whale").innerHTML=items.map(e=>`<div>${(e.detail||e.event||"").slice(0,50)}</div>`).join("")||"no whale signals";
-    }catch{$("d-whale").innerHTML="parse error";}
-  }
-
-  // X-Venue
-  if(data.xvenue_latest){
-    try{
-      const xv=typeof data.xvenue_latest==="string"?JSON.parse(data.xvenue_latest):data.xvenue_latest;
-      $("d-xvenue").innerHTML=Object.entries(xv||{}).slice(0,6).map(([k,v])=>`<div>${k}: ${typeof v==="object"?JSON.stringify(v).slice(0,40):v}</div>`).join("")||"no x-venue data";
-    }catch{$("d-xvenue").innerHTML="parse error";}
-  }
-
-  // Moonshot & Sweep
-  let ms="";
-  if(data.moonshot_sleeve){
-    try{
-      const ms2=typeof data.moonshot_sleeve==="string"?JSON.parse(data.moonshot_sleeve):data.moonshot_sleeve;
-      ms+=`<div>moonshot: ${ms2.active?"active":"idle"}</div>`;
-    }catch{}
-  }
-  if(data.sweep_pending){
-    ms+=`<div class="c-amber">⚠ sweep: cash $${(data.sweep_pending.peak||0).toFixed(2)} ≥ $200 → withdraw $${data.sweep_pending.amount||100}</div>`;
-  }else{
-    ms+='<div class="c-dim">sweep: no pending</div>';
-  }
-  $("d-moonshot").innerHTML=ms||"no data";
-}
-
-/* ---------- main tick (single, no duplicate) ---------- */
 let lastFills=0, betMkt=null, betSide=null;
 async function tick(){
   $("clock").textContent=new Date().toLocaleTimeString();
@@ -470,8 +338,7 @@ async function tick(){
     $("wins").querySelector("tbody").innerHTML=(st.settles||[]).map(e=>{
       const win=e.pnl_cents>0;
       return`<tr><td class="c-dim">${e.ts?new Date(e.ts*1000).toLocaleTimeString():"—"}</td><td class="c-cyan">${(e.ticker||"").slice(0,26)}</td><td>${(e.side||"").toUpperCase()}</td><td class="${win?"up":"dn"}">${win?"+":""}$${(e.pnl_cents/100).toFixed(2)}</td></tr>`;}).join("")
-      ||'<tr><td colspan="4" class="c-dim">no settles yet</td></tr>';
-  }
+      ||'<tr><td colspan="4" class="c-dim">no settles yet</td></tr>';}
   const sh=await j("/api/trade/shadow");
   if(sh&&sh.latest){$("whale").querySelector("tbody").innerHTML=sh.latest.slice(0,6).map(e=>
     `<tr><td class="c-dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</td><td>${(e.detail||"").slice(0,60)}</td></tr>`).join("");}
@@ -499,25 +366,8 @@ async function tick(){
     const mn=Math.min(...vals),mx=Math.max(...vals),rg=(mx-mn)||1;
     ctx.clearRect(0,0,cv.width,cv.height);
     ctx.strokeStyle=vals[vals.length-1]>=vals[0]?"#39ff14":"#ff4d4d";ctx.lineWidth=1.5;ctx.beginPath();
-    vals.forEach((v,i)=>{const x=i/(vals.length-1)*cv.width,y=cv.height-3-((v-mn)/rg)*(cv.height-6);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
-  }
-
-  // ---- deep dashboard refresh ----
-  const f2=await j("/api/trade/funds");
-  if(f2){
-    const fl2=await j("/api/trade/fleet");
-    const st2=await j("/api/trade/status");
-    renderDeep({
-      vault_state:f2.vault_state,
-      governor_state: st2&&st2.governor?st2.governor:null,
-      evidence_lanes:f2.evidence_lanes,
-      dry_runs:f2.dry_runs,
-      copier_board:f2.copier_board,
-      xvenue_latest:f2.xvenue_latest,
-      moonshot_sleeve:f2.moonshot_sleeve,
-      sweep_pending:f2.sweep_pending,
-      daemons: fl2&&fl2.daemons?fl2.daemons:[]
-    });
+    vals.forEach((v,i)=>{const x=i/(vals.length-1)*cv.width,y=cv.height-3-((v-mn)/rg)*(cv.height-6);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.stroke();
   }
 }
 $("bb-yes").onclick=()=>{betSide="yes";$("bb-yes").classList.add("sel");$("bb-no").classList.remove("sel");};
@@ -544,18 +394,11 @@ $("sw-trend").onclick=async()=>{
   await j("/api/trade/autofollow",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on})});
   log(`auto-follow super trends ${on?"ON":"OFF"}`,"c-cyan");
 };
-(async()=>{
-  try{const a=await j("/api/trade/autofollow");if(a&&a.on){$("sw-trend-el").classList.add("on");$("sw-trend-txt").textContent="ON";}}catch(e){}
+(async()=>{try{const a=await j("/api/trade/autofollow");if(a&&a.on){$("sw-trend-el").classList.add("on");$("sw-trend-txt").textContent="ON";}}catch(e){}
   const p=await j("/api/trade/positions");
   if(p&&p.positions){$("positions").querySelector("tbody").innerHTML=p.positions.slice(0,20).map(x=>
     `<tr><td class="c-cyan">${x.ticker.slice(0,28)}</td><td>${x.side}</td><td>${x.net_count}</td><td>${x.avg_price_cents}</td><td class="${x.realized_pnl_cents>0?"c-green":x.realized_pnl_cents<0?"c-red":""}">${x.realized_pnl_cents}</td></tr>`).join("");}
-  // Initial renders
-  renderEdge();renderDaemons();
-  // Edge updates less frequently (markets don't change that fast)
-  setInterval(renderEdge,30000);
-  setInterval(renderDaemons,10000);
-  tick();setInterval(tick,10000);
-})();
+  tick();setInterval(tick,10000);})();
 </script>
 </body>
 </html>
