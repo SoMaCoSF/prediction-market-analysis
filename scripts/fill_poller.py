@@ -144,7 +144,7 @@ def publish_account():
         import json as _json
         bal = kget("/portfolio/balance")
         cash = float(bal.get("balance_dollars") or 0)
-        pv = (bal.get("portfolio_value") or 0) / 100
+        pv = float(bal.get("portfolio_value") or 0)  # already in dollars
         con = sb.sb_conn()
         con.autocommit = True
         cur = con.cursor()
