@@ -26,6 +26,7 @@ STATE = ROOT / "data" / "engine_state.json"
 
 class EventType(Enum):
     MARKET_TICK = "market_tick"
+    PAPER_TICK = "paper_tick"
     TRADE_FILL = "trade_fill"
     ORDER_UPDATE = "order_update"
     POSITION_UPDATE = "position_update"
