@@ -108,9 +108,12 @@ def copy_print(cx, whale, side, usd, series):
                 copies.append({"ticker": m["ticker"], "side": kside, "price": price, "qty": qty})
                 spent_today += price * qty / 100
                 log(f"COPY {whale[:10]}… ${usd:,.0f} {side} -> {kside.upper()} x{qty} @{price}c {series}")
-            return
+                return
+            # illiquid fill: try next market instead of giving up
+            continue
     except Exception as e:
         log(f"copy warn {repr(e)[:50]}")
+    log(f"COPY {whale[:10]}… ${usd:,.0f} {side} -> no live Kalshi market for {series}")
 
 
 def main():

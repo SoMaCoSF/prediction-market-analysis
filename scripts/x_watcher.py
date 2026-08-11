@@ -1,10 +1,9 @@
-# file_id: SOM-PY-0976-v1.0.0 name: x_watcher.py description: X watcher v2 — official X API (bearer) with keyless fallback: AI-startup space sentiment signals, minted 0x3D3, published for the panel; zero tokens project_id: PREDICTION-MARKET-ANALYSIS category: script tags: [x, sentiment, ai-startups, signals, stream] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT
-"""x_watcher.py v2 — the X sentiment lane for the AI startup space.
+# file_id: SOM-PY-0976-v1.1.0 name: x_watcher.py description: X watcher v3 — expanded multi-query sentiment sweep with faster polling; official X API (bearer) with keyless fallback; zero tokens project_id: PREDICTION-MARKET-ANALYSIS category: script tags: [x, sentiment, ai-startups, signals, stream, expanded] created: 2026-08-03 modified: 2026-08-11 version: 1.1.0 agent_id: HERMES-AGENT
+"""x_watcher.py v3 — the X sentiment lane for the AI startup space.
 
-Mode A (X_BEARER_TOKEN in .env): official X API v2 recent-search, 5-min poll:
-  query: AI startups/founders space (funding, launches, agents, models).
-Mode B (no key): keyless fallback — nitter-style syndication is dead, so we
-  poll the same RSS bridge used by the news engine's AI feeds (degraded).
+Mode A (X_BEARER_TOKEN in .env): official X API v2 recent-search, 2-min poll:
+  queries: AI startups, crypto, policy/regulation, chip/semiconductor, robotics
+Mode B (no key): keyless fallback — RSS bridge (degraded but functional).
 
 Each signal: author, text, engagement, sentiment score -> mint 0x3D3 XSIGNAL
 UUID -> local stream + mc_state x:latest (the trade panel's X card).
@@ -28,10 +27,24 @@ from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(ROOT / ".env")
 TOKEN = os.getenv("X_BEARER_TOKEN", "")
-POLL_S = 300
-QUERY = '("AI startup" OR "AI agent" OR "founded" OR "seed round" OR "Series A") (AI OR artificial intelligence) lang:en -is:retweet'
-POS = ["launch", "raised", "funding", "breakthrough", "sota", "release", "partnership", "growth", "wins"]
-NEG = ["shutdown", "layoff", "lawsuit", "delay", "bug", "outage", "bankrupt", "fail"]
+POLL_S = 120  # 2 min — faster than before
+
+# 5 targeted queries covering the full AI/crypto/policy surface + Congress/trader accounts
+QUERIES = [
+    '("AI startup" OR "AI agent" OR "founded" OR "seed round" OR "Series A") (AI OR artificial intelligence) lang:en -is:retweet',
+    '("bitcoin" OR "ethereum" OR "crypto" OR "solana") (pump OR dump OR breakout OR SEC OR ETF) lang:en -is:retweet',
+    '("AI regulation" OR "EU AI Act" OR "SEC" OR "antitrust" OR "copyright") (AI OR artificial intelligence) lang:en -is:retweet',
+    '("semiconductor" OR "TSMC" OR "NVIDIA" OR "chip export" OR "fab") (surge OR demand OR shortage OR ban) lang:en -is:retweet',
+    '("humanoid" OR "robot" OR "Figure AI" OR "Optimus" OR "tesla bot") (launch OR funding OR breakthrough) lang:en -is:retweet',
+    '("Nancy Pelosi" OR "Paul Pelosi" OR "@nancypelosi") (stock OR trade OR purchase OR sale OR buy OR sell) lang:en -is:retweet',
+    '("Donald Trump" OR "Trump" OR "@realdonaldtrump") (stock OR trade OR purchase OR sale OR buy OR sell OR crypto) lang:en -is:retweet',
+    '("Congress" OR "Senate" OR "House") (bill OR act OR vote OR legislation OR market OR trading OR fiscal) lang:en -is:retweet',
+]
+
+POS = ["launch", "raised", "funding", "breakthrough", "sota", "release", "partnership", "growth", "wins",
+       "pump", "breakout", "surge", "demand", "approval", "win", "bullish"]
+NEG = ["shutdown", "layoff", "lawsuit", "delay", "bug", "outage", "bankrupt", "fail",
+       "dump", "ban", "recession", "shortage", "investigation", "bearish", "crash", "hack"]
 TYPE_XSIGNAL = 0x3D3
 PROV_X = 0xE
 
@@ -64,15 +77,15 @@ def publish(signals):
         con.cursor().execute(
             "INSERT INTO mc_state (k, v, updated_at) VALUES ('x:latest', %s, now()) "
             "ON CONFLICT (k) DO UPDATE SET v=EXCLUDED.v, updated_at=now()",
-            (json.dumps(signals[:15]),))
+            (json.dumps(signals[:20]),))
         con.close()
     except Exception as e:
         log(f"publish warn {repr(e)[:50]}")
 
 
-def fetch_official(cx):
+def fetch_official(cx, query):
     r = cx.get("https://api.x.com/2/tweets/search/recent",
-               params={"query": QUERY, "max_results": 20,
+               params={"query": query, "max_results": 25,
                        "tweet.fields": "public_metrics,created_at,author_id"},
                headers={"Authorization": f"Bearer {TOKEN}"}, timeout=20)
     if r.status_code != 200:
@@ -83,30 +96,33 @@ def fetch_official(cx):
         m = t.get("public_metrics", {})
         eng = (m.get("like_count") or 0) + 2 * (m.get("retweet_count") or 0)
         out.append({"id": t["id"], "author": t.get("author_id", "?"),
-                    "text": t.get("text", "")[:140], "eng": eng,
+                    "text": t.get("text", "")[:200], "eng": eng,
                     "sent": sentiment(t.get("text", "")), "ts": int(time.time())})
     return out
 
 
 def main():
     fleetlib.acquire_lock("xwatch")
-    mode = "OFFICIAL" if TOKEN else "NO-KEY (waiting for X_BEARER_TOKEN in .env)"
-    log(f"start | mode={mode} poll={POLL_S}s")
+    mode = "OFFICIAL" if TOKEN else "NO-KEY (RSS fallback)"
+    log(f"start | mode={mode} queries={len(QUERIES)} poll={POLL_S}s")
     with httpx.Client(headers={"Accept-Encoding": "identity"}, timeout=25) as cx:
         while True:
             fleetlib.checkin("xwatch")
             try:
+                all_sigs = []
                 if TOKEN:
-                    sigs = [s for s in fetch_official(cx) if s["id"] not in seen]
-                    for s in sigs:
-                        seen.add(s["id"])
-                        s["uuid"] = mint_signal(s["author"], s["sent"], s["eng"])
-                    if sigs:
-                        publish(sigs)
-                        top = max(sigs, key=lambda s: s["eng"])
-                        log(f"{len(sigs)} signals | top @{top['author']} eng={top['eng']} sent={top['sent']:+d} | {top['text'][:60]}")
-                    if len(seen) > 5000:
-                        seen.clear()
+                    for q in QUERIES:
+                        sigs = [s for s in fetch_official(cx, q) if s["id"] not in seen]
+                        for s in sigs:
+                            seen.add(s["id"])
+                            s["uuid"] = mint_signal(s["author"], s["sent"], s["eng"])
+                        all_sigs.extend(sigs)
+                if len(seen) > 10000:
+                    seen.clear()
+                if all_sigs:
+                    publish(all_sigs)
+                    top = max(all_sigs, key=lambda s: s["eng"])
+                    log(f"{len(all_sigs)} signals | top @{top['author']} eng={top['eng']} sent={top['sent']:+d} | {top['text'][:60]}")
             except Exception as e:
                 log(f"cycle warn {repr(e)[:60]}")
             time.sleep(POLL_S)

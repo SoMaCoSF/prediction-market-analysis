@@ -129,10 +129,14 @@ def follow_trade(entity: str, detail: str, bullish: bool):
         runlog.log_event("shadow", f"follow-trade warn {repr(e)[:60]}", kind="warn")
     return False
 
-# The index — people/flows we shadow. kind: whale|politician|trader|flow
+# The index — people/flows we shadow. kind: whale|politician|trader|flow|congress
 ENTITIES = [
     {"name": "polymarket-whale-flow", "kind": "flow", "source": "polymarket", "live": True},
-    {"name": "nancy-pelosi", "kind": "politician", "source": "xai-stub", "live": False},
+    {"name": "nancy-pelosi", "kind": "politician", "source": "x", "live": True},
+    {"name": "paul-pelosi", "kind": "trader", "source": "x", "live": True},
+    {"name": "donald-trump", "kind": "politician", "source": "x", "live": True},
+    {"name": "us-congress-bills", "kind": "congress", "source": "rss", "live": True},
+    {"name": "us-senate-action", "kind": "congress", "source": "rss", "live": True},
     {"name": "dan-crenshaw", "kind": "politician", "source": "xai-stub", "live": False},
     {"name": "mark-messer", "kind": "politician", "source": "xai-stub", "live": False},
     {"name": "michael-burry", "kind": "trader", "source": "xai-stub", "live": False},
@@ -475,10 +479,15 @@ def main():
                     total += polymarket_whale_flow(cx, cur, ts)
                 except Exception as e:
                     runlog.log_event("shadow", f"whale flow warn {repr(e)[:60]}", kind="warn")
+                # trigger follow-trades on fresh shadow signals
+                try:
+                    for row in cur.execute('SELECT symbol, detail, price_c FROM stream WHERE source LIKE "shadow:%" ORDER BY ts DESC LIMIT 5').fetchall():
+                        maybe_follow_trade(row[0], row[1], float(row[2]) if row[2] else 0.5)
+                except Exception as e:
+                    runlog.log_event("shadow", f"follow-trade warn {repr(e)[:60]}", kind="warn")
                 con.commit()
                 publish(con)
                 con.close()
-                publish_latest()
                 publish_latest()
             except Exception as e:
                 runlog.log_event("shadow", f"cycle warn {repr(e)[:60]}", kind="warn")

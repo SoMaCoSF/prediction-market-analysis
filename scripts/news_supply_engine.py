@@ -1,12 +1,12 @@
-# file_id: SOM-PY-0962-v1.0.0 name: news_supply_engine.py description: News->supply-chain->market prediction engine — keyless EU/global RSS, supply-chain node mapping, bold forecasts minted as 0x326 FORECAST UUIDs, edge-gap alerts vs Kalshi prices; zero tokens project_id: PREDICTION-MARKET-ANALYSIS category: script tags: [news, supply-chain, eu, forecast, prediction, rss] created: 2026-08-03 version: 1.0.0 agent_id: HERMES-AGENT
+# file_id: SOM-PY-0962-v1.1.0 name: news_supply_engine.py description: News->supply-chain->market prediction engine — expanded 30-feed global RSS, supply-chain node mapping, bold forecasts minted as 0x326 FORECAST UUIDs, edge-gap alerts vs Kalshi prices; zero tokens project_id: PREDICTION-MARKET-ANALYSIS category: script tags: [news, supply-chain, eu, forecast, prediction, rss, expanded] created: 2026-08-03 modified: 2026-08-11 version: 1.1.0 agent_id: HERMES-AGENT
 """news_supply_engine.py — read the world's wires, map supply chains, mint forecasts.
 
 Pipeline: RSS headline -> supply-chain NODES hit -> affected commodities/sectors
 -> candidate Kalshi markets -> our probability vs market price -> EDGE GAP alert.
 Every forecast = 0x326 FORECAST UUID (probability in signal bits, horizon in ts,
 deterministic seed) -> the stream, resolvable later for Brier scoring.
-EU tilt: ECB/eurozone feeds + EU-session hours; the chain atlas is explicit and
-editable. Zero tokens, pure stdlib+httpx XML parse.
+Wide net: 30+ feeds across business, tech, policy, energy, AI, crypto, science.
+Zero tokens, pure stdlib+httpx XML parse.
 """
 from __future__ import annotations
 
@@ -29,10 +29,11 @@ DB = ROOT / "data" / "uuid_stream.db"
 TYPE_FORECAST = 0x326
 TYPE_ARTICLE = 0x3D4
 PROV_NEWS = 0xD
-POLL_S = 300
+POLL_S = 180  # 3 min — faster than before
 
 # --- uptick spiral integration: read adjusted weights if available ---
 WEIGHTS_FILE = ROOT / "data" / "uptick_weights.json"
+
 
 def load_uptick_shifts() -> dict[str, float]:
     """Read adjusted node shifts from uptick_spiral. Falls back to ATLAS base shifts."""
@@ -44,6 +45,7 @@ def load_uptick_shifts() -> dict[str, float]:
     except Exception:
         pass
     return {node: shift for node, (_, shift) in ATLAS.items()}
+
 
 # --- forecast-bet linkage: back each prediction with a position ---
 import hashlib  # noqa: E402
@@ -101,56 +103,90 @@ def place_forecast_bet(cx, node, prob, hint, title):
         runlog.log_event("news", f"bet warn {repr(e)[:50]}", kind="warn")
     return None
 
+
+# 30+ feeds across global business, tech, AI, policy, energy, crypto, science
 FEEDS = [
+    # --- Business / general ---
     ("bbc-biz", "https://feeds.bbci.co.uk/news/business/rss.xml"),
-    ("ecb", "https://www.ecb.europa.eu/rss/press.html"),
-    ("euractiv", "https://www.euractiv.com/feed/"),
-    ("mw-commodities", "https://feeds.content.dowjones.io/public/rss/mw_marketpulse"),
-    # AI plane for TIME.somacosf.com
-    ("techcrunch-ai", "https://techcrunch.com/category/artificial-intelligence/feed/"),
-    ("verge-ai", "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"),
-    ("venturebeat-ai", "https://venturebeat.com/category/ai/feed/"),
+    ("reuters-biz", "https://www.reutersagency.com/feed/?bestTopics=business"),
+    ("ft-com", "https://www.ft.com/rss/home"),
+    ("bloomberg-markets", "https://feeds.bloomberg.com/markets/news/rss.xml"),
+    ("ap-biz", "https://apnews.com/hub/business/rss.xml"),
+    ("guardian-biz", "https://www.theguardian.com/business/rss"),
+    ("cnbc", "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114"),
+    # --- AI / tech ---
+    ("techcrunch", "https://techcrunch.com/feed/"),
+    ("verge", "https://www.theverge.com/rss/index.xml"),
+    ("wired", "https://www.wired.com/feed/rss"),
+    ("arstechnica", "https://feeds.arstechnica.com/arstechnica/index"),
+    ("the-register", "https://www.theregister.com/headlines.atom"),
     ("mit-review", "https://www.technologyreview.com/feed/"),
-    ("ars-ai", "https://feeds.arstechnica.com/arstechnica/technology-lab"),
+    ("venturebeat", "https://venturebeat.com/feed/"),
+    ("zdnet", "https://www.zdnet.com/news/rss.xml"),
+    # --- Policy / regulation / geopolitics ---
+    ("politico", "https://www.politico.com/rss/politicopicks.xml"),
+    ("reuters-politics", "https://www.reutersagency.com/feed/?bestTopics=politics"),
+    ("bbc-politics", "https://feeds.bbci.co.uk/news/politics/rss.xml"),
+    ("ap-politics", "https://apnews.com/hub/politics/rss.xml"),
+    ("the-hill", "https://thehill.com/feed/"),
+    # --- Energy / commodities / macro ---
+    ("reuters-energy", "https://www.reutersagency.com/feed/?bestTopics=energy"),
+    ("opec", "https://www.opec.org/opec_web/en/rss/rss_opec.xml"),
+    ("eia", "https://www.eia.gov/rss/todayinenergy.xml"),
+    ("ft-com", "https://www.ft.com/rss/home"),
+    ("bbc-economy", "https://feeds.bbci.co.uk/news/business/rss.xml"),
+    # --- Crypto / digital assets ---
+    ("coindesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"),
+    ("cointelegraph", "https://cointelegraph.com/rss"),
+    ("decrypt", "https://decrypt.co/feed"),
+    ("blockworks", "https://blockworks.co/feed/"),
+    ("the-block", "https://www.theblock.co/rss.xml"),
+    # --- US Congress / legislation / market-moving policy ---
+    ("congress-gov", "https://www.congress.gov/rss/house-floor-action.xml"),
+    ("congress-bills", "https://www.congress.gov/rss/pending-legislation.xml"),
+    ("senate-journal", "https://www.congress.gov/rss/senate-floor-action.xml"),
+    ("rollcall", "https://www.rollcall.com/feed/"),
+    ("the-hill", "https://thehill.com/feed/"),
+    ("politico", "https://www.politico.com/rss/politicopicks.xml"),
+    ("ap-politics", "https://apnews.com/hub/politics/rss.xml"),
+    ("reuters-politics", "https://www.reutersagency.com/feed/?bestTopics=politics"),
+    ("bbc-politics", "https://feeds.bbci.co.uk/news/politics/rss.xml"),
+    # --- Science / research ---
+    ("nature-news", "https://www.nature.com/nature.rss"),
+    ("science-org", "https://www.science.org/rss/news_current.xml"),
+    ("arxiv-cs", "https://rss.arxiv.org/rss/cs"),
+    ("new-scientist", "https://www.newscientist.com/section/news/rss/"),
 ]
 
-AI_TOPICS = {
-    "openai": ["openai", "chatgpt", "gpt", "sama", "altman"],
-    "anthropic": ["anthropic", "claude"],
-    "nvidia": ["nvidia", "jensen", "blackwell", "gpu", "cuda"],
-    "agents": ["agent", "agentic", "autonomous", "mcp"],
-    "chips": ["chip", "semiconductor", "tsmc", "asml", "fab"],
-    "regulation": ["regulation", "eu ai act", "policy", "antitrust", "copyright", "lawsuit"],
-    "models": ["llm", "model", "reasoning", "benchmark", "frontier"],
-    "robotics": ["robot", "humanoid", "figure", "optimus"],
+# Topic keywords for article categorization (AI/ML focus)
+TOPICS = {
+    "openai": ["openai", "chatgpt", "gpt-5", "gpt-4", "sama", "sam altman", "o1", "o3"],
+    "anthropic": ["anthropic", "claude", "sonnet"],
+    "google": ["gemini", "deepmind", "google ai"],
+    "nvidia": ["nvidia", "jensen", "blackwell", "h100", "b200", "cuda", "gpu"],
+    "meta": ["meta ai", "llama", "zuckerberg"],
+    "xai": ["xai", "grok", "musk ai"],
+    "agents": ["agent", "agentic", "autonomous", "mcp", "a2a"],
+    "robotics": ["robot", "humanoid", "figure", "optimus", "tesla bot"],
+    "chips": ["semiconductor", "tsmc", "asml", "intel", "amd", "chip export", "fab"],
+    "regulation": ["sec", "ftc", "antitrust", "eu ai act", "regulation", "copyright", "lawsuit"],
+    "models": ["llm", "reasoning", "benchmark", "frontier model", "deepseek", "mistral", "kimi"],
+    "crypto": ["bitcoin", "ethereum", "solana", "btc", "eth", "sol", "xrp", "crypto", "polymarket"],
+    "energy": ["oil", "gas", "lng", "opec", "energy", "power", "grid", "renewable"],
+    "macro": ["fed", "rate", "inflation", "cpi", "gdp", "recession", "ecb", "central bank"],
+    "congress": ["congress", "senate", "house", "pelosi", "mccarthy", "schumer", " McConnell",
+                 "bill", "act", "legislation", "vote", "amendment", "appropriation", "debt ceiling",
+                 "infrastructure", "stimulus", "regulation", "sec", "cftc", "cftc", "treasury",
+                 "federal reserve", "yellen", "powell", "interest rate", "fiscal", "tax"],
 }
 
 
 def topic_of(title: str) -> str:
     low = title.lower()
-    for topic, kws in AI_TOPICS.items():
+    for topic, kws in TOPICS.items():
         if any(k in low for k in kws):
             return topic
-    return "ai-general"
-
-AI_FEEDS = [
-    ("techcrunch-ai", "https://techcrunch.com/category/artificial-intelligence/feed/"),
-    ("verge-ai", "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"),
-    ("ars-ai", "https://feeds.arstechnica.com/arstechnica/technology-lab"),
-    ("venturebeat-ai", "https://venturebeat.com/category/ai/feed/"),
-    ("mit-tr-ai", "https://www.technologyreview.com/feed/"),
-]
-
-TOPICS = {
-    "openai": ["openai", "chatgpt", "gpt-5", "sama", "sam altman"],
-    "anthropic": ["anthropic", "claude"],
-    "nvidia": ["nvidia", "jensen", "gpu", "blackwell", "h100", "b200"],
-    "agents": ["agent", "agentic", "autonomous"],
-    "chips": ["chip", "semiconductor", "tsmc", "asml", "intel", "amd"],
-    "regulation": ["regulation", "eu ai act", "executive order", "antitrust", "ftc", "copyright"],
-    "models": ["llm", "model", "gemini", "llama", "mistral", "grok", "kimi", "deepseek"],
-    "robotics": ["robot", "humanoid", "figure", "optimus"],
-}
+    return "general"
 
 
 # supply-chain atlas: node -> (keywords, downstream effects, kalshi hint, base prob shift)
@@ -177,6 +213,10 @@ ATLAS = {
                    "regulatory flow -> crypto spot", "KXBTC15M", +0.05),
     "tariffs": (["tariff", "trade war", "import duty", "retaliatory"],
                 "trade friction -> sector rotation", "KXSP500", +0.05),
+    "ai-power": (["ai power", "datacenter power", "gpu cluster", "training compute"],
+                 "compute demand -> power demand -> energy bid", "KXWTI", +0.04),
+    "chip-war": (["chip war", "semiconductor ban", "chip act", "export control", "tsmc export"],
+                 "supply chain disruption -> chip stocks", "KXNASDAQ", +0.05),
 }
 
 
@@ -206,7 +246,7 @@ def headlines(cx):
     out = []
     for name, url in FEEDS:
         try:
-            r = cx.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0 somaco-forecast/1.0"})
+            r = cx.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0 somaco-forecast/2.0"})
             root = ET.fromstring(r.text)
             for item in root.iter("item"):
                 t = item.findtext("title") or ""
@@ -215,7 +255,7 @@ def headlines(cx):
                     out.append((name, t.strip(), link.strip()))
         except Exception as e:
             runlog.log_event("news", f"feed {name} warn {repr(e)[:50]}", kind="warn")
-    return out[:80]
+    return out[:120]
 
 
 def publish_articles(items):
@@ -226,8 +266,8 @@ def publish_articles(items):
         arts = []
         for src, title, link in items:
             topic = topic_of(title)
-            if topic == "ai-general" and not src.endswith(("-ai", "review")):
-                continue  # non-AI feeds only contribute tagged AI items
+            if topic == "general" and not src.endswith(("techcrunch", "verge", "wired", "arstechnica", "mit-review", "venturebeat")):
+                continue  # non-tech feeds only contribute tagged AI items
             u = mint_article(title, topic, src, int(time.time()))
             aid = u[-12:]  # low-42 hex tail = the routable handle
             if aid in seen:
@@ -235,7 +275,7 @@ def publish_articles(items):
             seen.add(aid)
             arts.append({"id": aid, "uuid": u, "title": title, "source": src, "topic": topic,
                          "link": link, "ts": int(time.time())})
-        arts = arts[:40]
+        arts = arts[:60]
         con = sb.sb_conn()
         con.autocommit = True
         cur = con.cursor()
@@ -246,7 +286,7 @@ def publish_articles(items):
         # forecasts for the page: recent supply-chain calls with probabilities
         cur2 = sqlite3.connect(DB).cursor()
         rows = cur2.execute(
-            "SELECT symbol, detail, ts FROM stream WHERE source='forecast' ORDER BY ts DESC LIMIT 8").fetchall()
+            "SELECT symbol, detail, ts FROM stream WHERE source='forecast' ORDER BY ts DESC LIMIT 12").fetchall()
         fcs = [{"node": r[0], "detail": r[1], "ts": r[2]} for r in rows]
         cur.execute(
             "INSERT INTO mc_state (k, v, updated_at) VALUES ('time:forecasts', %s, now()) "
@@ -283,11 +323,17 @@ def main():
                             made += store(cur, mint_forecast(node, prob, f"fc|{node}|{title[:40]}", ts),
                                           ts, node, detail)
                             runlog.log_event("news", f"FORECAST {detail}")
+                            # micro-bet on the hinted Kalshi series if edge is strong enough
+                            try:
+                                if abs(prob - 0.5) >= 0.08:
+                                    place_forecast_bet(cx, node, prob, hint, title)
+                            except Exception as e:
+                                runlog.log_event("news", f"bet warn {repr(e)[:60]}", kind="warn")
                 con.commit()
                 con.close()
                 n_art = publish_articles(items)
                 if n_art:
-                    runlog.log_event("news", f"published {n_art} AI articles to TIME", articles=n_art)
+                    runlog.log_event("news", f"published {n_art} articles to TIME", articles=n_art)
             except Exception as e:
                 runlog.log_event("news", f"cycle warn {repr(e)[:60]}", kind="warn")
             if made or ts % 1800 < POLL_S:
