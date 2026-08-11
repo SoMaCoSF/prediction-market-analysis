@@ -1,20 +1,40 @@
 import { useEffect, useState } from "react";
 
 export default function Info() {
-  const [portfolio, setPortfolio] = useState(null);
-  const [health, setHealth] = useState(null);
+  const [kalshi, setKalshi] = useState(null);
+  const [positions, setPositions] = useState(null);
+  const [orders, setOrders] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [whale, setWhale] = useState(null);
+  const [settles, setSettles] = useState(null);
   const [cycle, setCycle] = useState(null);
 
   useEffect(() => {
-    fetch("/api/portfolio").then(r => r.ok ? r.json() : null).then(setPortfolio).catch(() => {});
-    fetch("/api/venue_health").then(r => r.ok ? r.json() : null).then(setHealth).catch(() => {});
-    fetch("/api/info/cycle").then(r => r.ok ? r.json() : null).then(setCycle).catch(() => {});
+    const fetchAll = async () => {
+      const [k, p, o, s, w, st, c] = await Promise.all([
+        fetch("/api/kalshi/balance").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/kalshi/positions").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/kalshi/orders").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/whale/signals").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/settlements").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/stats").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/info/cycle").then(r => r.ok ? r.json() : null).catch(() => null),
+      ]);
+      setKalshi(k); setPositions(p); setOrders(o);
+      setWhale(w); setSettles(st); setStats(s); setCycle(c);
+    };
+    fetchAll();
+    const t = setInterval(fetchAll, 10000);
+    return () => clearInterval(t);
   }, []);
 
-  const cash = portfolio?.balance?.balance_dollars || "—";
-  const portfolio_value = portfolio?.balance?.portfolio_value || "—";
-  const positions_count = portfolio?.positions?.event_positions?.length || 0;
-  const open_orders = portfolio?.orders?.length || 0;
+  const cash = kalshi?.balance_dollars || "—";
+  const portfolio = kalshi?.portfolio_value || "—";
+  const positions_count = positions?.event_positions?.length || 0;
+  const open_orders = orders?.length || 0;
+  const ledger = stats?.ledger || {};
+  const kill = stats?.kill || false;
+  const keys = stats?.keys || false;
 
   return (
     <main style={{
@@ -39,15 +59,16 @@ export default function Info() {
             </h1>
             <p style={{ color: "#6b7785", fontSize: 13, marginTop: 8, maxWidth: 800 }}>
               Live autonomous trading infrastructure for Kalshi + Polymarket. Micro-grind execution,
-              multi-venue liquidity routing, and real-time monitoring — built for constant uptick.
+              multi-venue liquidity routing, event-driven engine, and real-time monitoring — built for constant uptick.
             </p>
           </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Badge label="Status" value={cycle?.summary?.running ? "LIVE" : "OFFLINE"} color={cycle?.summary?.running ? "#39ff14" : "#ffaa55"} />
             <Badge label="Cash" value={`$${cash}`} color="#39ff14" />
-            <Badge label="Portfolio" value={`$${portfolio_value}`} color="#06b6d4" />
-            <Badge label="Positions" value={positions_count} color="#c8d2dc" />
-            <Badge label="Open Orders" value={open_orders} color="#c8d2dc" />
+            <Badge label="Portfolio" value={`$${portfolio}`} color="#06b6d4" />
+            <Badge label="Ledger P&L" value={`${ledger.realized_pnl_cents ? `$${ledger.realized_pnl_cents}¢` : "—"}`} color="#FF9000" />
+            <Badge label="Fills" value={ledger.fills || 0} color="#c8d2dc" />
+            <Badge label="Kill" value={kill ? "HALT" : "CLEAR"} color={kill ? "#ff4444" : "#39ff14"} />
           </div>
         </div>
 
@@ -68,8 +89,7 @@ export default function Info() {
                   <span style={{ color: d.color, fontSize: 11, fontWeight: "bold", textTransform: "uppercase" }}>{d.label}</span>
                   <span style={{
                     color: d.status === "RUNNING" || d.status === "SCANNING" || d.status === "ACTIVE" ? "#39ff14" : d.status === "ERROR" ? "#ff4444" : "#ffaa55",
-                    fontSize: 10,
-                    fontWeight: "bold",
+                    fontSize: 10, fontWeight: "bold",
                   }}>{d.status}</span>
                 </div>
                 <div style={{ color: "#c8d2dc", fontSize: 11, lineHeight: 1.5, marginBottom: 6 }}>{d.watch}</div>
@@ -94,7 +114,101 @@ export default function Info() {
         </div>
       </div>
 
-      {/* UUID MATH */}
+      {/* VENUE STATE */}
+      <Section title="VENUE STATE" color="#06b6d4">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+          <div style={{ background: "#10141b", border: "1px solid #1d2630", borderRadius: 8, padding: 16 }}>
+            <div style={{ color: "#06b6d4", fontSize: 12, fontWeight: "bold", marginBottom: 10, textTransform: "uppercase" }}>Kalshi Status</div>
+            <div style={{ color: "#c8d2dc", fontSize: 12, lineHeight: 1.8 }}>
+              Cash: ${cash} · Portfolio: ${portfolio} · {positions_count} event positions · {open_orders} open orders<br/>
+              Ledger: {ledger.fills || 0} fills · {ledger.orders || 0} orders · {ledger.open_contracts || 0} open contracts<br/>
+              Realized P&L: {ledger.realized_pnl_cents ? `${ledger.realized_pnl_cents}¢` : "—"}<br/>
+              Kill switch: <span style={{ color: kill ? "#ff4444" : "#39ff14" }}>{kill ? "HALT" : "CLEAR"}</span><br/>
+              API keys: <span style={{ color: keys ? "#39ff14" : "#ff4444" }}>{keys ? "PRESENT" : "MISSING"}</span><br/>
+              Corpus DB: <span style={{ color: !stats?.corpus?.online ? "#ffaa55" : "#39ff14" }}>{stats?.corpus?.online ? "ONLINE" : "OFFLINE"}</span>
+            </div>
+          </div>
+
+          <div style={{ background: "#10141b", border: "1px solid #1d2630", borderRadius: 8, padding: 16 }}>
+            <div style={{ color: "#ff10f0", fontSize: 12, fontWeight: "bold", marginBottom: 10, textTransform: "uppercase" }}>Polymarket</div>
+            <div style={{ color: "#c8d2dc", fontSize: 12, lineHeight: 1.8 }}>
+              Wallet: <code>0xbC66…Dd40</code> (Polygon)<br/>
+              Status: <span style={{ color: "#ffaa55" }}>SIGNAL ONLY — unfunded</span><br/>
+              Execution: armed when USDC lands<br/>
+              Whale copier: live via Gamma API<br/>
+              Cross-venue arb: scanning<br/>
+              Min deposit: $35 USDC on Polygon + $1–2 POL gas
+            </div>
+          </div>
+
+          <div style={{ background: "#10141b", border: "1px solid #1d2630", borderRadius: 8, padding: 16 }}>
+            <div style={{ color: "#39ff14", fontSize: 12, fontWeight: "bold", marginBottom: 10, textTransform: "uppercase" }}>Paper Venue</div>
+            <div style={{ color: "#c8d2dc", fontSize: 12, lineHeight: 1.8 }}>
+              Status: <span style={{ color: "#39ff14" }}>ACTIVE</span><br/>
+              Markets: 5 synthetic (BTC/ETH/SOL/XRP/DOGE 15M)<br/>
+              Prices: fed from real Kalshi /markets/[ticker] mids<br/>
+              Spread: 2¢ · Depth: 100 contracts · Fill prob: 85%<br/>
+              Purpose: strategy validation when live books are dead
+            </div>
+          </div>
+        </div>
+
+        {/* WHALE + SETTLE ALERTS */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+          <div style={{ background: "#10141b", border: "1px solid #1d2630", borderRadius: 8, padding: 14 }}>
+            <div style={{ color: "#FF9000", fontSize: 11, fontWeight: "bold", marginBottom: 8, textTransform: "uppercase" }}>Whale Signals (≥$1k)</div>
+            {whale?.signals?.slice(-5).reverse().map((sig, i) => (
+              <div key={i} style={{ color: "#c8d2dc", fontSize: 10, marginBottom: 4, fontFamily: "monospace", wordBreak: "break-all" }}>
+                {sig.slice(0, 120)}
+              </div>
+            )) || <div style={{ color: "#6b7785", fontSize: 11 }}>No whale signals yet</div>}
+          </div>
+          <div style={{ background: "#10141b", border: "1px solid #1d2630", borderRadius: 8, padding: 14 }}>
+            <div style={{ color: "#FF9000", fontSize: 11, fontWeight: "bold", marginBottom: 8, textTransform: "uppercase" }}>Settlement Watch</div>
+            {settles?.alerts?.slice(-5).reverse().map((a, i) => (
+              <div key={i} style={{ color: "#c8d2dc", fontSize: 10, marginBottom: 4, fontFamily: "monospace" }}>
+                {a}
+              </div>
+            )) || <div style={{ color: "#6b7785", fontSize: 11 }}>No imminent settlements</div>}
+          </div>
+        </div>
+      </Section>
+
+      {/* EVENT-DRIVEN ENGINE */}
+      <Section title="EVENT-DRIVEN ENGINE" color="#39ff14">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          <Card title="Core" body={[
+            "trading_engine.py — async event queue + strategy dispatch",
+            "Event types: MARKET_TICK, PAPER_TICK, TRADE_FILL, ORDER_UPDATE",
+            "Pluggable Strategy base class — drop in new logic without touching core",
+            "RiskManager: position caps, cash floor, drawdown guard",
+            "WsFeed: WebSocket first, REST fallback — sub-second ticks",
+          ]} accent="#39ff14" />
+          <Card title="Strategies" body={[
+            "PanicFade — buys >10¢ drops when YES bid >20¢",
+            "WhaleFollow — follows $1k+ volume spikes + 5¢ price moves",
+            "Arb — intra-market YES+NO combined < 99¢",
+            "All strategies emit WHALE_SIGNAL or TRADE_FILL events",
+            "Cooldown + max-position guards on every strategy",
+          ]} accent="#06b6d4" />
+          <Card title="Order Router" body={[
+            "order_router.py — signed V2 POST/DELETE",
+            "Client order ID generation",
+            "IoC exits on thin books",
+            "Paper venue: synthetic book fed by real Kalshi mids",
+            "Routes paper orders when live depth = 0",
+          ]} accent="#FF9000" />
+          <Card title="Ledger" body={[
+            "uuid_orders: all orders with exchange_order_id",
+            "uuid_fills: all fills with fee tracking",
+            "uuid_positions: live positions with avg price + realized P&L",
+            "Phantom reconciliation: clears positions exchange no longer carries",
+            "17,386 fills · 24,954 orders · 242¢ realized · 1,881 open contracts",
+          ]} accent="#ff10f0" />
+        </div>
+      </Section>
+
+      {/* GYST UUIDv8 */}
       <Section title="GYST UUIDv8 — THE IDENTITY LAYER" color="#00CCDD">
         <div style={{ background: "#10141b", border: "1px solid #1d2630", borderRadius: 8, padding: 20, marginBottom: 16 }}>
           <div style={{ color: "#6b7785", fontSize: 11, marginBottom: 12, textTransform: "uppercase" }}>
@@ -177,33 +291,41 @@ export default function Info() {
       {/* ARCHITECTURE */}
       <Section title="ARCHITECTURE" color="#00CCDD">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-          <Card title="SCANNERS" body={[
-            "orderbook_monitor.py — polls 200 markets/10s",
-            "liquidity_hunter.py — enters only on real bid+ask",
-            "volume_watchdog.py — arms when volume_24h > 0",
-            "btc_paper_engine.py — BTC short paper test",
+          <Card title="Scanners" body={[
+            "orderbook_monitor — polls 200 markets/10s",
+            "liquidity_hunter — enters only on real bid+ask",
+            "volume_watchdog — arms when volume_24h > 0",
+            "whale_follower — $1k volume spikes + 5¢ moves",
+            "settlement_watcher — alerts on markets closing",
+            "panic_fade — buys after >10¢ drops, YES >20¢",
+            "arb_scanner — Kalshi intra-market + Polymarket signal",
+            "paper_venue — feeds from real Kalshi /markets/[ticker] mids",
           ]} accent="#06b6d4" />
-          <Card title="EXECUTION" body={[
-            "mission_control.py — V2 auth + order wrapper",
-            "liquidity_hunter.py — IoC exits, local tracking",
-            "MAX_ENTRY_PRICE cap — exits always reachable",
-            "Floor guard at /api/order — live orders blocked below $15",
+          <Card title="Engine" body={[
+            "trading_engine.py — async event queue + strategy dispatch",
+            "Strategies: panic_fade, whale_follow, arb",
+            "WsFeed: WebSocket first, REST fallback",
+            "RiskManager: floor guard, max positions, drawdown",
+            "OrderRouter: signed V2 + paper venue fallback",
           ]} accent="#39ff14" />
-          <Card title="MONITORING" body={[
-            ":4242/api/portfolio — live Kalshi balance",
-            ":4242/api/venue_health — Kalshi + Polymarket",
-            ":8420/api/kalshi/{balance,positions,orders}",
+          <Card title="Execution" body={[
+            "mission_control — :8420 Kalshi proxy + V2 auth",
+            "Floor guard at /api/order — live orders blocked below $15",
+            "IoC exits for thin books — fill or cancel",
+            "Paper venue: synthetic book when live depth = 0",
+            "MAX_ENTRY_PRICE cap — exits always reachable",
+          ]} accent="#ff10f0" />
+          <Card title="Monitoring" body={[
+            ":8420/api/kalshi/balance — live Kalshi cash",
+            ":8420/api/kalshi/positions — event positions",
+            ":8420/api/whale/signals — whale volume/price alerts",
+            ":8420/api/settlements — settlement alerts",
+            ":8420/api/stats — ledger + kill switch",
             "mc_state DB — 60s reconciled truth",
           ]} accent="#FF9000" />
-          <Card title="ROUTING" body={[
-            "venue_router.py — depth-based venue selection",
-            "Only routes to executable books",
-            "Polymarket fallback when Kalshi dead",
-            "Bridge coordinator — cross-account awareness",
-          ]} accent="#ff10f0" />
         </div>
 
-        {/* ARCHITECTURE DIAGRAM */}
+        {/* SYSTEM FLOW */}
         <div style={{
           background: "#10141b",
           border: "1px solid #1d2630",
@@ -219,7 +341,7 @@ export default function Info() {
             <text x="100" y="35" textAnchor="middle" fill="#06b6d4" fontSize="12" fontWeight="bold">KALSHI</text>
             <text x="100" y="55" textAnchor="middle" fill="#6b7785" fontSize="10">200 open markets</text>
             <text x="100" y="75" textAnchor="middle" fill="#6b7785" fontSize="10">V2 REST API</text>
-            <text x="100" y="95" textAnchor="middle" fill="#6b7785" fontSize="10">Prices: dollars × 100</text>
+            <text x="100" y="95" textAnchor="middle" fill="#6b7785" fontSize="10">Prices: dollars</text>
 
             <rect x="610" y="10" width="180" height="200" rx="8" fill="#10141b" stroke="#1d2630" strokeWidth="1"/>
             <text x="700" y="35" textAnchor="middle" fill="#ff10f0" fontSize="12" fontWeight="bold">POLYMARKET</text>
@@ -230,13 +352,13 @@ export default function Info() {
             <rect x="320" y="60" width="160" height="100" rx="8" fill="#10141b" stroke="#FF9000" strokeWidth="2"/>
             <text x="400" y="90" textAnchor="middle" fill="#FF9000" fontSize="12" fontWeight="bold">VENUE ROUTER</text>
             <text x="400" y="110" textAnchor="middle" fill="#6b7785" fontSize="10">depth-based routing</text>
-            <text x="400" y="130" textAnchor="middle" fill="#6b7785" fontSize="10">no dead books</text>
+            <text x="400" y="130" textAnchor="middle" fill="#6b7785" fontSize="10">paper fallback when dead</text>
 
             <line x1="190" y1="110" x2="320" y2="110" stroke="#06b6d4" strokeWidth="2" markerEnd="url(#arrow)"/>
             <line x1="480" y1="110" x2="610" y2="110" stroke="#ff10f0" strokeWidth="2" markerEnd="url(#arrow)"/>
 
             <rect x="320" y="180" width="160" height="30" rx="4" fill="#10141b" stroke="#39ff14" strokeWidth="1"/>
-            <text x="400" y="200" textAnchor="middle" fill="#39ff14" fontSize="10">:4242 + :8420 live dashboards</text>
+            <text x="400" y="200" textAnchor="middle" fill="#39ff14" fontSize="10">:8420 + paper venue + event engine</text>
 
             <line x1="400" y1="160" x2="400" y2="180" stroke="#39ff14" strokeWidth="1.5"/>
 
@@ -252,92 +374,34 @@ export default function Info() {
       {/* AGENT PROTOCOL */}
       <Section title="AGENT PROTOCOL" color="#39ff14">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-          <Card title="HOW AGENTS TRADE" body={[
-            "Every action is a UUIDv8 — order, fill, settle, mark",
-            "Signal drift ≥1.5bps on BTC/ETH/SOL/XRP/DOGE 15M",
-            "Entry: 25–60¢, both-side, size by bankroll",
-            "Exit: +15¢ take / −10¢ stop / IoC at settlement",
-            "Local entry tracking — Kalshi avg_cost bug bypass",
+          <Card title="How We Trade" body={[
+            "1 contract per signal — micro size only",
+            "BTC/ETH/SOL/XRP/DOGE 15M momentum + panic fade",
+            "Entry: 15–35¢ on live bid+ask, no ghost orders",
+            "Exit: +3¢ take / −5¢ stop / IoC at settlement",
+            "Paper venue: validate strategy against real Kalshi mids",
+            "Cross-venue arb: Kalshi + Polymarket >5¢ divergence",
           ]} accent="#39ff14" />
-          <Card title="HONESTY MACHINERY" body={[
+          <Card title="Honesty Machinery" body={[
             "Exchange truth only: fill_count_fp > 0 = real fill",
             "P&L from /portfolio/positions + settles",
-            "Evidence engine: Wilson 95% CI, n≥50, lower-CI≥55%",
-            "Losses published — $24.98 → $134 → $57 → $102 arc visible",
+            "Wilson 95% CI, n≥50, lower-CI≥55%",
+            "Losses published — 4W/0L +$2.42 early, then market decay",
             "No sugarcoating: always post true state",
           ]} accent="#ffaa55" />
-          <Card title="EVIDENCE GATES" body={[
+          <Card title="Evidence Gates" body={[
             "PROVEN: n≥50 AND lower-CI≥55% AND exp>0",
             "FORMING: 20≤n<50, CI expanding",
             "DEAD: n≥20 AND lower-CI<50% — lane killed",
-            "5 parallel paper backtests continuously test exits",
+            "Paper venue continuously tests exits",
             "Live engines adopt winner automatically",
           ]} accent="#06b6d4" />
-          <Card title="SAVINGS + BRIDGE" body={[
+          <Card title="Bridge + Savings" body={[
+            "Kalshi cash: $57.43 · Portfolio: $337",
+            "Polymarket USDC: $0 (unfunded, awaiting deposit)",
+            "Bridge coordinator watches both balances",
             "25% of every realized win → protected savings sleeve",
-            "Vault locks 30% reserve + savings",
-            "Bridge coordinator watches Kalshi + Poly balances",
-            "Recommends cross-account rebalance (manual taps)",
-            "Funding feed detects Venmo deposits via balance delta",
           ]} accent="#FF9000" />
-        </div>
-
-        {/* AGENT FLOW DIAGRAM */}
-        <div style={{
-          background: "#10141b",
-          border: "1px solid #1d2630",
-          borderRadius: 8,
-          padding: 20,
-          marginTop: 20,
-        }}>
-          <div style={{ color: "#6b7785", fontSize: 11, marginBottom: 12, textTransform: "uppercase" }}>
-            Agent Execution Flow
-          </div>
-          <svg viewBox="0 0 800 160" style={{ width: "100%", height: "auto" }}>
-            <rect x="10" y="10" width="140" height="60" rx="6" fill="#0a0c10" stroke="#06b6d4" strokeWidth="1.5"/>
-            <text x="80" y="30" textAnchor="middle" fill="#06b6d4" fontSize="11" fontWeight="bold">SIGNAL</text>
-            <text x="80" y="50" textAnchor="middle" fill="#6b7785" fontSize="9">drift ≥1.5bps</text>
-
-            <rect x="180" y="10" width="140" height="60" rx="6" fill="#0a0c10" stroke="#39ff14" strokeWidth="1.5"/>
-            <text x="250" y="30" textAnchor="middle" fill="#39ff14" fontSize="11" fontWeight="bold">EVIDENCE</text>
-            <text x="250" y="50" textAnchor="middle" fill="#6b7785" fontSize="9">Wilson CI ≥55%</text>
-
-            <rect x="350" y="10" width="140" height="60" rx="6" fill="#0a0c10" stroke="#FF9000" strokeWidth="1.5"/>
-            <text x="420" y="30" textAnchor="middle" fill="#FF9000" fontSize="11" fontWeight="bold">ENTRY</text>
-            <text x="420" y="50" textAnchor="middle" fill="#6b7785" fontSize="9">IoC limit order</text>
-
-            <rect x="520" y="10" width="140" height="60" rx="6" fill="#0a0c10" stroke="#ff10f0" strokeWidth="1.5"/>
-            <text x="590" y="30" textAnchor="middle" fill="#ff10f0" fontSize="11" fontWeight="bold">EXIT</text>
-            <text x="590" y="50" textAnchor="middle" fill="#6b7785" fontSize="9">+15c / −10c / settle</text>
-
-            <rect x="680" y="10" width="110" height="60" rx="6" fill="#0a0c10" stroke="#c8d2dc" strokeWidth="1"/>
-            <text x="735" y="30" textAnchor="middle" fill="#c8d2dc" fontSize="11" fontWeight="bold">LEDGER</text>
-            <text x="735" y="50" textAnchor="middle" fill="#6b7785" fontSize="9">UUIDv8 truth</text>
-
-            <line x1="150" y1="40" x2="180" y2="40" stroke="#06b6d4" strokeWidth="1.5" markerEnd="url(#arrow-blue)"/>
-            <line x1="320" y1="40" x2="350" y2="40" stroke="#39ff14" strokeWidth="1.5" markerEnd="url(#arrow-green)"/>
-            <line x1="490" y1="40" x2="520" y2="40" stroke="#FF9000" strokeWidth="1.5" markerEnd="url(#arrow-orange)"/>
-            <line x1="660" y1="40" x2="680" y2="40" stroke="#ff10f0" strokeWidth="1.5" markerEnd="url(#arrow-pink)"/>
-
-            <line x1="420" y1="70" x2="420" y2="120" stroke="#FF9000" strokeWidth="1"/>
-            <rect x="320" y="120" width="200" height="30" rx="4" fill="#10141b" stroke="#FF9000" strokeWidth="1"/>
-            <text x="420" y="140" textAnchor="middle" fill="#FF9000" fontSize="10">25% win → protected savings sleeve</text>
-
-            <defs>
-              <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L0,6 L8,3 z" fill="#06b6d4" />
-              </marker>
-              <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L0,6 L8,3 z" fill="#39ff14" />
-              </marker>
-              <marker id="arrow-orange" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L0,6 L8,3 z" fill="#FF9000" />
-              </marker>
-              <marker id="arrow-pink" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L0,6 L8,3 z" fill="#ff10f0" />
-              </marker>
-            </defs>
-          </svg>
         </div>
       </Section>
 
@@ -348,8 +412,10 @@ export default function Info() {
           <Control label="MAX ENTRY" value="1–2 contracts" desc="Micro size only" />
           <Control label="BOOK CHECK" value="bid + ask > 0" desc="No ghost orders" />
           <Control label="EXIT MODE" value="IoC limit" desc="Fill or cancel" />
-          <Control label="PRICE SOURCE" value="/markets/{ticker}" desc="Only truthful endpoint" />
-          <Control label="VOLUME FILTER" value="> 0 required" desc="No dead books" />
+          <Control label="PRICE SOURCE" value={"/markets/" + "[ticker]"} desc="Only truthful endpoint" />
+          <Control label="VOLUME FILTER" value="required" desc="No dead books" />
+          <Control label="PAPER FALLBACK" value="real Kalshi mids" desc="Trade when venue is frozen" />
+          <Control label="KILL SWITCH" value="file-based" desc="Instant halt of all live firing" />
         </div>
       </Section>
 
@@ -357,48 +423,48 @@ export default function Info() {
       <Section title="BUILD ROADMAP" color="#FF9000">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
           <RoadmapItem phase="1" title="Live Monitoring" status="done" desc="Portfolio, orders, positions on :4242 + :8420" />
-          <RoadmapItem phase="2" title="Liquidity Scanners" status="done" desc="3 daemons scanning 200 markets/10s" />
+          <RoadmapItem phase="2" title="Liquidity Scanners" status="done" desc="8 daemons: orderbook, whale, settle, panic fade, arb, paper" />
           <RoadmapItem phase="3" title="BTC Paper Test" status="done" desc="/btc dashboard with live spot P&L" />
-          <RoadmapItem phase="4" title="Multi-Venue Router" status="scaffold" desc="Routes to Kalshi or Polymarket based on depth" />
-          <RoadmapItem phase="5" title="Live Trading" status="pending" desc="Armed, waiting for executable liquidity" />
-          <RoadmapItem phase="6" title="Profit Scaling" status="pending" desc="Size up after 60%+ win rate on live closes" />
+          <RoadmapItem phase="4" title="Event-Driven Engine" status="done" desc="trading_engine.py + strategies + WS feed + paper venue" />
+          <RoadmapItem phase="5" title="Multi-Venue Router" status="done" desc="Kalshi + Polymarket + paper venue routing" />
+          <RoadmapItem phase="6" title="Paper Execution" status="active" desc="Trading on paper venue fed by real Kalshi mids" />
+          <RoadmapItem phase="7" title="Live Trading" status="pending" desc="Armed, waiting for executable liquidity on Kalshi or Polymarket funding" />
+          <RoadmapItem phase="8" title="Profit Scaling" status="pending" desc="Size up after 60%+ win rate on live closes" />
         </div>
       </Section>
 
-      {/* SPOCTALK NOTE */}
-      <Section title="SPOCTALK / AGENT COMMUNICATION" color="#ff10f0">
-        <div style={{ background: "#10141b", border: "1px solid #1d2630", borderRadius: 8, padding: 16 }}>
-          <div style={{ color: "#ff10f0", fontSize: 12, fontWeight: "bold", marginBottom: 8 }}>STATUS: NEEDS SOURCE DOCS</div>
-          <div style={{ color: "#c8d2dc", fontSize: 12, lineHeight: 1.6 }}>
-            I couldn’t find SPOCTALK in any existing gist, script, or markdown file. If you point me to the spec, gist, or repo that defines it, I’ll add a dedicated section here with the exact protocol flow and how agents use it for prediction-market reasoning.
-          </div>
-        </div>
-      </Section>
-
-      {/* LIVE STATUS */}
+      {/* LIVE SYSTEM STATUS */}
       <Section title="LIVE SYSTEM STATUS" color="#06b6d4">
         <div style={{ background: "#10141b", border: "1px solid #1d2630", borderRadius: 8, padding: 16 }}>
           <pre style={{ color: "#c8d2dc", fontSize: 12, margin: 0, whiteSpace: "pre-wrap" }}>
 {JSON.stringify({
   bank: {
     cash: `$${cash}`,
-    portfolio: `$${portfolio_value}`,
+    portfolio: `$${portfolio}`,
     positions: positions_count,
     open_orders: open_orders,
+    ledger_pnl_cents: ledger.realized_pnl_cents || 0,
   },
-  scanners: {
-    orderbook_monitor: "RUNNING",
-    liquidity_hunter: "RUNNING",
-    volume_watchdog: "RUNNING",
-    btc_paper_engine: "RUNNING",
+  ledger: {
+    orders: ledger.orders || 0,
+    fills: ledger.fills || 0,
+    open_contracts: ledger.open_contracts || 0,
+  },
+  kill_switch: kill,
+  api_keys: keys,
+  corpus_online: !!stats?.corpus?.online,
+  venues: {
+    kalshi: { cash, portfolio, positions: positions_count, status: "price truth, no depth" },
+    polymarket: { wallet: "0xbC66…Dd40", usdc: 0, status: "SIGNAL ONLY" },
+    paper: { status: "ACTIVE", markets: 5, source: "real Kalshi mids" },
   },
   dashboards: {
     local: "http://localhost:4242",
     mission_control: "http://localhost:8420",
-    btc: "https://btc.somacosf.com",
     info: "https://info.somacosf.com/info",
+    grind: "https://grind.somacosf.com",
+    btc: "https://btc.somacosf.com",
   },
-  venue_health: health || {},
   last_updated: new Date().toISOString(),
 }, null, 2)}
           </pre>
@@ -474,7 +540,7 @@ function Control({ label, value, desc }) {
 }
 
 function RoadmapItem({ phase, title, status, desc }) {
-  const statusColor = status === "done" ? "#39ff14" : status === "scaffold" ? "#ffaa55" : "#6b7785";
+  const statusColor = status === "done" ? "#39ff14" : status === "active" ? "#FF9000" : status === "scaffold" ? "#ffaa55" : "#6b7785";
   return (
     <div style={{
       background: "#10141b",

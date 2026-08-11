@@ -1,5 +1,4 @@
 {
   "version": 2,
-  "buildCommand": "node scripts/collect_status.js && next build",
   "framework": "nextjs"
 }
