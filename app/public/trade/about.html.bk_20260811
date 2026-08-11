@@ -111,17 +111,14 @@ spawn:   namespace = fnv1a12(parent_uuid)   = the tree IS the roll-up</div>
   <h2><span class="n">2</span>The machines — daemons, all supervised, all zero-token</h2>
   <div class="grid2">
     <div class="card">
-      <div class="machine"><b class="c-cyan">btc_trend + trend_engine x4</b> — 15-min trend threads for BTC/ETH/SOL/XRP/DOGE. Reads spot momentum from <i>our own UUID tape</i>, enters trend side early-window, exits +15¢/−10¢.</div>
-      <div class="machine"><b class="c-cyan">profit_scalp + maker</b> — multi-series scalp + passive limit-quote engine across 5 crypto 15M series.</div>
-      <div class="machine"><b class="c-cyan">mission_control</b> — the gate. Every order flows through it: caps, kill switch, floor guard, passkey, ledger minting.</div>
-      <div class="machine"><b class="c-cyan">crossvenue_engine + poly_executor</b> — Kalshi vs Polymarket arb scanner +( dormant until wallet funded).</div>
+      <div class="machine"><b class="c-cyan">btc_trend</b> — the 15-min trend thread. Reads 3-min spot momentum from <i>our own UUID tape</i>, enters trend side early-window, exits +15¢/−10¢. The edge candidate.</div>
+      <div class="machine"><b class="c-cyan">profit_scalp</b> — multi-series scalp engine (BTC/ETH/SOL/XRP/DOGE 15M). Same discipline across the complex.</div>
+      <div class="machine"><b class="c-cyan">mission_control</b> — the gate. Every order flows through it: caps, kill switch, passkey, ledger minting.</div>
     </div>
     <div class="card">
-      <div class="machine"><b class="c-green">uuid_ingest + tick_service + kalshi_ws</b> — the tape. Spot + book ticks minted as UUIDs, live WebSocket feed, normalized price stream.</div>
-      <div class="machine"><b class="c-green">fill_poller + oracle + evidence_engine</b> — truth sync. Exchange fills → positions, settlement verification, statistical edge validation per lane.</div>
-      <div class="machine"><b class="c-green">supervisor + governor + recovery_engine</b> — the sanity loop. Singleton locks, heartbeats, hung-daemon restarts, risk limits, crash capture + auto-restart.</div>
-      <div class="machine"><b class="c-green">x_watcher + news_supply_engine + shadow_index + uptick_spiral</b> — signal layer: X/Twitter sentiment, RSS news, whale tracking, forecast accuracy scoring (Brier).</div>
-      <div class="machine"><b class="c-green">dry_run x4 + sweep_watch + calendar + funding_feed</b> — paper engine ($1/$3 clip comparison), cash sweep alerts, settlement calendar, wallet funding watcher.</div>
+      <div class="machine"><b class="c-green">uuid_ingest</b> — the tape. Spot + book ticks minted as UUIDs every 5s into the local stream. Free, forever.</div>
+      <div class="machine"><b class="c-green">fill_poller</b> — truth sync. Exchange fills → 0x3A7 children + positions every 60s.</div>
+      <div class="machine"><b class="c-green">supervisor</b> — the sanity loop. Atomic singleton locks, checkin heartbeats, hung-daemon restarts. Dupes die at birth.</div>
     </div>
   </div>
 </section>
@@ -134,8 +131,8 @@ spawn:   namespace = fnv1a12(parent_uuid)   = the tree IS the roll-up</div>
       <tr><th>Test</th><th>Result</th><th>Verdict</th></tr>
       <tr><td>Batch 1 (live, settle-held)</td><td class="c-green">4/4 +$2.42</td><td>lag is real</td></tr>
       <tr><td>Batch 2 (live, settle-held)</td><td class="c-red">0/5 −$4.51</td><td>reversals kill settle-holding</td></tr>
-      <tr><td>Dry run (paper, +15¢ exits)</td><td class="c-green">20W/4L, $24.07 equity</td><td><span class="tag t-proven">DISCIPLINE WORKS</span></td></tr>
-      <tr><td>Now running</td><td>39 daemons live · 24,954 orders · 17,386 fills</td><td><span class="tag t-unproven">LIVE, SAMPLE GROWING</span></td></tr>
+      <tr><td>Dry run (paper, +15¢ exits)</td><td class="c-green">8/8, $0.00 drawdown</td><td><span class="tag t-proven">DISCIPLINE WORKS</span></td></tr>
+      <tr><td>Now running</td><td>btc_trend live, micro size</td><td><span class="tag t-unproven">SAMPLE FORMING</span></td></tr>
     </table>
     <div class="note">Ceiling, honestly: these books are thin — this tops out around $50–100/day, not thousands. That's the design goal: self-funding compute, not a fortune.</div>
   </div>
@@ -148,13 +145,9 @@ spawn:   namespace = fnv1a12(parent_uuid)   = the tree IS the roll-up</div>
       <tr><th>Claim</th><th>State</th></tr>
       <tr><td>UUID engine: deterministic, decodable, RFC 9562</td><td><span class="tag t-proven">PROVEN</span> 14-check + 3000/3000 on 52.77M rows</td></tr>
       <tr><td>Ledger: order/ack/fill/settle as spawn tree</td><td><span class="tag t-proven">PROVEN</span> 15-check + live fill reconciled</td></tr>
-      <tr><td>Fleet sanity (locks, checkins, restarts)</td><td><span class="tag t-proven">PROVEN</span> 39 daemons · dupes refused in logs</td></tr>
-      <tr><td>First real money moved (MLB YES 40.9¢)</td><td><span class="tag t-proven">DONE</span> 2026-08-02 · 24,954 orders since</td></tr>
-      <tr><td>Momentum edge on 15-min binaries</td><td><span class="tag t-unproven">FORMING</span> realized +$2.42 · dry 20W/4L · 17,386 fills</td></tr>
-      <tr><td>WebSocket tape (drop REST polling)</td><td><span class="tag t-proven">DONE</span> kalshi_ws daemon live</td></tr>
-      <tr><td>Cross-venue divergence (Polymarket)</td><td><span class="tag t-unproven">BUILT</span> xvenue engine live · wallet unfunded</td></tr>
-      <tr><td>Maker engine (limit quotes, spread capture)</td><td><span class="tag t-proven">DONE</span> maker daemon live</td></tr>
-      <tr><td>Failure harness (crash capture + auto-restart)</td><td><span class="tag t-proven">DONE</span> 51/51 checks · 0x124 WHEA diagnosed</td></tr>
+      <tr><td>Fleet sanity (locks, checkins, restarts)</td><td><span class="tag t-proven">PROVEN</span> dupes refused in logs</td></tr>
+      <tr><td>First real money moved (MLB YES 40.9¢)</td><td><span class="tag t-proven">DONE</span> 2026-08-02</td></tr>
+      <tr><td>Momentum edge on 15-min binaries</td><td><span class="tag t-unproven">FORMING</span> batch1 +$2.42 · batch2 −$4.51 · dry 8/8</td></tr>
       <tr><td>Self-funding loop (winnings pay compute)</td><td><span class="tag t-unproven">UNPROVEN</span> — the goal; needs ~$1.50/day sustained</td></tr>
     </table>
   </div>
@@ -164,15 +157,15 @@ spawn:   namespace = fnv1a12(parent_uuid)   = the tree IS the roll-up</div>
   <h2><span class="n">5</span>Roadmap</h2>
   <div class="card">
     <table>
-      <tr><td class="c-cyan">now</td><td>edge finder (Kalshi MLB) · daemon beats dashboard · 39-daemon fleet · failure harness live</td></tr>
-      <tr><td class="c-cyan">next</td><td>GPU batch bitmask filter (GTX 1660 Ti) · Polymarket wallet funding (on-chain arb live) · vault (locked reserve vs trading allowance)</td></tr>
-      <tr><td class="c-cyan">then</td><td>self-funding threshold · cross-venue divergence automation · uptick spiral forecast scoring at scale</td></tr>
+      <tr><td class="c-cyan">now</td><td>btc_trend + scalp with both-side exits · dry-run sample to 100+ trades</td></tr>
+      <tr><td class="c-cyan">next</td><td>maker engine (zero-fee limit quotes, structural spread capture) · vault (locked reserve vs trading allowance)</td></tr>
+      <tr><td class="c-cyan">then</td><td>WebSocket tape (drop REST polling) · GPU batch bitmask filter (GTX 1660 Ti) · cross-venue divergence (Polymarket)</td></tr>
     </table>
   </div>
 </section>
 
 <footer style="color:var(--dim);font-size:10px;border-top:1px solid var(--line);padding-top:10px">
-  SOM-APP-0934 v2.1.0 · GYST UUIDv8 · source: prediction-market-analysis (private) · trade.somacosf.com · mc.somacosf.com · dry.somacosf.com
+  SOM-APP-0934 v2.0.0 · GYST UUIDv8 · source: uuid-trader (private) · trade.somacosf.com · mc.somacosf.com · dry.somacosf.com
 </footer>
 </div>
 <script>
