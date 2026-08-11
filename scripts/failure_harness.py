@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # file_id: SOM-PY-1006-v1.0.0 name: failure_harness.py description: Event-feed/trade failure harness — detects dead event feed, dead trading daemons, and dead MC; auto-restarts and logs failure signatures project_id: PREDICTION-MARKET-ANALYSIS category: script tags: [harness, watchdog, failure, restart, daemons, events] created: 2026-08-11 version: 1.0.0 agent_id: HERMES-AGENT
-import os, sys, json, time, subprocess, signal
-from pathlib import Path
+import json
+import os
+import subprocess
+import sys
+import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 ROOT = Path(".").resolve()
 LOGS = ROOT / "logs"
@@ -90,8 +94,8 @@ def check_mc():
 def check_daemon_processes():
     dead = []
     for daemon in TRADING_DAEMONS:
-        pid = read_lock(daemon)
         name = daemon.replace(".py", "")
+        pid = read_lock(name)
         if pid is None or not is_pid_alive(pid):
             dead.append(name)
     return dead
@@ -114,7 +118,7 @@ def start_daemon(script: str):
         return None
 
 def maybe_start(name: str, state: dict):
-    pid = read_lock(name + ".py")
+    pid = read_lock(name)
     if pid and is_pid_alive(pid):
         return False
     new_pid = start_daemon(f"scripts/{name}.py")
@@ -130,7 +134,6 @@ def main():
     state = load_state()
     now = time.time()
 
-    # 1. MC dead
     mc_alive = check_mc()
     if not mc_alive:
         if state.get("mc_dead_since") is None:
@@ -149,8 +152,8 @@ def main():
         state["mc_dead_since"] = None
         save_state(state)
 
-    # 2. Event feed zero / stale
     empty, stale = check_event_feed()
+    restarted = set()
     if empty or stale:
         if state.get("feed_zero_since") is None:
             state["feed_zero_since"] = now
@@ -162,7 +165,8 @@ def main():
             if dead:
                 log(f"ACTION: dead trading daemons={dead} — restarting")
                 for name in dead:
-                    maybe_start(name, state)
+                    if maybe_start(name, state):
+                        restarted.add(name)
             state["feed_zero_since"] = now
             save_state(state)
     else:
@@ -171,11 +175,12 @@ def main():
         state["feed_zero_since"] = None
         save_state(state)
 
-    # 3. Trading daemon processes dead
     dead = check_daemon_processes()
     if dead:
         log(f"FAILURE: dead trading daemons={dead}")
         for name in dead:
+            if name in restarted:
+                continue
             if maybe_start(name, state):
                 pass
             else:
