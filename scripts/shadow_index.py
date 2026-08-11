@@ -28,6 +28,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import fleetlib  # noqa: E402
 import httpx  # noqa: E402
+import os as _os  # noqa: E402
+FLEET_HALTED = _os.getenv("FLEET_HALTED", "0") == "1"
 import runlog  # noqa: E402
 import sb  # noqa: E402
 import uuid_ledger as L  # noqa: E402
@@ -419,6 +421,8 @@ def alert(entity, detail):
 
 def maybe_follow_trade(entity, detail, signal01):
     """Real-money follow: crypto-themed whale print -> 1-contract Kalshi position in the whale's direction."""
+    if FLEET_HALTED:
+        return
     follows = get_follows()
     if not follows.get(entity):
         return

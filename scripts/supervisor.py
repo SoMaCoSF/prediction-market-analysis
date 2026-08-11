@@ -114,10 +114,11 @@ def guard_check():
         pv = float(bal.get("portfolio_value") or 0) / 100.0
         cash = float(bal.get("balance_dollars") or 0)
         bankroll = max(pv, cash)
-        if _start_bankroll is None:
+        if _start_bankroll is None or _start_bankroll <= 0:
             _start_bankroll = bankroll
         fees = session_fees_dollars()
-        if bankroll > 0 and fees > _start_bankroll * FEE_BLEED_PCT:
+        # Use current bankroll for threshold, not stale start value
+        if bankroll > 0 and fees > bankroll * FEE_BLEED_PCT:
             if not GUARD_FLAG.exists():
                 GUARD_FLAG.write_text(
                     f"FEE BLEED HALT: fees=${fees:.2f} > {FEE_BLEED_PCT:.0%} of bankroll ${_start_bankroll:.2f}\n")

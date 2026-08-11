@@ -21,6 +21,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import fleetlib  # noqa: E402
 import httpx  # noqa: E402
+import os as _os  # noqa: E402
+FLEET_HALTED = _os.getenv("FLEET_HALTED", "0") == "1"
 import runlog  # noqa: E402
 import sb  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
@@ -136,6 +138,9 @@ def main():
                 if time.strftime("%Y-%m-%d") != today:
                     today = time.strftime("%Y-%m-%d")
                     spent_today = 0.0
+                if FLEET_HALTED:
+                    time.sleep(POLL_S)
+                    continue
                 poly = poly_crypto_prices(cx)
                 kal = kalshi_windows(cx)
                 for coin, k in kal.items():

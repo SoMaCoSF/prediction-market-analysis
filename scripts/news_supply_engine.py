@@ -21,6 +21,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import fleetlib  # noqa: E402
 import httpx  # noqa: E402
+import os as _os  # noqa: E402
+FLEET_HALTED = _os.getenv("FLEET_HALTED", "0") == "1"
 import runlog  # noqa: E402
 import uuid_ledger as L  # noqa: E402
 from uuid_service_turboquant import encode_gyst, fnv1a12  # noqa: E402
@@ -78,6 +80,8 @@ def fire(ticker, side, price, count=1):
 
 def place_forecast_bet(cx, node, prob, hint, title):
     """Back the forecast: current window on the hinted series, 1ct, direction=prob side."""
+    if FLEET_HALTED:
+        return None
     global spent_today
     if hint not in BET_SERIES or len(open_bets) >= MAX_OPEN_BETS or spent_today >= DAILY_BET_CAP:
         return None

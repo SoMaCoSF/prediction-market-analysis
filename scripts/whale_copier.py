@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import fleetlib  # noqa: E402
 import httpx  # noqa: E402
+import os as _os  # noqa: E402
+FLEET_HALTED = _os.getenv("FLEET_HALTED", "0") == "1"
 import runlog  # noqa: E402
 import sb  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
@@ -90,6 +92,8 @@ def map_series(text):
 
 def copy_print(cx, whale, side, usd, series):
     global spent_today
+    if FLEET_HALTED:
+        return
     if len(copies) >= MAX_CONC or spent_today >= DAILY_CAP / 100:
         return
     try:
