@@ -52,11 +52,11 @@ def read_lock(daemon: str):
         return None
 
 def check_event_feed():
-    import psycopg2
     try:
-        con = psycopg2.connect(os.environ.get("DATABASE_URL", ""))
+        import sb as sb_mod
+        con = sb_mod.sb_conn()
         cur = con.cursor()
-        cur.execute("SELECT k, v, updated_at FROM mc_state WHERE k IN ('shadow:latest','xvenue:latest','poly:latest','time:articles','copier:board') ORDER BY k")
+        cur.execute("SELECT k, v, updated_at FROM mc_state WHERE k IN ('shadow:latest','xvenue:latest','poly:latest','time:articles','copier:board','uptick:spiral') ORDER BY k")
         rows = cur.fetchall()
         now = time.time()
         stale = []
@@ -76,7 +76,7 @@ def check_event_feed():
         con.close()
         return empty, stale
     except Exception as e:
-        return [f"db_error:{e}"], []
+        return [f"events_error:{e}"], []
 
 def check_mc():
     import urllib.request
