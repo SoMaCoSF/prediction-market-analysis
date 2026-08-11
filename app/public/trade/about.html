@@ -161,7 +161,58 @@ spawn:   namespace = fnv1a12(parent_uuid)   = the tree IS the roll-up</div>
 </section>
 
 <section>
-  <h2><span class="n">5</span>Roadmap</h2>
+  <h2><span class="n">6</span>Ghost Catalog — Good HouseKeeping, Matter of Course</h2>
+  <div class="card">
+    <p>Every artifact in this repo is self-documenting. Not convention — <b>enforcement</b>. The Ghost Catalog is our answer to OpenAI’s Harness Engineering principle: <i>“Give agents a map, not a 1,000-page manual.”</i></p>
+
+    <h3>What it is</h3>
+    <p>A semantic file-identity system where every file announces itself at the byte level. No agent ever has to guess what a file does or where it sits in the hierarchy.</p>
+
+    <h3>The header</h3>
+    <pre style="background:rgba(0,0,0,.3);padding:10px;border-radius:4px;font-size:11px;overflow:auto">
+# ===============================================================================
+# file_id: SOM-APP-0934-v2.1.0
+# name: trade/about.html
+# description: SOMACO TRADE CONTROL /about — what we're building, the machines,
+#              the proof so far, all live-wired
+# project_id: PREDICTION-MARKET-ANALYSIS
+# category: app
+# tags: [about, docs, algo, uuid, trading, live]
+# created: 2026-08-02
+# modified: 2026-08-11
+# version: 2.1.0
+# agent_id: HERMES-AGENT
+# ===============================================================================</pre>
+
+    <h3>What the fields mean</h3>
+    <table>
+      <tr><td><b>file_id</b></td><td>Unique identity: <code>SOM-{CATEGORY}-{NNNN}-{version}</code></td></tr>
+      <tr><td><b>project_id</b></td><td>Which project owns this file</td></tr>
+      <tr><td><b>category</b></td><td>Machine-readable type: APP / LIB / API / DOC / CFG / SCR / CMP / PAG</td></tr>
+      <tr><td><b>tags</b></td><td>Searchable keywords for full-text retrieval</td></tr>
+      <tr><td><b>version</b></td><td>Semantic version, increments with every meaningful change</td></tr>
+      <tr><td><b>agent_id</b></td><td>Which agent last touched this file</td></tr>
+    </table>
+
+    <h3>What it gives us</h3>
+    <table>
+      <tr><td>Self-documenting files</td><td class="c-green">Every file is its own manifest. No external docs required.</td></tr>
+      <tr><td>Zero-DB context</td><td class="c-green">GYST UUID v8 embeds type, namespace, timestamp, fractal → agents route without a database lookup.</td></tr>
+      <tr><td>Duplicate detection</td><td class="c-green">Content-hash grouping finds copies before they proliferate.</td></tr>
+      <tr><td>Full-text search</td><td class="c-green">SQLite catalog + tags + FTS5 — find anything in milliseconds.</td></tr>
+      <tr><td>Agent-invocable skill</td><td class="c-green"><code>/ghost-catalog scan|tag|validate|search|stats|report</code> — agents call it natively.</td></tr>
+      <tr><td>Visual architecture</td><td class="c-green">Mermaid diagrams in docs for human review.</td></tr>
+    </table>
+
+    <h3>Why this matters</h3>
+    <p>OpenAI’s Harness Engineering (Feb 2026) made two asks of agent-first codebases: <b>legibility</b> and <b>context imbuing</b>. Ghost Catalog satisfies both at the file level, not the repo level. Every file is parseable, searchable, and self-routing — no Slack threads, no Google Docs, no “where does this live?” questions.</p>
+
+    <p style="color:var(--dim);font-size:11px">Reference: <a href="https://gist.github.com/SoMaCoSF/155211564d271c52b8165479291f9797" style="color:var(--cyan)">GYST Ghost Catalog System — Complete Documentation</a> · <a href="https://gist.github.com/SoMaCoSF/488d6a173bff53204aa65e159085942f" style="color:var(--cyan)">Factory Droid Skill</a> · <a href="https://gist.github.com/SoMaCoSF/dc3e03e9d4b1a133e9297759af006b5a" style="color:var(--cyan)">Harness Engineering comparison</a></p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">7</span>Roadmap</h2>
   <div class="card">
     <table>
       <tr><td class="c-cyan">now</td><td>edge finder (Kalshi MLB) · daemon beats dashboard · 39-daemon fleet · failure harness live</td></tr>
