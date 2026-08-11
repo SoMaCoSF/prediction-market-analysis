@@ -231,6 +231,11 @@
       <div>
         <h4 style="color:var(--cyan);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">Moonshot & Sweep</h4>
         <div id="d-moonshot" class="mono-sm">loading…</div>
+        </div>
+        <div>
+          <h4 style="color:var(--purple);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">Event Feed</h4>
+          <div id="d-events" class="mono-sm">loading…</div>
+        </div>
       </div>
     </div>
   </div>
@@ -475,6 +480,10 @@ async function tick(){
   const sh=await j("/api/trade/shadow");
   if(sh&&sh.latest){$("whale").querySelector("tbody").innerHTML=sh.latest.slice(0,6).map(e=>
     `<tr><td class="c-dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</td><td>${(e.detail||"").slice(0,60)}</td></tr>`).join("");}
+  const ev=await j("/api/trade/events");
+  if(ev&&ev.events){$("d-events").innerHTML=ev.events.slice(0,12).map(e=>{
+    const sc=e.source==="shadow"?"var(--purple)":e.source==="xvenue"?"var(--cyan)":e.source==="polynews"?"var(--mag)":e.source==="copier"?"var(--amber)":"var(--dim)";
+    return`<div style="font-size:10px;margin-bottom:4px"><span style="color:${sc};font-weight:bold">${e.source}</span> <span class="c-dim">${new Date((e.ts||0)*1000).toLocaleTimeString()}</span> ${(e.detail||"").slice(0,70)}</div>`}).join("")||'<div class="c-dim">no events yet</div>';}
   const L=await j("/api/trade/lanes");
   if(L){
     if(L.sweep_pending){const b=$("sweep-banner");b.style.display="block";
