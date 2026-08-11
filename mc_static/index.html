@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head><title>Mission Control</title></head>
+<body>
+<h1>Mission Control</h1>
+<p>API: <a href="/api/stats">/api/stats</a> | <a href="/api/kalshi/balance">/api/kalshi/balance</a> | <a href="/api/kalshi/positions">/api/kalshi/positions</a> | <a href="/api/kalshi/orders">/api/kalshi/orders</a></p>
+<pre id="out">Loading...</pre>
+<script>
+fetch('/api/stats').then(r=>r.json()).then(d=>document.getElementById('out').textContent=JSON.stringify(d,null,2));
+</script>
+</body>
+</html>

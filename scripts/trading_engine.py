@@ -142,7 +142,7 @@ class TradingEngine:
         self.risk = RiskManager()
         self.positions: dict[str, Position] = {}
         self.orders: dict[str, Order] = {}
-        self.cash: float = 0.0
+        self.cash: float = 62.21
         self.portfolio_value: float = 0.0
         self.running = False
         self._event_handlers: dict[EventType, list[Callable]] = {}
@@ -225,6 +225,96 @@ class TradingEngine:
         r.raise_for_status()
         return r.json()
 
+    async def _paper_execution(self):
+        """Execute paper trades from strategy signals using real Kalshi prices."""
+        import json
+        import random
+        from datetime import datetime, timezone
+        try:
+            import sb as _sb
+            _con = _sb.sb_conn()
+            _con.autocommit = True
+            _cur = _con.cursor()
+            _cur.execute("CREATE TABLE IF NOT EXISTS paper_ledger (ts TIMESTAMPTZ DEFAULT now(), ticker TEXT, side TEXT, price NUMERIC, count INT, pnl NUMERIC)")
+            _con.close()
+        except Exception:
+            pass
+        state_path = ROOT / "data" / "paper_venue.json"
+        log_path = ROOT / "logs" / "paper_exec.out"
+        fill_prob = 0.85
+
+        def log_paper(msg: str):
+            ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            line = f"[{ts}] {msg}"
+            print(line, flush=True)
+            try:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(log_path, "a", encoding="utf-8") as f:
+                    f.write(line + "\n")
+            except Exception:
+                pass
+
+        def load_state():
+            try:
+                if state_path.exists():
+                    return json.loads(state_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+            return {"orderbook": {}, "last_update": 0}
+
+        def save_state(state):
+            try:
+                state_path.parent.mkdir(parents=True, exist_ok=True)
+                state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+            except Exception:
+                pass
+
+        async def match_paper(side: str, ticker: str, price_cents: int):
+            state = load_state()
+            book = state.get("orderbook", {}).get(ticker)
+            if not book:
+                return None
+            yes_ask = book.get("yes_ask", 0)
+            no_ask = book.get("no_ask", 0)
+            ask = yes_ask if side == "yes" else no_ask
+            if ask <= 0 or price_cents / 100 < ask:
+                return None
+            if random.random() > fill_prob:
+                return None
+            fill_price = ask
+            count = 1
+            fee = round(count * fill_price * 0.01, 4)
+            pnl = round((1.0 - fill_price) * count - fee, 4) if side == "yes" else round((fill_price) * count - fee, 4)
+            self.cash += pnl
+            log_paper(f"FILL {side.upper()} {ticker} @ {fill_price*100:.0f}¢ P&L={pnl:+.2f} cash={self.cash:.2f}")
+            return {"side": side, "ticker": ticker, "price": fill_price, "count": count, "pnl": pnl}
+
+        log_paper("PAPER EXECution STARTED")
+        while self.running:
+            try:
+                while self.event_queue:
+                    event = self.event_queue.popleft()
+                    if event.type in (EventType.WHALE_SIGNAL, EventType.TRADE_FILL):
+                        data = event.data or {}
+                        ticker = data.get("ticker")
+                        side = data.get("side") or ("yes" if event.type == EventType.WHALE_SIGNAL else None)
+                        price_cents = data.get("price_cents") or data.get("price")
+                        if not ticker or not side or not price_cents:
+                            continue
+                        try:
+                            price_cents = int(price_cents)
+                        except Exception:
+                            continue
+                        if self.cash < 1.0:
+                            continue
+                        result = await match_paper(side, ticker, price_cents)
+                        if result:
+                            self.portfolio_value = max(0.0, self.portfolio_value + result["pnl"])
+                await asyncio.sleep(0.05)
+            except Exception as e:
+                log_paper(f"warn {repr(e)[:60]}")
+                await asyncio.sleep(1)
+
     def add_strategy(self, strategy: Strategy):
         """Register a strategy."""
         self.strategies.append(strategy)
@@ -240,6 +330,9 @@ class TradingEngine:
 
         # Start WS feed
         self._ws_task = asyncio.create_task(self._ws_market_feed())
+
+        # Start paper execution loop
+        self._paper_task = asyncio.create_task(self._paper_execution())
 
         log("ENGINE RUNNING")
 

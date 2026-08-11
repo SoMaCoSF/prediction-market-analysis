@@ -1,0 +1,379 @@
+# file_id: SOM-PY-0937-v1.0.0 name: profit_scalp.py description: Speed-run scalp engine — early-window drift entries + reprice exits at +15c (no settlement wait), exchange-truth state, micro size, bankroll guard project_id: PREDICTION-MARKET-ANALYSIS category: script tags: [scalp, hft, momentum, kalshi, live, speedrun] created: 2026-08-02 version: 1.0.0 agent_id: HERMES-AGENT
+"""profit_scalp.py — the speed run.
+
+Loop (5s cadence):
+  ENTER: early 15M window (ttl>=540s), drift>=±0.20%, price<=60c, 1 contract.
+  EXIT : held YES whose bid >= entry+SCALP_C -> sell at bid (taker) NOW.
+         Profit is locked at reprice, not at settlement -> many cycles/hour.
+  Truth: open positions read from the EXCHANGE every cycle (no local-state drift).
+  Guard: cash floor $20, session stop -$3, MC kill switch honored, one position
+         per series at a time.
+
+Sell mechanics: selling YES at bid B == V2 ask @ B/100, which our MC translator
+produces from side='no' price=(100-B). Minted as 0x3A5 ORDER_ASK in the ledger.
+"""
+from __future__ import annotations
+
+import base64
+import hashlib
+import json
+import os
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+import fleetlib  # noqa: E402
+import httpx  # noqa: E402
+import runlog  # noqa: E402
+import sb  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv(ROOT / ".env")
+MC = os.getenv("MC_URL", "http://127.0.0.1:8420")
+KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
+PK = hashlib.sha256(f"3024a97f6e32|omen-01|{sb.status_salt()}".encode()).hexdigest()
+
+SERIES = [("KXBTC15M", "XBTUSD"), ("KXETH15M", "ETHUSD"), ("KXSOL15M", "SOLUSD"),
+          ("KXXRP15M", "XRPUSD"), ("KXDOGE15M", "DOGEUSD")]
+# Long-play: daily/weekly crypto markets, low cost, high payout.
+SERIES_LONG = [("KXBTC", "XBTUSD"), ("KXETH", "ETHUSD"), ("KXSOL", "SOLUSD"),
+               ("KXXRP", "XRPUSD"), ("KXDOGE", "DOGEUSD")]
+DRIFT_MIN, ENTRY_MIN, ENTRY_MAX, TTL_MIN = 0.20, 25, 60, 540
+SCALP_C = 15               # take-profit: exit when bid >= entry + this many cents
+STOP_C = 10                # stop-loss: exit when bid <= entry - STOP_C
+CASH_FLOOR = 5.00       # HARD BACKSTOP: never let cash drop below $5 (user rule 2026-08-05).
+DRIFT_WINDOW = 6           # remember last 6 drift polls per series
+DRIFT_STREAK = 4           # same-direction streak to trigger burst entry
+MAX_BURST = 5              # max burst entries per cycle
+BURST_MODE = os.getenv("BURST_MODE", "1") == "1"   # set BURST_MODE=0 to disable
+# Long-play constants
+LONG_DRIFT_MIN = 0.50      # stronger drift required for long horizon (1.5x scalp)
+LONG_ENTRY_MAX = 40        # cheaper entries for long-play
+LONG_TARGET = 30           # take-profit at +30c (2x scalp target)
+LONG_STOP = 15             # stop-loss at -15c (1.5x scalp stop)
+LONG_MAX_OPEN = 3          # max 3 long positions at once
+LONG_POLL = 30             # check long-play every 30s (not every 5s)
+LONG_CLIP = 1              # 1 contract per long entry (low cost, high payout)
+
+
+def governor_ok():
+    """Circuit breaker: entries blocked when governor is HALT/STOP. Exits never blocked."""
+    try:
+        con = sb.sb_conn()
+        cur = con.cursor()
+        cur.execute("SELECT v FROM mc_state WHERE k='governor:state'")
+        row = cur.fetchone()
+        con.close()
+        if not row:
+            return True
+        return json.loads(row[0]).get("state") == "NORMAL"
+    except Exception:
+        return True
+SESSION_STOP = -300
+POLL = 5
+MAX_OPEN = 8
+
+session_pnl = 0.0
+_drift_hist: dict[str, list[float]] = {s: [] for s, _ in SERIES}
+_burst_sent: dict[str, int] = {}
+
+_floor_cache = {"v": CASH_FLOOR, "ts": 0.0}
+
+
+def cash_floor() -> float:
+    """Cash floor = vault reserve (mc_state vault:state), cached 30s.
+
+    Falls back to the hardcoded CASH_FLOOR when vault state is missing or
+    stale (>300s — vault daemon dead -> conservative $20 line)."""
+    if time.time() - _floor_cache["ts"] > 30:
+        try:
+            con = sb.sb_conn()
+            cur = con.cursor()
+            cur.execute("SELECT v FROM mc_state WHERE k='vault:state'")
+            row = cur.fetchone()
+            con.close()
+            val = CASH_FLOOR
+            if row:
+                st = json.loads(row[0])
+                if time.time() - float(st.get("ts") or 0) <= 300:
+                    val = float(st.get("floor") or st.get("reserve") or CASH_FLOOR)
+            _floor_cache["v"] = val
+        except Exception:
+            pass
+        _floor_cache["ts"] = time.time()
+    return _floor_cache["v"]
+
+
+def log(m):
+    print(f"[{time.strftime('%H:%M:%S')}] {m}", flush=True)
+    runlog.log_event("scalp", m)
+
+
+def _sign(method, path, ts):
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import padding
+    key = serialization.load_pem_private_key((ROOT / ".kalshi_key.pem").read_bytes(), password=None)
+    sig = key.sign(f"{ts}{method}{path}".encode(),
+                   padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH),
+                   hashes.SHA256())
+    return base64.b64encode(sig).decode()
+
+
+def kget(path):
+    try:
+        ts = str(int(time.time() * 1000))
+        full = "/trade-api/v2" + path.split("?")[0]
+        h = {"KALSHI-ACCESS-KEY": os.getenv("KALSHI_KEY_ID"),
+             "KALSHI-ACCESS-SIGNATURE": _sign("GET", full, ts),
+             "KALSHI-ACCESS-TIMESTAMP": ts}
+        r = httpx.get(KALSHI + path, headers=h, timeout=15)
+        return r.json() if "json" in r.headers.get("content-type", "") else {}
+    except Exception:
+        return {}   # transient network failure -> empty truth, cycle retries
+
+
+def cash() -> float:
+    return float(kget("/portfolio/balance").get("balance_dollars") or 0)
+
+
+def positions() -> dict:
+    """truth: ticker -> {fp, cost_per_ct, side} for 15M markets."""
+    out = {}
+    d = kget("/portfolio/positions?limit=100")
+    for mp in d.get("market_positions", []):
+        t = mp.get("ticker", "")
+        fp = float(mp.get("position_fp") or 0)
+        if fp == 0 or "15M" not in t:
+            continue
+        cost = float(mp.get("total_traded_dollars") or 0)
+        side = "yes" if fp > 0 else "no"
+        entry_c = round(abs(cost) / abs(fp) * 100, 1) if fp else 0
+        out[t] = {"fp": abs(fp), "entry_c": entry_c, "side": side}
+    return out
+
+
+def drift(cx, pair):
+    d = cx.get(f"https://api.kraken.com/0/public/Ticker?pair={pair}", timeout=10).json()["result"]
+    k = next(iter(d))
+    return (float(d[k]["c"][0]) - float(d[k]["o"])) / float(d[k]["o"]) * 100
+
+
+def book(cx, ticker):
+    r = cx.get(f"{KALSHI}/markets/{ticker}", timeout=15)
+    m = r.json().get("market") or {}
+    return {"ya": float(m.get("yes_ask_dollars") or 0) * 100,
+            "yb": float(m.get("yes_bid_dollars") or 0) * 100,
+            "status": m.get("status")}
+
+
+def window_market(cx, series):
+    r = cx.get(f"{KALSHI}/markets", params={"limit": 5, "status": "open", "series_ticker": series}, timeout=15)
+    for m in r.json().get("markets", []):
+        ya = float(m.get("yes_ask_dollars") or 0)
+        if not (0 < ya < 1):
+            continue
+        ttl = datetime.fromisoformat(m["close_time"].replace("Z", "+00:00")).astimezone(timezone.utc).timestamp() - time.time()
+        if ttl >= TTL_MIN:
+            return {"ticker": m["ticker"], "ya": round(ya * 100), "yb": round(float(m.get("yes_bid_dollars") or 0) * 100), "ttl": ttl}
+    return None
+
+
+def record_drift(series: str, d: float):
+    """Append drift reading; return ('burst', side) if a burst should fire, else None."""
+    hist = _drift_hist.setdefault(series, [])
+    hist.append(d)
+    if len(hist) > DRIFT_WINDOW:
+        del hist[:-DRIFT_WINDOW]
+    if not BURST_MODE or len(hist) < DRIFT_STREAK:
+        return None
+    recent = hist[-DRIFT_STREAK:]
+    if all(x >= DRIFT_MIN for x in recent):
+        return ("burst", "yes")
+    if all(x <= -DRIFT_MIN for x in recent):
+        return ("burst", "no")
+    return None
+
+
+def burst_ok(series: str) -> bool:
+    """Allow at most MAX_BURST entries per series per cycle window."""
+    return _burst_sent.get(series, 0) < MAX_BURST
+
+
+def mark_burst(series: str):
+    _burst_sent[series] = _burst_sent.get(series, 0) + 1
+
+
+def reset_bursts():
+    """Call once per poll cycle so bursts don't accumulate forever."""
+    _burst_sent.clear()
+
+
+def clip_cost_cents(side, price):
+    """Cost in cents to open 1 contract at `price` (c). yes costs `price`c, no costs (100-price)c."""
+    return float(price) if side == "yes" else float(100 - price)
+
+
+def fire(ticker, side, price, count=1):
+    try:
+        r = httpx.post(f"{MC}/api/order", json={"ticker": ticker, "side": side, "price": price,
+                       "count": count, "mode": "live", "passkey": PK, "confirm": "FIRE"}, timeout=30)
+        d = r.json()
+        ack = d.get("ack") or {}
+        return {"ok": bool(d.get("ok")), "filled": float(ack.get("fill_count") or 0),
+                "avg": ack.get("average_fill_price"), "uuid": d.get("uuid"), "err": d.get("error")}
+    except Exception as e:
+        return {"ok": False, "filled": 0.0, "avg": None, "uuid": None, "err": f"net:{repr(e)[:60]}"}
+
+
+def main():
+    global session_pnl
+    fleetlib.acquire_lock("scalp")
+    log(f"SCALP start | entry<=60c drift>={DRIFT_MIN}% exit@+{SCALP_C}c floor=vault:state reserve (fallback ${CASH_FLOOR}) poll={POLL}s")
+    for _ in range(10):
+        try:
+            s = httpx.get(f"{MC}/api/stats", timeout=10).json()
+            break
+        except Exception:
+            time.sleep(3)
+    else:
+        log("MC unreachable after retries — exiting")
+        return 1
+    assert s.get("keys") and not s.get("kill"), "MC not armed"
+    log("MC armed; speed run live")
+    with httpx.Client(headers={"Accept-Encoding": "identity"}) as cx:
+        while True:
+            fleetlib.checkin("scalp")
+            if session_pnl * 100 <= SESSION_STOP:
+                log(f"SESSION STOP {session_pnl:+.2f}$")
+                return
+            try:
+                held = positions()
+            except Exception:
+                held = {}
+            # ---- EXITS ----
+            for t, pos in held.items():
+                try:
+                    b = book(cx, t)
+                except Exception:
+                    continue
+                if b["status"] != "active":
+                    continue
+                bid = round(b["yb"])
+                side = pos.get("side", "yes")
+                entry = pos["entry_c"]
+                fp = int(pos["fp"])
+                # --- YES long: sell YES at bid ---
+                if side == "yes":
+                    if bid >= entry + SCALP_C and 1 <= bid <= 99:
+                        sell_px = 100 - bid
+                        r = fire(t, "no", sell_px, fp)
+                        if r["ok"] and r["filled"] > 0:
+                            profit = (bid - entry) * fp / 100.0
+                            session_pnl += profit
+                            log(f"SCALP-OUT {t[:38]} YES sold x{fp} @ {bid}c (entry {entry}c) "
+                                f"+${profit:.2f} | session {session_pnl:+.2f}")
+                        elif r["ok"]:
+                            log(f"exit resting {t[:30]} YES @ {bid}c")
+                        time.sleep(0.25)
+                    elif bid <= entry - STOP_C and 1 <= bid <= 99:
+                        sell_px = 100 - bid
+                        r = fire(t, "no", sell_px, fp)
+                        if r["ok"] and r["filled"] > 0:
+                            loss = (bid - entry) * fp / 100.0
+                            session_pnl += loss
+                            log(f"STOP-OUT {t[:38]} YES sold x{fp} @ {bid}c (entry {entry}c) "
+                                f"${loss:.2f} | session {session_pnl:+.2f}")
+                        elif r["ok"]:
+                            log(f"stop resting {t[:30]} YES @ {bid}c")
+                        time.sleep(0.25)
+                # --- NO long: buy back YES at bid to close NO ---
+                else:
+                    if bid <= entry - SCALP_C and 1 <= bid <= 99:
+                        r = fire(t, "yes", bid, fp)
+                        if r["ok"] and r["filled"] > 0:
+                            profit = (entry - bid) * fp / 100.0
+                            session_pnl += profit
+                            log(f"SCALP-OUT {t[:38]} NO covered x{fp} @ {bid}c (entry {entry}c) "
+                                f"+${profit:.2f} | session {session_pnl:+.2f}")
+                        elif r["ok"]:
+                            log(f"exit resting {t[:30]} NO @ {bid}c")
+                        time.sleep(0.25)
+                    elif bid >= entry + STOP_C and 1 <= bid <= 99:
+                        r = fire(t, "yes", bid, fp)
+                        if r["ok"] and r["filled"] > 0:
+                            loss = (entry - bid) * fp / 100.0
+                            session_pnl += loss
+                            log(f"STOP-OUT {t[:38]} NO covered x{fp} @ {bid}c (entry {entry}c) "
+                                f"${loss:.2f} | session {session_pnl:+.2f}")
+                        elif r["ok"]:
+                            log(f"stop resting {t[:30]} NO @ {bid}c")
+                        time.sleep(0.25)
+            # ---- ENTRIES ----
+            if len(held) < MAX_OPEN:
+                # FEE CONSERVATION: if fleet halted by fee-bleed breaker, no new entries
+                if os.getenv("FLEET_HALTED") == "1":
+                    log("FLEET_HALTED (fee-bleed breaker) — entries blocked")
+                    time.sleep(POLL * 6)
+                    continue
+                c = cash()
+                floor = cash_floor()
+                if c and c < floor:
+                    log(f"cash ${c:.2f} < floor ${floor:.2f} — entries paused")
+                    time.sleep(POLL * 6)
+                    continue
+                if not governor_ok():
+                    time.sleep(POLL * 6)
+                    continue
+                # MIN CLIP: never trade below fee floor. count_fp from MIN_CLIP_CENTS env.
+                min_clip = max(1, int(float(os.getenv("MIN_CLIP_CENTS", "100"))))
+                for series, pair in SERIES:
+                    if any(t.startswith(series) for t in held):
+                        continue
+                    try:
+                        m = window_market(cx, series)
+                        if not m:
+                            continue
+                        d = drift(cx, pair)
+                        if d >= DRIFT_MIN and ENTRY_MIN <= m["ya"] <= ENTRY_MAX:
+                            side, price = "yes", m["ya"]
+                        elif d <= -DRIFT_MIN and ENTRY_MIN <= (100 - m["yb"]) <= ENTRY_MAX:
+                            side, price = "no", 100 - m["yb"]
+                        else:
+                            continue
+                        # === FEE-AWARE SIZING ===
+                        # MIN_CLIP_CENTS is a dollar floor, not a contract count.
+                        # Convert to contracts: at price P cents, $1.00 = 100/P contracts.
+                        edge_cents = abs(d) / 100.0 * price  # drift% * price(c)
+                        fee_cents = 1.0 + 0.10 * max(0.0, edge_cents)
+                        if edge_cents <= fee_cents:
+                            log(f"SKIP {series}: edge {edge_cents:.2f}c <= fee {fee_cents:.2f}c — no trade")
+                            time.sleep(0.1)
+                            continue
+                        min_clip_cents = max(1, int(float(os.getenv("MIN_CLIP_CENTS", "100"))))
+                        min_clip = max(1, int(min_clip_cents / max(price, 1)))
+                        # scale clip so total edge covers fee by >=5x margin
+                        target_edge_cents = fee_cents * 5.0
+                        need_clip = max(min_clip, int(target_edge_cents / max(edge_cents, 0.01)))
+                        clip = min(need_clip, int(c * 100 * 0.10)) if c else need_clip
+                        clip = max(clip, min_clip)  # never below min
+                        # MC caps count at 25
+                        clip = min(clip, 25)
+                        r = fire(m["ticker"], side, price, clip)
+                        if r["ok"] and r["filled"] > 0:
+                            runlog.assert_event(float(r["filled"]) == 1.0, "scalp", "entry fill_count==1 (taker)", ticker=m["ticker"], side=side, price=price)
+                            log(f"ENTRY {side.upper()} x1 @ {price}c {series} drift {d:+.2f}% ttl {m['ttl']:.0f}s | FILLED avg={r['avg']}")
+                        elif r["ok"]:
+                            log(f"entry resting {series} {side} {price}c")
+                        else:
+                            log(f"entry rejected {series}: {str(r['err'])[:60]}")
+                        time.sleep(0.3)
+                    except Exception as e:
+                        log(f"entry warn {series}: {repr(e)[:60]}")
+            time.sleep(POLL)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
