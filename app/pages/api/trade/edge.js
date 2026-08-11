@@ -9,7 +9,7 @@ const DEFAULT_PICKS = [
   { game: "Seattle vs New York Y", pick: "New York Y", probability: 0.55, team_code: "NYY", match_code: "SEANYY" },
   { game: "New York M vs Atlanta", pick: "Atlanta", probability: 0.56, team_code: "ATL", match_code: "NYMATL" },
   { game: "Philadelphia vs St. Louis", pick: "Philadelphia", probability: 0.62, team_code: "PHI", match_code: "PHISTL" },
-  { game: "Colorado vs Arizona", pick: "Arizona", probability: 0.63, team_code: "AZ", match_code: "COARZ" },
+  { game: "Colorado vs Arizona", pick: "Arizona", probability: 0.63, team_code: "AZ", match_code: "COLAZ" },
   { game: "Milwaukee vs San Diego", pick: "Milwaukee", probability: 0.54, team_code: "MIL", match_code: "MILSD" },
   { game: "Tampa Bay vs A's", pick: "Tampa Bay", probability: 0.63, team_code: "TB", match_code: "TBATH" },
   { game: "Kansas City vs Los Angeles D", pick: "Los Angeles D", probability: 0.65, team_code: "LAD", match_code: "KCLAD" },
