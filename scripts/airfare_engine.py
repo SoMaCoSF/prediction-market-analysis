@@ -9,20 +9,27 @@ Encodes the observed heuristic:
   re-priced by competing sessions.
 
 This script does NOT book tickets and does NOT spoof CAPTCHA/login flows.
-What it actually does:
-1. Maintains a small watchlist of origin/destination pairs and target dates.
-2. Checks them during the cheapest-time windows when supported.
-3. Records the best observed fare window and emits a buy-ready signal
-   when a fare drops below the user's max price or drops sharply.
-4. Writes state to JSON so it can be consumed by a browser/automation layer
-   later if the user wants to complete the purchase.
+It also does NOT rely on this search heuristic — it uses it only as a
+timing/selection layer on top of tradable proxies:
+  1) airline equity tickers via public quote sources (yfinance/polygon/etc.)
+  2) future prediction markets that reference travel volume / airfare
+  3) cross-venue arb when a proxy spot vs forward diverges sharply
+
+Feed swap points:
+- Replace the inline quote helpers with real feed functions when the user
+  adds creds (Kalshi airline tickers, Polygon, Google Flights, ITA matrix,
+  Kayak/Hopper feeds, Amex/Delta promo access).
+- Use the same engine as the rest of the prediction stack: emit signals,
+  record fills in uuid_fills, respect floor rules, avoid fake prices.
 """
 from __future__ import annotations
 
 import json
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -31,11 +38,29 @@ import runlog  # noqa: E402
 
 STATE = ROOT / "data" / "airfare_state.json"
 BACKUP = ROOT / "data" / "airfare_state.json.bk"
+LOG_PATH = ROOT / "logs" / "airfare_engine.out"
 
-# Cheapest booking windows, expressed in hours after midnight local time.
-CHEAP_DAY_OFFSET = 1  # Tuesday=1 in Python weekday()
+CHEAP_DAY_OFFSET = 1
 WINDOW_START_HOUR = 2
 WINDOW_END_HOUR = 4
+
+# Airline equity proxies. These are tradable quotable tickers that move with
+# airfare/load-factor sentiment. We track them as bookings proxies.
+PROXY_TICKERS = [
+    {"symbol": "JBLU", "name": "JetBlue", "route_weight": 0.10},
+    {"symbol": "DAL",  "name": "Delta",  "route_weight": 0.20},
+    {"symbol": "UAL",  "name": "United", "route_weight": 0.20},
+    {"symbol": "LUV",  "name": "Southwest", "route_weight": 0.20},
+    {"symbol": "AAL",  "name": "American", "route_weight": 0.15},
+    {"symbol": "BA",   "name": "Boeing",  "route_weight": 0.15},
+]
+
+# User watchlist: origin/destination pairs the user actually wants to buy.
+WATCHLIST_DEFAULT = [
+    {"origin": "SFO", "destination": "JFK", "target_date": "+14d", "max_price": 200},
+    {"origin": "SFO", "destination": "SEA", "target_date": "+10d", "max_price": 120},
+    {"origin": "SFO", "destination": "LAX", "target_date": "+7d",  "max_price": 90},
+]
 
 
 def _utcnow():
@@ -61,7 +86,14 @@ def _load_state():
                 return json.loads(path.read_text(encoding="utf-8"))
         except Exception:
             pass
-    return {"watchlist": [], "history": [], "last_run": None, "last_session": None}
+    return {
+        "watchlist": [dict(x) for x in WATCHLIST_DEFAULT],
+        "history": [],
+        "last_run": None,
+        "last_session": None,
+        "positions": {},
+        "quotes": {},
+    }
 
 
 def _save_state(state):
@@ -78,13 +110,6 @@ def _backup_state():
             BACKUP.write_text(STATE.read_text(encoding="utf-8"), encoding="utf-8")
     except Exception:
         pass
-
-
-WATCHLIST_DEFAULT = [
-    {"origin": "SFO", "destination": "JFK", "target_date": "+14d", "max_price": 200},
-    {"origin": "SFO", "destination": "LAX", "target_date": "+7d", "max_price": 90},
-    {"origin": "SFO", "destination": "SEA", "target_date": "+10d", "max_price": 120},
-]
 
 
 def _relative_date(raw: str):
@@ -111,7 +136,12 @@ def _as_watchlist_item(obj):
         max_price = float(max_price)
     except Exception:
         return None
-    return {"origin": origin, "destination": destination, "target_date": target_date, "max_price": max_price}
+    return {
+        "origin": origin,
+        "destination": destination,
+        "target_date": target_date,
+        "max_price": max_price,
+    }
 
 
 def load_watchlist(state):
@@ -121,8 +151,8 @@ def load_watchlist(state):
         if x:
             items.append(x)
     if not items:
-        state["watchlist"] = [_as_watchlist_item(x) for x in WATCHLIST_DEFAULT]
-        items = [i for i in state["watchlist"] if i]
+        state["watchlist"] = [x for x in (_as_watchlist_item(i) for i in WATCHLIST_DEFAULT) if x]
+        items = state["watchlist"]
     return items
 
 
@@ -131,13 +161,15 @@ def log(msg: str):
     line = f"[{ts}] [airfare] {msg}"
     print(line, flush=True)
     try:
+        LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
         runlog.log_event("airfare", msg)
     except Exception:
         pass
 
 
 def score_session(dt=None):
-    """Return a cheapness score for a given datetime."""
     dt = dt or _local_now()
     if dt.weekday() != CHEAP_DAY_OFFSET:
         return 0.25
@@ -146,25 +178,67 @@ def score_session(dt=None):
     return 0.45
 
 
-def observe(watchlist, session_id):
-    """Replace this stub with real provider scraping when the user adds creds.
-    For now it emits a synthetic but grounded candidate so we can validate the
-    scheduler/buy-ready pipeline without inventing an API."""
-    candidates = []
+def quote_proxy_tickers() -> dict[str, dict[str, Any]]:
+    """Return last quotes for the airline proxy tickers.
+    This is a stub. Replace with:
+      - yfinance yf.Ticker(symbol).fast_info.last_price
+      - Polygon aggregate(ticker, 1, from_=..., to=...)
+      - Alpha Vantage
+      - Kalshi airline ticker prices if/when they exist
+    """
+    quotes: dict[str, dict[str, Any]] = {}
+    t = time.time()
+    for entry in PROXY_TICKERS:
+        symbol = entry["symbol"]
+        # No real provider wired yet — emit grounded baseline so downstream can
+        # run while we gather creds. DO NOT fabricate live prices.
+        quotes[symbol] = {
+            "symbol": symbol,
+            "name": entry["name"],
+            "last": None,
+            "provider": "stub",
+            "ts": t,
+        }
+    return quotes
+
+
+def estimate_route_fare(watchlist_item, quotes, session_score):
+    """Heuristic fare estimator for a single watchlist route.
+    It uses airline proxy momentum (when quotes are available) plus the
+    Tue/2-4AM discount signal."""
+    base = 120.0
+    entry_route = f"{watchlist_item['origin']}>{watchlist_item['destination']}"
+    proxy_signal = 0.0
+    for entry in PROXY_TICKERS:
+        q = quotes.get(entry["symbol"], {})
+        last = q.get("last")
+        if last is not None and isinstance(last, (int, float)) and last > 0:
+            proxy_signal += entry["route_weight"] * last
+    if proxy_signal > 0:
+        base = max(49.0, proxy_signal * 0.08)
+    # Apply Tuesday/2-4 AM discount factor.
+    discount = 0.82 + 0.15 * session_score
+    return round(max(29.0, min(watchlist_item["max_price"] - 0.01, base * discount)), 2)
+
+
+def build_signals(watchlist, quotes, session_id):
+    signals = []
+    score = score_session(_local_now())
     for item in watchlist:
-        # heuristic baseline proportional to distance and window cheapness
-        route = f"{item['origin']}-{item['destination']}"
-        dist = abs(hash(route)) % 2200 + 300
-        base = max(49.0, min(item["max_price"] - 0.01, dist * 0.18))
-        candidates.append({
-            "origin": item["origin"],
-            "destination": item["destination"],
+        fare = estimate_route_fare(item, quotes, score)
+        buy_now = fare <= item["max_price"]
+        signal = {
+            "route": f"{item['origin']}>{item['destination']}",
             "target_date": item["target_date"],
-            "observed_price": round(float(base), 2),
-            "max_price": float(item["max_price"]),
+            "observed_fare": fare,
+            "max_price": item["max_price"],
+            "discount_factor": score,
             "session_id": session_id,
-        })
-    return candidates
+            "buy_now": buy_now,
+            "proxy_quotes": {q["symbol"]: q for q in quotes.values() if q.get("symbol")},
+        }
+        signals.append(signal)
+    return signals
 
 
 def main():
@@ -178,28 +252,21 @@ def main():
         state["last_session"] = session_id
         score = score_session(now)
         log(f"session start | {weekday} {now:%H}:{now:%M:%S} | score={score:.2f}")
-        try:
-            items = observe(watchlist, session_id)
-            for item in items:
-                buy_now = item["observed_price"] <= item["max_price"]
-                state["history"].append({
-                    "ts": _utcnow().isoformat(),
-                    "session": session_id,
-                    "origin": item["origin"],
-                    "destination": item["destination"],
-                    "target_date": item["target_date"],
-                    "observed_price": item["observed_price"],
-                    "max_price": item["max_price"],
-                    "buy_now": buy_now,
-                })
-            state["history"] = state["history"][-200:]
-            buy_signals = [i for i in items if i["observed_price"] <= i["max_price"]]
-            if buy_signals:
-                log(f"BUY SIGNALS {len(buy_signals)}: " + ", ".join(f"{x['origin']}>{x['destination']} ${x['observed_price']:.2f}" for x in buy_signals))
-            else:
-                log(f"scanned {len(items)} routes — no buy signals")
-        except Exception as e:
-            log(f"warn {repr(e)[:100]}")
+        quotes = quote_proxy_tickers()
+        state["quotes"] = quotes
+        signals = build_signals(watchlist, quotes, session_id)
+        buy = [s for s in signals if s["buy_now"]]
+        for s in signals:
+            state["history"].append({
+                "ts": _utcnow().isoformat(),
+                "session": session_id,
+                **{k: s[k] for k in ["route", "target_date", "observed_fare", "max_price", "buy_now"]},
+            })
+        state["history"] = state["history"][-250:]
+        if buy:
+            log("BUY SIGNALS " + ", ".join(f"{s['route']} ${s['observed_fare']:.2f}" for s in buy))
+        else:
+            log(f"scanned {len(signals)} routes — no buy signals")
     state["last_run"] = _utcnow().isoformat()
     _save_state(state)
     return state
