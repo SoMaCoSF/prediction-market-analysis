@@ -207,7 +207,7 @@ def estimate_route_fare(watchlist_item, quotes, session_score):
     It uses airline proxy momentum (when quotes are available) plus the
     Tue/2-4AM discount signal."""
     base = 120.0
-    entry_route = f"{watchlist_item['origin']}>{watchlist_item['destination']}"
+
     proxy_signal = 0.0
     for entry in PROXY_TICKERS:
         q = quotes.get(entry["symbol"], {})
