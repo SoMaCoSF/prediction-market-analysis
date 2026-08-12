@@ -23,7 +23,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / '.env')
 import httpx
 
 ROOT = Path(__file__).resolve().parent.parent
-KALSHI_HOST = 'https://api.elections.kalshi.com/trade-api/v2'
+KALSHI_HOST = 'https://external-api.kalshi.com/trade-api/v2'
 STATE_FILE = ROOT / 'data' / 'wti_watch_state.json'
 LOG_FILE = ROOT / 'data' / 'micro_grind_log.jsonl'
 
@@ -31,9 +31,9 @@ LOG_FILE = ROOT / 'data' / 'micro_grind_log.jsonl'
 MAX_BET_PRICE = 0.10      # max 10c per share
 MIN_ASK_SIZE = 50          # min 50 shares available
 SHARES_PER_BET = 5         # 5 shares per market
-MAX_CYCLE_SPEND = 3.00     # max $3 per cycle
-MIN_CASH_TO_TRADE = 1.00  # need at least $1 free cash to bother
-RESERVE_CASH = 2.00        # keep $2 reserve, don't deploy below this
+MAX_CYCLE_SPEND = 5.00     # max $3 per cycle
+MIN_CASH_TO_TRADE = 0.25  # need at least $1 free cash to bother
+RESERVE_CASH = 0.50        # keep $2 reserve, don't deploy below this
 
 
 def kalshi_sign(method, path, ts_ms, key_path):
@@ -83,18 +83,17 @@ def get_portfolio():
         return None
     mp = r.json().get('market_positions', [])
     active = [p for p in mp if float(p.get('position_fp', 0)) > 0]
-    settled = [p for p in mp if float(p.get('position_fp', 0)) == 0 and float(p.get('total_traded_dollars', 0)) > 0]
     held_tickers = set(p.get('ticker', '') for p in active)
 
     return {
         'cash': cash,
         'portfolio_value': portfolio_value,
         'active': active,
-        'settled': settled,
+        'settled': [],
         'held_tickers': held_tickers,
         'total_shares': sum(float(p.get('position_fp', 0)) for p in active),
         'total_invested': sum(float(p.get('total_traded_dollars', 0)) for p in active),
-        'realized_pnl': sum(float(p.get('realized_pnl_dollars', 0)) for p in settled),
+        'realized_pnl': 0.0,
     }
 
 
