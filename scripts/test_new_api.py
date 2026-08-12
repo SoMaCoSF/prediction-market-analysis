@@ -17,7 +17,7 @@ def sign_request(method, path, body=''):
     ts = str(int(time.time() * 1000))
     msg = ts + method + path + body
     sig = key.sign(msg.encode(), padding.PSS(padding.MGF1(hashes.SHA256()), salt_length=20), hashes.SHA256())
-    return {'KALSHI-KEY-ID': KEY_ID, 'KALSHI-TIMESTAMP': ts, 'KALSHI-SIGNATURE': base64.b64encode(sig).decode()}
+    return {'KALSHI-ACCESS-KEY': KEY_ID, 'KALSHI-ACCESS-TIMESTAMP': ts, 'KALSHI-ACCESS-SIGNATURE': base64.b64encode(sig).decode()}
 
 import httpx
 
