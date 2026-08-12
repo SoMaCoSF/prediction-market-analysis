@@ -14,8 +14,8 @@ def sign_request(method, path, body=''):
     from cryptography.hazmat.primitives.asymmetric import padding
     key = serialization.load_pem_private_key(KEY_PATH.read_bytes(), password=None)
     ts = str(int(time.time() * 1000))
-    msg = ts + method + path + body
-    sig = key.sign(msg.encode(), padding.PSS(padding.MGF1(hashes.SHA256()), salt_length=20), hashes.SHA256())
+    msg = f'{ts}{method.upper()}/trade-api/v2{path.split("?")[0]}' + body
+    sig = key.sign(msg.encode(), padding.PSS(padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH), hashes.SHA256())
     return {'KALSHI-ACCESS-KEY': KEY_ID, 'KALSHI-ACCESS-TIMESTAMP': ts, 'KALSHI-ACCESS-SIGNATURE': base64.b64encode(sig).decode()}
 
 import httpx

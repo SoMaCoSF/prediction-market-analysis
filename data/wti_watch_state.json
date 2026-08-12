@@ -1,5 +1,1266 @@
 {
-  "timestamp": "2026-08-12T07:40:34.008367+00:00",
-  "wti_price": 83.84,
-  "positions": []
+  "timestamp": "2026-08-12T16:16:54Z",
+  "wti_price": null,
+  "cash": 0.4253,
+  "portfolio_value": 11.99,
+  "active_count": 125,
+  "settled_count": 0,
+  "realized_pnl": -0.21,
+  "total_shares": 545.0,
+  "total_invested": 18.672999999999988,
+  "max_return": 545.0,
+  "positions": [
+    {
+      "fees_paid_dollars": "0.022800",
+      "last_updated_ts": "2026-08-12T07:37:51.263264Z",
+      "market_exposure_dollars": "0.350000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202671080FB4F17-08D8A196460",
+      "total_traded_dollars": "0.350000"
+    },
+    {
+      "fees_paid_dollars": "0.006600",
+      "last_updated_ts": "2026-08-12T07:37:50.70384Z",
+      "market_exposure_dollars": "0.095000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026488579835B4-4A3979F8A5D",
+      "total_traded_dollars": "0.095000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:36:28.422774Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20265A5C21324A8-0F92FA968EF",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:36:27.726485Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20263C928579D6E-878E1B4B16C",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.001400",
+      "last_updated_ts": "2026-08-12T04:49:00.93019Z",
+      "market_exposure_dollars": "0.020000",
+      "position_fp": "10.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20263C928579D6E-8F3BDD2BBEA",
+      "total_traded_dollars": "0.020000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:36:26.422585Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026062A660AE10-DB9D8DC89DD",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:39.535961Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026062A660AE10-9057C8904C8",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.001400",
+      "last_updated_ts": "2026-08-12T07:36:25.803328Z",
+      "market_exposure_dollars": "0.020000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C3F6890D223-C44C5F6C19C",
+      "total_traded_dollars": "0.020000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:36:25.163354Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20266CAD9C12702-DC26B0D2307",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.011200",
+      "last_updated_ts": "2026-08-12T07:36:24.542654Z",
+      "market_exposure_dollars": "0.165000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202626F8034E0D3-38DF5AAB802",
+      "total_traded_dollars": "0.165000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:49:02.810639Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "10.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-8447245255F",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000300",
+      "last_updated_ts": "2026-08-12T04:17:29.788652Z",
+      "market_exposure_dollars": "0.003000",
+      "position_fp": "3.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-FFD33D6D369",
+      "total_traded_dollars": "0.003000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:20:38.440201Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-95811585E7B",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:52:42.794237Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-F2F2D7804E5",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:43:58.892385Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-1AD0EB83D7F",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:55:23.065415Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-0ACE65C798F",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:54:04.265018Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-47F82F7C1A1",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T07:33:39.602213Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-805E2D78A96",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T07:35:06.466456Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-D3C3E7FF277",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000100",
+      "last_updated_ts": "2026-08-12T04:16:24.769186Z",
+      "market_exposure_dollars": "0.001000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-2C372182353",
+      "total_traded_dollars": "0.001000"
+    },
+    {
+      "fees_paid_dollars": "0.000100",
+      "last_updated_ts": "2026-08-12T04:16:24.303779Z",
+      "market_exposure_dollars": "0.001000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-385BE9F4F42",
+      "total_traded_dollars": "0.001000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:56:45.286219Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-D8CB8D8C6C6",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.010900",
+      "last_updated_ts": "2026-08-12T07:35:03.92184Z",
+      "market_exposure_dollars": "0.160000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20266419C114A13-887ACC2263D",
+      "total_traded_dollars": "0.160000"
+    },
+    {
+      "fees_paid_dollars": "0.015700",
+      "last_updated_ts": "2026-08-12T07:33:48.37011Z",
+      "market_exposure_dollars": "0.235000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20263C8E2A0DC7C-077A25047E9",
+      "total_traded_dollars": "0.235000"
+    },
+    {
+      "fees_paid_dollars": "0.005200",
+      "last_updated_ts": "2026-08-12T07:33:47.192206Z",
+      "market_exposure_dollars": "0.075000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026005ACE0A162-05B421CA591",
+      "total_traded_dollars": "0.075000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:33:43.823917Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20261D4D98D1306-78330ECB111",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:33:40.844071Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20269A4F310338C-06834601270",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:33:40.207024Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202638ACE9DD3FE-05CA5FABC14",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:40.219921Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202636C90E63DAD-7BED8A6D762",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:33:37.740482Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202636C90E63DAD-187B9EFE431",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:32:19.243628Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026410B790F9C5-CF31FC4CE7D",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.028700",
+      "last_updated_ts": "2026-08-12T07:32:17.807921Z",
+      "market_exposure_dollars": "0.450000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026A70FD7E8F2F-9E6A238ABA8",
+      "total_traded_dollars": "0.450000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:32:17.061246Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026D905C6E8757-57FC7C09568",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:32:16.451938Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026429B7AE0147-0B9407E5A9A",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:32:14.728128Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026149397C457B-6B27537B6A9",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:32:14.143667Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20268B5938421C1-5FFB6845ED4",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:32:12.941376Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026D2CC1885379-CA433271DAB",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:32:12.302658Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026DB33A4F8CD9-D07BD376001",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T07:32:11.702047Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20267F655D19403-7DD34EF98B7",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.006200",
+      "last_updated_ts": "2026-08-12T04:56:52.776414Z",
+      "market_exposure_dollars": "0.090000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026D516DD0B270-7A1772F7377",
+      "total_traded_dollars": "0.090000"
+    },
+    {
+      "fees_paid_dollars": "0.019500",
+      "last_updated_ts": "2026-08-12T04:56:52.32645Z",
+      "market_exposure_dollars": "0.295000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S202605DDB2ADA79-1C50CFFD9C7",
+      "total_traded_dollars": "0.295000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:51.8944Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026469F62BF947-1313EF69DD1",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:50.467986Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202657616111604-C81B827EEDC",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:48.929534Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20266C80D0E2A8F-F056DFC4942",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:48.469133Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026B79C3B793FC-DEF559BC7B3",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:54:06.110449Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026ED04DD329CA-041BAFFCA9D",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:47.550013Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026ED04DD329CA-09667E53DE5",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:43:59.346635Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20266D28196E6D5-FA268318D35",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:54:05.187619Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20266D28196E6D5-21030924A82",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:56:45.771304Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20266D28196E6D5-D0B3D1C6045",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:55:23.532906Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20266D28196E6D5-D4106063577",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:52:42.3284Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20266D28196E6D5-5561C58DE15",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:54:03.224936Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20269BAB8359FE1-A93797CC4B9",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:43.447188Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20269BAB8359FE1-D8E6D130388",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:54:01.207497Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026974D33EF88D-A77D23F6B6C",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:40.026868Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026974D33EF88D-304514EC4B9",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:42.090221Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026974D33EF88D-33425F99E1E",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.006900",
+      "last_updated_ts": "2026-08-12T04:56:41.630731Z",
+      "market_exposure_dollars": "0.100000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026D376A524C4E-8DEDF56F908",
+      "total_traded_dollars": "0.100000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:41.144955Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20262114C4712F4-6FC80309B40",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:54:00.767117Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20262114C4712F4-20E9483C029",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.022200",
+      "last_updated_ts": "2026-08-12T04:56:40.671452Z",
+      "market_exposure_dollars": "0.340000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026A61AF5FD32C-CF1C8C07B17",
+      "total_traded_dollars": "0.340000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:56:39.77126Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20269052A54967A-2AA2D83943D",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.011500",
+      "last_updated_ts": "2026-08-12T04:55:27.750131Z",
+      "market_exposure_dollars": "0.170000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202628F48691A4F-308BA08F92D",
+      "total_traded_dollars": "0.170000"
+    },
+    {
+      "fees_paid_dollars": "0.022800",
+      "last_updated_ts": "2026-08-12T04:55:26.344577Z",
+      "market_exposure_dollars": "0.350000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026CCDF124A790-7C9AF18D41F",
+      "total_traded_dollars": "0.350000"
+    },
+    {
+      "fees_paid_dollars": "0.006200",
+      "last_updated_ts": "2026-08-12T04:54:11.158766Z",
+      "market_exposure_dollars": "0.090000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20268AE37BCE6AE-6345A40E94B",
+      "total_traded_dollars": "0.090000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:54:06.57042Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026A8BA61D41EE-F5B98A6278C",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:54:05.645575Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C1FE92A1AB7-124A8639CDB",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.020100",
+      "last_updated_ts": "2026-08-12T04:54:00.328533Z",
+      "market_exposure_dollars": "0.305000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20262A36A66394B-CDFA471B2F9",
+      "total_traded_dollars": "0.305000"
+    },
+    {
+      "fees_paid_dollars": "0.031000",
+      "last_updated_ts": "2026-08-12T04:52:49.706276Z",
+      "market_exposure_dollars": "0.490000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20265E5EA03BB57-A020BAA7005",
+      "total_traded_dollars": "0.490000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:48.288377Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026DE6ABBE33C6-0A3C1CCD9FD",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:44.645506Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026CB5261E939B-4192B4FEA13",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:44.201694Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20269B649B34627-327B086D1CE",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:43.727181Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20264A4D68CBDEA-1906FD86E52",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:43.2709Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20265A9F9A364BC-9BA3BFCC272",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:40.966261Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20265F9B778C186-0255081625B",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:40.505768Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026D153BC04B3D-A2C8C6D6901",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:52:38.634653Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202614AF91F6357-89E14FCA34A",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.028900",
+      "last_updated_ts": "2026-08-12T04:49:06.588027Z",
+      "market_exposure_dollars": "0.430000",
+      "position_fp": "10.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202601715761D25-47A7D413773",
+      "total_traded_dollars": "0.430000"
+    },
+    {
+      "fees_paid_dollars": "0.064200",
+      "last_updated_ts": "2026-08-12T04:49:05.665444Z",
+      "market_exposure_dollars": "1.020000",
+      "position_fp": "10.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S202662D80B9B193-E9A7E0E65EE",
+      "total_traded_dollars": "1.020000"
+    },
+    {
+      "fees_paid_dollars": "0.063600",
+      "last_updated_ts": "2026-08-12T04:49:05.226545Z",
+      "market_exposure_dollars": "1.010000",
+      "position_fp": "10.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026AAC147EA820-671DBEAF626",
+      "total_traded_dollars": "1.010000"
+    },
+    {
+      "fees_paid_dollars": "0.001400",
+      "last_updated_ts": "2026-08-12T04:49:03.311556Z",
+      "market_exposure_dollars": "0.020000",
+      "position_fp": "10.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20262FB526069E4-63F4D7907D1",
+      "total_traded_dollars": "0.020000"
+    },
+    {
+      "fees_paid_dollars": "0.001400",
+      "last_updated_ts": "2026-08-12T04:49:00.400358Z",
+      "market_exposure_dollars": "0.020000",
+      "position_fp": "10.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026A778F8D945F-55EE98D9A70",
+      "total_traded_dollars": "0.020000"
+    },
+    {
+      "fees_paid_dollars": "0.001400",
+      "last_updated_ts": "2026-08-12T04:48:59.472689Z",
+      "market_exposure_dollars": "0.020000",
+      "position_fp": "10.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026706ABBD1110-DC5E7F95AEE",
+      "total_traded_dollars": "0.020000"
+    },
+    {
+      "fees_paid_dollars": "0.001100",
+      "last_updated_ts": "2026-08-12T04:20:47.04595Z",
+      "market_exposure_dollars": "0.015000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20264A673DEE0CD-DD86D3423F5",
+      "total_traded_dollars": "0.015000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:20:38.90085Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20266A3F94C7979-B091BF45294",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:20:37.430759Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20265DAC6523195-0327C571DA1",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.043200",
+      "last_updated_ts": "2026-08-12T04:20:36.946609Z",
+      "market_exposure_dollars": "0.720000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026355B0A0F1D5-08D9B9C9F9B",
+      "total_traded_dollars": "0.720000"
+    },
+    {
+      "fees_paid_dollars": "0.000700",
+      "last_updated_ts": "2026-08-12T04:20:35.936752Z",
+      "market_exposure_dollars": "0.010000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026CD2B622E1BA-6E7140ADA8D",
+      "total_traded_dollars": "0.010000"
+    },
+    {
+      "fees_paid_dollars": "0.031000",
+      "last_updated_ts": "2026-08-12T04:20:32.542447Z",
+      "market_exposure_dollars": "0.490000",
+      "position_fp": "5.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20264152E1D9D1D-1462464BF78",
+      "total_traded_dollars": "0.490000"
+    },
+    {
+      "fees_paid_dollars": "0.004900",
+      "last_updated_ts": "2026-08-12T04:17:34.504618Z",
+      "market_exposure_dollars": "0.072000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S202633062AFE156-F6D2E5EB442",
+      "total_traded_dollars": "0.072000"
+    },
+    {
+      "fees_paid_dollars": "0.000500",
+      "last_updated_ts": "2026-08-12T04:17:31.175762Z",
+      "market_exposure_dollars": "0.006000",
+      "position_fp": "3.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026CB5BF105698-8E63F7B6A79",
+      "total_traded_dollars": "0.006000"
+    },
+    {
+      "fees_paid_dollars": "0.000500",
+      "last_updated_ts": "2026-08-12T04:17:30.702418Z",
+      "market_exposure_dollars": "0.006000",
+      "position_fp": "3.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20260F4ADA2329C-22CFB071F44",
+      "total_traded_dollars": "0.006000"
+    },
+    {
+      "fees_paid_dollars": "0.000400",
+      "last_updated_ts": "2026-08-12T04:16:29.586152Z",
+      "market_exposure_dollars": "0.005000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026C067D466887-337710016FD",
+      "total_traded_dollars": "0.005000"
+    },
+    {
+      "fees_paid_dollars": "0.000200",
+      "last_updated_ts": "2026-08-12T04:16:27.598305Z",
+      "market_exposure_dollars": "0.002000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026D297644E1F6-A0ED1739191",
+      "total_traded_dollars": "0.002000"
+    },
+    {
+      "fees_paid_dollars": "0.000200",
+      "last_updated_ts": "2026-08-12T04:16:25.236672Z",
+      "market_exposure_dollars": "0.002000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20263BB334B4F26-A56476EB4FE",
+      "total_traded_dollars": "0.002000"
+    },
+    {
+      "fees_paid_dollars": "0.000200",
+      "last_updated_ts": "2026-08-12T04:16:27.133331Z",
+      "market_exposure_dollars": "0.002000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20263BB334B4F26-E80B6844568",
+      "total_traded_dollars": "0.002000"
+    },
+    {
+      "fees_paid_dollars": "0.000200",
+      "last_updated_ts": "2026-08-12T04:16:26.2081Z",
+      "market_exposure_dollars": "0.002000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20268D817ED0376-E3B8F469D67",
+      "total_traded_dollars": "0.002000"
+    },
+    {
+      "fees_paid_dollars": "0.000200",
+      "last_updated_ts": "2026-08-12T04:16:25.73599Z",
+      "market_exposure_dollars": "0.002000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20269D96EEC39CD-3EC15590F68",
+      "total_traded_dollars": "0.002000"
+    },
+    {
+      "fees_paid_dollars": "0.001000",
+      "last_updated_ts": "2026-08-12T04:16:22.408553Z",
+      "market_exposure_dollars": "0.014000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S2026867F9202C94-86BAC8C942E",
+      "total_traded_dollars": "0.014000"
+    },
+    {
+      "fees_paid_dollars": "0.009800",
+      "last_updated_ts": "2026-08-11T16:25:14.6354Z",
+      "market_exposure_dollars": "0.360000",
+      "position_fp": "3.00",
+      "realized_pnl_dollars": "-0.050000",
+      "ticker": "KXWTI-26NOV03-T105.99",
+      "total_traded_dollars": "1.410000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T12:25:39.208382Z",
+      "market_exposure_dollars": "0.220000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXWTI-26NOV03-T106.99",
+      "total_traded_dollars": "0.220000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T12:25:39.208032Z",
+      "market_exposure_dollars": "0.200000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXWTI-26NOV03-T107.99",
+      "total_traded_dollars": "0.200000"
+    },
+    {
+      "fees_paid_dollars": "0.017300",
+      "last_updated_ts": "2026-08-11T16:25:13.857326Z",
+      "market_exposure_dollars": "0.100000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "-0.030000",
+      "ticker": "KXWTI-26NOV03-T108.99",
+      "total_traded_dollars": "1.130000"
+    },
+    {
+      "fees_paid_dollars": "0.018400",
+      "last_updated_ts": "2026-08-11T16:25:13.082719Z",
+      "market_exposure_dollars": "0.110000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "-0.040000",
+      "ticker": "KXWTI-26NOV03-T109.99",
+      "total_traded_dollars": "1.150000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T11:58:54.39742Z",
+      "market_exposure_dollars": "0.200000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXWTI-26NOV03-T110.99",
+      "total_traded_dollars": "0.200000"
+    },
+    {
+      "fees_paid_dollars": "0.015500",
+      "last_updated_ts": "2026-08-11T16:25:12.310618Z",
+      "market_exposure_dollars": "0.090000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "-0.030000",
+      "ticker": "KXWTI-26NOV03-T111.99",
+      "total_traded_dollars": "1.120000"
+    },
+    {
+      "fees_paid_dollars": "0.011900",
+      "last_updated_ts": "2026-08-11T16:25:13.300597Z",
+      "market_exposure_dollars": "0.090000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "-0.040000",
+      "ticker": "KXWTI-26NOV03-T112.99",
+      "total_traded_dollars": "1.130000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T11:58:53.687472Z",
+      "market_exposure_dollars": "0.160000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXWTI-26NOV03-T113.99",
+      "total_traded_dollars": "0.160000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T11:58:53.68746Z",
+      "market_exposure_dollars": "0.160000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXWTI-26NOV03-T114.99",
+      "total_traded_dollars": "0.160000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T11:58:53.592246Z",
+      "market_exposure_dollars": "0.160000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXWTI-26NOV03-T115.99",
+      "total_traded_dollars": "0.160000"
+    },
+    {
+      "fees_paid_dollars": "0.040300",
+      "last_updated_ts": "2026-08-11T16:25:10.774811Z",
+      "market_exposure_dollars": "0.480000",
+      "position_fp": "6.00",
+      "realized_pnl_dollars": "-0.020000",
+      "ticker": "KXWTI-26NOV03-T116.99",
+      "total_traded_dollars": "1.500000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T04:06:24.34433Z",
+      "market_exposure_dollars": "0.130000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXGDPYEAR-36-T0.1",
+      "total_traded_dollars": "0.130000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T03:35:22.775495Z",
+      "market_exposure_dollars": "0.200000",
+      "position_fp": "4.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20263F225623CF4-72A5DC004A4",
+      "total_traded_dollars": "0.200000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T03:29:06.355079Z",
+      "market_exposure_dollars": "0.040000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026FF9A6C5B284-83B046CC603",
+      "total_traded_dollars": "0.040000"
+    },
+    {
+      "fees_paid_dollars": "0.006700",
+      "last_updated_ts": "2026-08-11T03:20:04.445703Z",
+      "market_exposure_dollars": "0.100000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20261A26A623696-72151028F7D",
+      "total_traded_dollars": "0.100000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T02:56:58.062999Z",
+      "market_exposure_dollars": "0.180000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20268F7305D2DBE-DA4AEBA7D13",
+      "total_traded_dollars": "0.180000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T02:56:55.359417Z",
+      "market_exposure_dollars": "0.240000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026C0763AA3987-07A0695C5B0",
+      "total_traded_dollars": "0.240000"
+    },
+    {
+      "fees_paid_dollars": "0.004800",
+      "last_updated_ts": "2026-08-11T02:53:53.144952Z",
+      "market_exposure_dollars": "0.070000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026F31A1F0F747-77362C1E0AD",
+      "total_traded_dollars": "0.070000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T02:56:49.854474Z",
+      "market_exposure_dollars": "0.240000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026F31A1F0F747-E6A6A877F6E",
+      "total_traded_dollars": "0.240000"
+    },
+    {
+      "fees_paid_dollars": "0.004100",
+      "last_updated_ts": "2026-08-11T02:50:48.267145Z",
+      "market_exposure_dollars": "0.060000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVESPORTSMULTIGAMEEXTENDED-S20263058EA6386C-52A1F611A11",
+      "total_traded_dollars": "0.060000"
+    },
+    {
+      "fees_paid_dollars": "0.003900",
+      "last_updated_ts": "2026-08-11T02:34:50.561992Z",
+      "market_exposure_dollars": "0.056000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S202679F2AB4DF29-0A87604A944",
+      "total_traded_dollars": "0.056000"
+    },
+    {
+      "fees_paid_dollars": "0.000000",
+      "last_updated_ts": "2026-08-11T02:13:23.90607Z",
+      "market_exposure_dollars": "0.180000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026B6AAFA304D8-8A8A4004F3F",
+      "total_traded_dollars": "0.180000"
+    },
+    {
+      "fees_paid_dollars": "0.003700",
+      "last_updated_ts": "2026-08-10T04:36:00.498222Z",
+      "market_exposure_dollars": "0.334000",
+      "position_fp": "4.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S2026BBA0AD29579-439140B5F23",
+      "total_traded_dollars": "0.334000"
+    },
+    {
+      "fees_paid_dollars": "0.002000",
+      "last_updated_ts": "2026-08-09T00:41:02.736177Z",
+      "market_exposure_dollars": "0.028000",
+      "position_fp": "2.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S202690E5C1A8E12-B278CBD64D3",
+      "total_traded_dollars": "0.028000"
+    },
+    {
+      "fees_paid_dollars": "0.005600",
+      "last_updated_ts": "2026-08-03T05:30:17.271261Z",
+      "market_exposure_dollars": "0.087000",
+      "position_fp": "1.00",
+      "realized_pnl_dollars": "0.000000",
+      "ticker": "KXMVECROSSCATEGORY-S20261A5ACC476A5-E7F45513BF9",
+      "total_traded_dollars": "0.087000"
+    }
+  ],
+  "held_tickers": [
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20261D4D98D1306-78330ECB111",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20266419C114A13-887ACC2263D",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026AAC147EA820-671DBEAF626",
+    "KXMVECROSSCATEGORY-S2026F31A1F0F747-77362C1E0AD",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20262114C4712F4-6FC80309B40",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20264A673DEE0CD-DD86D3423F5",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20262FB526069E4-63F4D7907D1",
+    "KXWTI-26NOV03-T105.99",
+    "KXMVECROSSCATEGORY-S2026355B0A0F1D5-08D9B9C9F9B",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-805E2D78A96",
+    "KXMVECROSSCATEGORY-S2026B6AAFA304D8-8A8A4004F3F",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026ED04DD329CA-09667E53DE5",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20264A4D68CBDEA-1906FD86E52",
+    "KXMVECROSSCATEGORY-S202690E5C1A8E12-B278CBD64D3",
+    "KXMVECROSSCATEGORY-S2026A61AF5FD32C-CF1C8C07B17",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026488579835B4-4A3979F8A5D",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20268D817ED0376-E3B8F469D67",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026CCDF124A790-7C9AF18D41F",
+    "KXMVECROSSCATEGORY-S20265F9B778C186-0255081625B",
+    "KXMVECROSSCATEGORY-S20264152E1D9D1D-1462464BF78",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026D297644E1F6-A0ED1739191",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20266C80D0E2A8F-F056DFC4942",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-95811585E7B",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026429B7AE0147-0B9407E5A9A",
+    "KXMVECROSSCATEGORY-S20266D28196E6D5-FA268318D35",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-47F82F7C1A1",
+    "KXWTI-26NOV03-T116.99",
+    "KXMVECROSSCATEGORY-S20261A5ACC476A5-E7F45513BF9",
+    "KXMVECROSSCATEGORY-S20266D28196E6D5-D0B3D1C6045",
+    "KXMVECROSSCATEGORY-S20266D28196E6D5-D4106063577",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202636C90E63DAD-187B9EFE431",
+    "KXMVECROSSCATEGORY-S2026CB5261E939B-4192B4FEA13",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202628F48691A4F-308BA08F92D",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202633062AFE156-F6D2E5EB442",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-385BE9F4F42",
+    "KXMVECROSSCATEGORY-S2026BBA0AD29579-439140B5F23",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202657616111604-C81B827EEDC",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026706ABBD1110-DC5E7F95AEE",
+    "KXMVECROSSCATEGORY-S2026062A660AE10-9057C8904C8",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026D376A524C4E-8DEDF56F908",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026CD2B622E1BA-6E7140ADA8D",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026B79C3B793FC-DEF559BC7B3",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-0ACE65C798F",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026867F9202C94-86BAC8C942E",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026D153BC04B3D-A2C8C6D6901",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-2C372182353",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20269BAB8359FE1-D8E6D130388",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026DB33A4F8CD9-D07BD376001",
+    "KXWTI-26NOV03-T113.99",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20263BB334B4F26-A56476EB4FE",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20268B5938421C1-5FFB6845ED4",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026D2CC1885379-CA433271DAB",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20269052A54967A-2AA2D83943D",
+    "KXWTI-26NOV03-T106.99",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20265A5C21324A8-0F92FA968EF",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-1AD0EB83D7F",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-F2F2D7804E5",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20262114C4712F4-20E9483C029",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026005ACE0A162-05B421CA591",
+    "KXWTI-26NOV03-T107.99",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20263BB334B4F26-E80B6844568",
+    "KXMVECROSSCATEGORY-S2026469F62BF947-1313EF69DD1",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C3F6890D223-C44C5F6C19C",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20265DAC6523195-0327C571DA1",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20263C8E2A0DC7C-077A25047E9",
+    "KXMVECROSSCATEGORY-S2026C0763AA3987-07A0695C5B0",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20267F655D19403-7DD34EF98B7",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026A778F8D945F-55EE98D9A70",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20268AE37BCE6AE-6345A40E94B",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026974D33EF88D-A77D23F6B6C",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20262A36A66394B-CDFA471B2F9",
+    "KXMVECROSSCATEGORY-S20263C928579D6E-878E1B4B16C",
+    "KXWTI-26NOV03-T111.99",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-FFD33D6D369",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026974D33EF88D-304514EC4B9",
+    "KXMVECROSSCATEGORY-S20269B649B34627-327B086D1CE",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026149397C457B-6B27537B6A9",
+    "KXWTI-26NOV03-T112.99",
+    "KXMVECROSSCATEGORY-S20261A26A623696-72151028F7D",
+    "KXMVECROSSCATEGORY-S20265E5EA03BB57-A020BAA7005",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20269D96EEC39CD-3EC15590F68",
+    "KXWTI-26NOV03-T108.99",
+    "KXMVECROSSCATEGORY-S20263C928579D6E-8F3BDD2BBEA",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-D8CB8D8C6C6",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20266A3F94C7979-B091BF45294",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202638ACE9DD3FE-05CA5FABC14",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202601715761D25-47A7D413773",
+    "KXWTI-26NOV03-T115.99",
+    "KXMVECROSSCATEGORY-S202662D80B9B193-E9A7E0E65EE",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20265A9F9A364BC-9BA3BFCC272",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202614AF91F6357-89E14FCA34A",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C067D466887-337710016FD",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-8447245255F",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20269A4F310338C-06834601270",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026A70FD7E8F2F-9E6A238ABA8",
+    "KXMVECROSSCATEGORY-S202679F2AB4DF29-0A87604A944",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20269BAB8359FE1-A93797CC4B9",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20260F4ADA2329C-22CFB071F44",
+    "KXMVECROSSCATEGORY-S2026FF9A6C5B284-83B046CC603",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C1FE92A1AB7-124A8639CDB",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026974D33EF88D-33425F99E1E",
+    "KXMVECROSSCATEGORY-S202605DDB2ADA79-1C50CFFD9C7",
+    "KXWTI-26NOV03-T110.99",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026410B790F9C5-CF31FC4CE7D",
+    "KXWTI-26NOV03-T114.99",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026D516DD0B270-7A1772F7377",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20263F225623CF4-72A5DC004A4",
+    "KXMVECROSSCATEGORY-S20268F7305D2DBE-DA4AEBA7D13",
+    "KXWTI-26NOV03-T109.99",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026A8BA61D41EE-F5B98A6278C",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S20263058EA6386C-52A1F611A11",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026ED04DD329CA-041BAFFCA9D",
+    "KXMVECROSSCATEGORY-S2026DE6ABBE33C6-0A3C1CCD9FD",
+    "KXMVECROSSCATEGORY-S20266D28196E6D5-21030924A82",
+    "KXMVECROSSCATEGORY-S2026F31A1F0F747-E6A6A877F6E",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026D905C6E8757-57FC7C09568",
+    "KXMVECROSSCATEGORY-S2026CB5BF105698-8E63F7B6A79",
+    "KXMVECROSSCATEGORY-S2026062A660AE10-DB9D8DC89DD",
+    "KXMVECROSSCATEGORY-S20266D28196E6D5-5561C58DE15",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202636C90E63DAD-7BED8A6D762",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202626F8034E0D3-38DF5AAB802",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S202671080FB4F17-08D8A196460",
+    "KXMVECROSSCATEGORY-S20266CAD9C12702-DC26B0D2307",
+    "KXGDPYEAR-36-T0.1",
+    "KXMVESPORTSMULTIGAMEEXTENDED-S2026C8B019230E6-D3C3E7FF277"
+  ]
 }
