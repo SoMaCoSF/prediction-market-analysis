@@ -1,11 +1,5 @@
 {
-  "balance": 42.00,
-  "portfolio_value": 0,
-  "cash": 42.00,
-  "positions": [],
-  "total_cost": 0,
-  "total_exposure": 0,
-  "total_fees": 0,
-  "updated_at": "2026-08-12T15:00:00Z",
-  "source": "kalshi_python SDK verified"
+  "timestamp": "2026-08-12T22:32:24.380565+00:00",
+  "wti_price": 82.74,
+  "positions": []
 }
