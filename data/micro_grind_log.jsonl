@@ -1,0 +1,4 @@
+{"type": "cycle", "cycle": 1, "fills": 13, "shares": 65.0, "spent": 0.6072, "cash_before": 5.009, "ts": "2026-08-12T04:52:45.961896+00:00"}
+{"type": "cycle", "cycle": 2, "fills": 10, "shares": 50.0, "spent": 0.4708, "cash_before": 4.3702, "ts": "2026-08-12T04:54:06.499628+00:00"}
+{"type": "cycle", "cycle": 3, "fills": 4, "shares": 20.0, "spent": 0.5368, "cash_before": 3.8739, "ts": "2026-08-12T04:55:23.086178+00:00"}
+{"type": "cycle", "cycle": 4, "fills": 16, "shares": 80.0, "spent": 0.9467999999999999, "cash_before": 3.3088, "ts": "2026-08-12T04:56:49.505934+00:00"}
