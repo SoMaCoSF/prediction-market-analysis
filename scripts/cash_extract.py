@@ -10,8 +10,8 @@ try:
 except Exception:
     pass
 
-from kalshi_python.api_client import ApiClient
 from kalshi_python.api.portfolio_api import PortfolioApi
+from kalshi_python.api_client import ApiClient
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "kalshi_balance.json"
