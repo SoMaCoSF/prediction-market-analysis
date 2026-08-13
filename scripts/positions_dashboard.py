@@ -4,10 +4,9 @@ import json
 import os
 import subprocess
 import threading
-import time
-from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
+from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "kalshi_balance.json"
