@@ -19,7 +19,7 @@ from kalshi_python.api_client import ApiClient
 
 ROOT = Path(__file__).resolve().parent.parent
 STATE_PATH = ROOT / "data" / "wti_watch_state.json"
-POLL_INTERVAL = 60
+POLL_INTERVAL = 10
 
 
 def load_state():
