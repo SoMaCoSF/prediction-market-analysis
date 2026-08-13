@@ -1,225 +1,160 @@
-"""Conservative Kalshi micro-grinder with real liquidity check.
-Safety rules:
-- Hard floor at $2.00 cash
-- Only trades markets with volume_24h > 0 and real orderbook depth
-- Small position sizes
-- Uses mission_control.py signing logic
-"""
+"""Minimal Kalshi micro-grinder using the official SDK only."""
+import json
 import os
 import time
-import json
-import math
 from pathlib import Path
-from datetime import datetime, timezone
-from dotenv import load_dotenv
 
-load_dotenv()
-
-# Config
-FLOOR = 2.00
-MAX_POSITION_SIZE = 0.50  # max $ per trade
-MAX_POSITIONS = 10
-MIN_LIQUIDITY = 100  # minimum volume_24h
-STATE_FILE = Path("data/grind_state.json")
-
-# Paths
-KEY_ID = os.environ["KALSHI_KEY_ID"]
-KEY_PATH = ".kalshi_key.pem"
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 from kalshi_python.api_client import ApiClient
 from kalshi_python.api.portfolio_api import PortfolioApi
 from kalshi_python.api.markets_api import MarketsApi
+from kalshi_python.models.create_order_request import CreateOrderRequest
 
-client = ApiClient()
-client.set_kalshi_auth(KEY_ID, KEY_PATH)
-portfolio_api = PortfolioApi(client)
-markets_api = MarketsApi(client)
-
-
-def get_balance():
-    bal = portfolio_api.get_balance()
-    return float(getattr(bal, "balance", 0))
-
-
-def get_positions():
-    try:
-        p = portfolio_api.get_positions()
-        data = p.model_dump() if hasattr(p, "model_dump") else getattr(p, "dict", lambda: None)()
-        return data.get("positions") or []
-    except Exception as e:
-        print(f"[WARN] get_positions failed: {e}")
-        return []
-
-
-def get_open_markets(limit=200):
-    resp = markets_api.get_markets(limit=limit, status="open")
-    data = resp.model_dump() if hasattr(resp, "model_dump") else getattr(resp, "dict", lambda: {})()
-    return data.get("markets", [])
-
-
-def check_orderbook_depth(ticker):
-    """Check if orderbook has real depth. Returns True if viable."""
-    try:
-        ob = markets_api.get_orderbook(ticker)
-        ob_data = ob.model_dump() if hasattr(ob, "model_dump") else getattr(ob, "dict", lambda: {})()
-        yes = ob_data.get("yes", {})
-        no = ob_data.get("no", {})
-        
-        yes_bid = yes.get("bid", 0)
-        yes_ask = yes.get("ask", 100)
-        no_bid = no.get("bid", 0)
-        no_ask = no.get("ask", 100)
-        
-        # Check spread is reasonable
-        yes_spread = yes_ask - yes_bid
-        no_spread = no_ask - no_bid
-        
-        if yes_spread > 20 or no_spread > 20:  # >20 cents spread = dead book
-            return False, "wide_spread"
-        
-        # Check there's actual depth
-        if not yes.get("depth") and not yes.get("bids"):
-            return False, "no_yes_depth"
-        
-        return True, "ok"
-    except Exception as e:
-        return False, f"error: {e}"
-
-
-def find_opportunities():
-    """Find micro opportunities with real liquidity."""
-    markets = get_open_markets()
-    opportunities = []
-    
-    for m in markets:
-        vol = m.get("volume_24h") or 0
-        if vol < MIN_LIQUIDITY:
-            continue
-        
-        ticker = m.get("ticker")
-        if not ticker:
-            continue
-        
-        viable, reason = check_orderbook_depth(ticker)
-        if not viable:
-            continue
-        
-        # Look for cheap YES/NO opportunities
-        yes_bid = m.get("yes_bid_dollars", 0)
-        yes_ask = m.get("yes_ask_dollars", 1)
-        no_bid = m.get("no_bid_dollars", 0)
-        no_ask = m.get("no_ask_dollars", 1)
-        
-        yes_price = yes_ask / 100 if yes_ask else 0
-        no_price = no_ask / 100 if no_ask else 0
-        
-        # Micro strategy: cheap YES or cheap NO
-        if yes_price <= 0.15 and yes_price > 0:
-            opportunities.append({
-                "ticker": ticker,
-                "title": m.get("title", ticker),
-                "side": "yes",
-                "price": yes_price,
-                "liquidity": vol,
-                "reason": f"cheap_yes_{yes_price:.2f}"
-            })
-        elif no_price <= 0.15 and no_price > 0:
-            opportunities.append({
-                "ticker": ticker,
-                "title": m.get("title", ticker),
-                "side": "no",
-                "price": no_price,
-                "liquidity": vol,
-                "reason": f"cheap_no_{no_price:.2f}"
-            })
-    
-    # Sort by liquidity descending, limit
-    opportunities.sort(key=lambda x: x["liquidity"], reverse=True)
-    return opportunities[:MAX_POSITIONS]
+ROOT = Path(__file__).resolve().parent.parent
+STATE_PATH = ROOT / "data" / "wti_watch_state.json"
+RESERVE_FLOOR = 2.00
+MAX_ORDER_NOTIONAL = 5.00
+MAX_ORDER_COUNT = 5
 
 
 def load_state():
-    if STATE_FILE.exists():
-        return json.loads(STATE_FILE.read_text())
-    return {"trades": [], "last_run": None}
+    if STATE_PATH.exists():
+        return json.loads(STATE_PATH.read_text())
+    return {"balance": 0, "positions": 0, "trades": 0}
 
 
 def save_state(state):
-    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    STATE_PATH.write_text(json.dumps(state, indent=2))
 
 
-def grind():
-    print(f"[{datetime.now(timezone.utc).isoformat()}] Starting grind cycle...")
-    
-    balance = get_balance()
-    print(f"Balance: ${balance:.2f}")
-    
-    if balance < FLOOR:
-        print(f"[STOP] Balance ${balance:.2f} below floor ${FLOOR:.2f}. Halting.")
-        return
-    
-    positions = get_positions()
-    active_count = len(positions) if isinstance(positions, list) else 0
-    print(f"Active positions: {active_count}")
-    
-    if active_count >= MAX_POSITIONS:
-        print(f"[STOP] Max positions {MAX_POSITIONS} reached. Halting.")
-        return
-    
-    
-    opportunities = find_opportunities()
-    print(f"Found {len(opportunities)} opportunities")
-    
-    if not opportunities:
-        print("[WAIT] No viable opportunities. Sleeping.")
-        return
-    
+def get_client():
+    client = ApiClient()
+    client.set_kalshi_auth(os.environ["KALSHI_KEY_ID"], str(ROOT / ".kalshi_key.pem"))
+    return client
+
+
+def get_balance(client):
+    api = PortfolioApi(client)
+    resp = api.get_balance()
+    balance = getattr(resp, "balance", None)
+    if balance is None:
+        return 0.0
+    return float(balance)
+
+
+def find_opportunity(client):
+    """Scan for any market with executable depth."""
+    markets_api = MarketsApi(client)
+    try:
+        resp = markets_api.get_markets(limit=200, status="open")
+        markets = resp.markets if hasattr(resp, "markets") else []
+    except Exception as e:
+        print(f"Market scan error: {e}")
+        return None
+
+    for m in markets:
+        yes_bid = getattr(m, "yes_bid_dollars", None)
+        yes_ask = getattr(m, "yes_ask_dollars", None)
+        no_bid = getattr(m, "no_bid_dollars", None)
+        no_ask = getattr(m, "no_ask_dollars", None)
+        vol = getattr(m, "volume_24h", None) or getattr(m, "volume", None) or 0
+
+        if vol <= 0:
+            continue
+        if yes_ask is None and no_ask is None:
+            continue
+
+        # Prefer cheap YES
+        if yes_ask is not None and yes_ask <= 0.15:
+            return {
+                "ticker": m.ticker,
+                "side": "yes",
+                "price": float(yes_ask),
+                "reason": f"YES ask {yes_ask} <= 15¢, vol={vol}",
+            }
+        # Fallback: cheap NO implies expensive YES
+        if no_ask is not None and no_ask >= 0.85:
+            yes_effective = 1.0 - float(no_ask)
+            if yes_effective <= 0.15:
+                return {
+                    "ticker": m.ticker,
+                    "side": "yes",
+                    "price": yes_effective,
+                    "reason": f"NO ask {no_ask} => YES ~{yes_effective:.2f}, vol={vol}",
+                }
+    return None
+
+
+def place_order(client, ticker, side, price, count=1):
+    """Place a limit order using SDK."""
+    api = PortfolioApi(client)
+    price_cents = int(round(price * 100))
+    order = CreateOrderRequest(
+        ticker=ticker,
+        action="buy",
+        side=side,
+        count=count,
+        type="limit",
+        yes_price=price_cents if side == "yes" else None,
+        no_price=price_cents if side == "no" else None,
+        client_order_id=f"grind-{int(time.time())}",
+    )
+    try:
+        resp = api.create_order(order)
+        print(f"Order placed: {ticker} {side} x{count} @ {price}")
+        print(f"Response: {resp}")
+        return True
+    except Exception as e:
+        print(f"Order failed: {e}")
+        return False
+
+
+def main():
     state = load_state()
-    
-    for opp in opportunities:
-        # Skip if we already traded this ticker recently
-        recent_tickers = [t["ticker"] for t in state.get("trades", [])[-20:]]
-        if opp["ticker"] in recent_tickers:
-            continue
-        
-        # Calculate position size
-        alloc = min(MAX_POSITION_SIZE, balance * 0.1)
-        shares = max(1, int(alloc / opp["price"]))
-        cost = shares * opp["price"]
-        
-        if cost > balance - FLOOR:
-            print(f"[SKIP] Cost ${cost:.2f} would breach floor")
-            continue
-        
-        print(f"[TRADE] {opp['ticker']} {opp['side'].upper()} {shares} @ ${opp['price']:.3f} = ${cost:.2f}")
-        
-        # Record trade
-        trade = {
-            "ticker": opp["ticker"],
-            "side": opp["side"],
-            "shares": shares,
-            "price": opp["price"],
-            "cost": cost,
-            "time": datetime.now(timezone.utc).isoformat(),
-            "reason": opp["reason"]
-        }
-        state.setdefault("trades", []).append(trade)
+    client = get_client()
+
+    # Update balance
+    balance = get_balance(client)
+    print(f"Live balance: ${balance:.2f}")
+    state["balance"] = balance
+
+    if balance <= RESERVE_FLOOR:
+        print(f"At floor ${RESERVE_FLOOR}. No trades.")
         save_state(state)
-        
-        # TODO: actually place order via markets_api.create_order(...)
-        # For now, just simulate the trade
-        balance -= cost
-        print(f"[OK] Simulated trade. Remaining balance: ${balance:.2f}")
-        
-        if balance < FLOOR:
-            print(f"[STOP] Balance ${balance:.2f} below floor after trade. Halting.")
-            break
-    
-    state["last_run"] = datetime.now(timezone.utc).isoformat()
+        return
+
+    # Find opportunity
+    opp = find_opportunity(client)
+    if not opp:
+        print("No opportunity found. Sleeping.")
+        save_state(state)
+        return
+
+    print(f"Found: {opp['ticker']} {opp['side']} @ {opp['price']} ({opp['reason']})")
+
+    # Check notional
+    notional = float(opp["price"]) * 1
+    available = balance - RESERVE_FLOOR
+    if notional > min(MAX_ORDER_NOTIONAL, available):
+        print(f"Notional ${notional:.2f} exceeds limit. Skipping.")
+        save_state(state)
+        return
+
+    # Place order
+    success = place_order(client, opp["ticker"], opp["side"], opp["price"], count=1)
+    if success:
+        state["trades"] = state.get("trades", 0) + 1
+        state["positions"] = state.get("positions", 0) + 1
+
     save_state(state)
-    print(f"[DONE] Grind cycle complete. Balance: ${balance:.2f}")
+    print("Done.")
 
 
 if __name__ == "__main__":
-    grind()
+    main()
