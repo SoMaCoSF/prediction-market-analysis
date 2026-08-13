@@ -23,14 +23,6 @@ OUT = ROOT / "data" / "kalshi_balance.json"
 def main():
     key_pem = (ROOT / ".kalshi_key.pem").read_text()
     private_key = serialization.load_pem_private_key(key_pem.encode(), password=None)
-    ts = str(int(time.time() * 1000))
-    msg = f"{ts}GET/trade-api/v2/portfolio/balance".encode()
-    sig = private_key.sign(msg, padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH), hashes.SHA256())
-    headers = {
-        "KALSHI-ACCESS-KEY": os.environ["KALSHI_KEY_ID"],
-        "KALSHI-ACCESS-TIMESTAMP": ts,
-        "KALSHI-ACCESS-SIGNATURE": __import__("base64").b64encode(sig).decode(),
-    }
     def signed_get(path, params=None):
         ts = str(int(time.time() * 1000))
         msg = f"{ts}GET/trade-api/v2{path}".encode()

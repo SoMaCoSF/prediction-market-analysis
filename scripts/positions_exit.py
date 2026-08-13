@@ -69,8 +69,6 @@ def main():
             continue
 
         ob = ob_resp.json().get("orderbook_fp", {})
-        yes_asks = ob.get("yes_dollars", [])
-        no_asks = ob.get("no_dollars", [])
 
         # Find best bid price for immediate exit
         best_price = None
