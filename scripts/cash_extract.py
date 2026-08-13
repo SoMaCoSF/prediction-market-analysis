@@ -2,6 +2,7 @@
 """Extract Kalshi live balance to a local file."""
 import json
 import os
+import time
 from pathlib import Path
 
 try:
@@ -10,44 +11,63 @@ try:
 except Exception:
     pass
 
-from kalshi_python.api.portfolio_api import PortfolioApi
-from kalshi_python.api_client import ApiClient
+
+import httpx
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "kalshi_balance.json"
 
 
 def main():
-    client = ApiClient()
-    client.set_kalshi_auth(os.environ["KALSHI_KEY_ID"], str(ROOT / ".kalshi_key.pem"))
-    api = PortfolioApi(client)
-    bal = api.get_balance()
-    pos = api.get_positions()
+    key_pem = (ROOT / ".kalshi_key.pem").read_text()
+    private_key = serialization.load_pem_private_key(key_pem.encode(), password=None)
+    ts = str(int(time.time() * 1000))
+    msg = f"{ts}GET/trade-api/v2/portfolio/balance".encode()
+    sig = private_key.sign(msg, padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH), hashes.SHA256())
+    headers = {
+        "KALSHI-ACCESS-KEY": os.environ["KALSHI_KEY_ID"],
+        "KALSHI-ACCESS-TIMESTAMP": ts,
+        "KALSHI-ACCESS-SIGNATURE": __import__("base64").b64encode(sig).decode(),
+    }
+    def signed_get(path, params=None):
+        ts = str(int(time.time() * 1000))
+        msg = f"{ts}GET/trade-api/v2{path}".encode()
+        sig = private_key.sign(msg, padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH), hashes.SHA256())
+        h = {
+            "KALSHI-ACCESS-KEY": os.environ["KALSHI_KEY_ID"],
+            "KALSHI-ACCESS-TIMESTAMP": ts,
+            "KALSHI-ACCESS-SIGNATURE": __import__("base64").b64encode(sig).decode(),
+        }
+        return httpx.get("https://external-api.kalshi.com/trade-api/v2" + path, headers=h, params=params, timeout=20)
 
-    balance = getattr(bal, "balance", None)
-    if balance is None:
-        balance = 0.0
-    balance = float(balance) / 100.0
+    bal = signed_get("/portfolio/balance").json()
+    pos = signed_get("/portfolio/positions", {"limit": "200"}).json()
 
-    positions_raw = getattr(pos, "positions", None)
+    raw_balance = bal.get("balance_dollars") or bal.get("balance") or 0
+    balance = float(raw_balance)
+    if balance > 100:
+        balance = balance / 100.0
+
+    positions_raw = pos.get("event_positions") or pos.get("positions") or []
     positions = []
-    if positions_raw is not None:
-        for p in positions_raw:
-            positions.append({
-                "ticker": getattr(p, "ticker", None),
-                "side": getattr(p, "side", None),
-                "count": getattr(p, "count", None),
-                "avg_price": getattr(p, "avg_price", None),
-                "current_price": getattr(p, "current_price", None),
-                "value": getattr(p, "value", None),
-                "pnl": getattr(p, "pnl", None),
-            })
+    for p in positions_raw:
+        positions.append({
+            "ticker": p.get("event_ticker") or p.get("ticker"),
+            "side": p.get("side"),
+            "count": float(p.get("total_cost_shares_fp") or p.get("count") or 0),
+            "avg_price": p.get("avg_price"),
+            "current_price": p.get("current_price"),
+            "value": float(p.get("event_exposure_dollars") or p.get("value") or 0),
+            "pnl": float(p.get("realized_pnl_dollars") or p.get("pnl") or 0),
+        })
 
     out = {
         "balance": balance,
         "positions_count": len(positions),
         "positions": positions,
-        "source": "kalshi_python SDK verified",
+        "source": "direct Kalshi V2",
         "timestamp": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
     }
 
