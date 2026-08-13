@@ -27,7 +27,7 @@ def main():
     balance = getattr(bal, "balance", None)
     if balance is None:
         balance = 0.0
-    balance = float(balance)
+    balance = float(balance) / 100.0
 
     positions_raw = getattr(pos, "positions", None)
     positions = []
