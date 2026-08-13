@@ -10,9 +10,9 @@ try:
 except Exception:
     pass
 
-from kalshi_python.api_client import ApiClient
-from kalshi_python.api.portfolio_api import PortfolioApi
 from kalshi_python.api.markets_api import MarketsApi
+from kalshi_python.api.portfolio_api import PortfolioApi
+from kalshi_python.api_client import ApiClient
 from kalshi_python.models.create_order_request import CreateOrderRequest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -59,9 +59,7 @@ def find_opportunity(client):
         return None
 
     for m in markets:
-        yes_bid = getattr(m, "yes_bid_dollars", None)
         yes_ask = getattr(m, "yes_ask_dollars", None)
-        no_bid = getattr(m, "no_bid_dollars", None)
         no_ask = getattr(m, "no_ask_dollars", None)
         vol = getattr(m, "volume_24h", None) or getattr(m, "volume", None) or 0
 

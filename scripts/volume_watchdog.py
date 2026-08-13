@@ -14,8 +14,8 @@ try:
 except Exception:
     pass
 
-from kalshi_python.api_client import ApiClient
 from kalshi_python.api.markets_api import MarketsApi
+from kalshi_python.api_client import ApiClient
 
 ROOT = Path(__file__).resolve().parent.parent
 STATE_PATH = ROOT / "data" / "wti_watch_state.json"
