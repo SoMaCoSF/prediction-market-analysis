@@ -1,0 +1,2 @@
+fn(WebSocket, tokio::sync::broadcast::Sender<std::string::String>) -> impl futures_util::Future<Output = ()> {ws_handler}
+fn(WebSocket, tokio::sync::broadcast::Sender<std::string::String>) -> impl futures_util::Future<Output = ()> {ws_handler}: Handler<_, _>
