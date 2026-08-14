@@ -1,10 +1,10 @@
-from typing import Any
 #!/usr/bin/env python3
 """Auto exit: scan positions, find any executable depth, close immediately."""
 import json
 import os
 import time
 from pathlib import Path
+from typing import Any
 
 import httpx
 from cryptography.hazmat.primitives import hashes, serialization
