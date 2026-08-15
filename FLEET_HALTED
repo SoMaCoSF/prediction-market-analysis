@@ -1,1 +1,9 @@
-FEE BLEED HALT: fees=$69.33 > 15% of bankroll $10.69
+FLEET HALT — REVISED 2026-08-15
+Original flag: FEE BLEED HALT: fees=$69.33 > 15% of bankroll $10.69
+REVISED STATE (2026-08-15):
+  - 0 open positions (37 stale positions from 08-14 snapshot have settled/expired)
+  - Cash $10.46, portfolio_value $5.43 — account clean at floor
+  - Original fee-bleed reason no longer active
+  - CURRENT reason not to trade: KALSHI VENUE DEAD — 0 of 200 open markets have 24h volume / two-sided spread
+  - uptick_loop.py monitors every 20m; arms only when real liquidity returns
+  - DO NOT restart live traders until: (a) venue liquidity returns AND (b) explicit GO
