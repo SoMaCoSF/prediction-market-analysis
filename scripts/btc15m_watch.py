@@ -24,8 +24,8 @@ except Exception:
 import httpx  # noqa: E402
 from mission_control import KALSHI_HOST, kalshi_keys, kalshi_sign  # noqa: E402
 
-CASH_FLOOR = 10.00
-MAX_RISK = 1.00          # $1 max micro-bet (this is a $9.x account)
+CASH_FLOOR = 5.00       # user-set floor 2026-08-15: "set floor at $5"
+MAX_RISK = 4.00          # deploy up to the disposable remainder (~$4.35)
 GO_FILE = ROOT / "GO_BTC"
 LOG = ROOT / "data" / "btc15m_watch.log"
 LOG.parent.mkdir(exist_ok=True)
