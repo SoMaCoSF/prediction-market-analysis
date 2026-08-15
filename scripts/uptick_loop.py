@@ -137,8 +137,24 @@ def main():
         elif (status.get("cash") or 0) <= FLOOR:
             status["note"] = (status["note"] + " | cash at/below floor — no auto-trade.").strip(" |")
 
+    # Warm the execution path every tick (DRY_RUN) so it's live-ready the
+    # instant liquidity returns. Never posts unless GO_TRADE exists.
+    exec_action = "none"
+    try:
+        from kalshi_executor import execute_once
+        ex = execute_once(force_live=False)
+        exec_action = ex.get("action", "none")
+        status["exec_action"] = exec_action
+        status["exec_detail"] = ex.get("detail", "")
+        # If the executor WOULD have acted (entry/exit) and venue is armed,
+        # that's the signal to surface to the user.
+        if exec_action in ("entry", "exit") and status["armed"]:
+            status["note"] = (status["note"] + f" | EXECUTOR WOULD {exec_action.upper()} — DRY_RUN (drop GO_TRADE to go live)").strip(" |")
+    except Exception as e:
+        status["note"] = (status["note"] + f" | executor warm failed: {e}").strip(" |")
+
     STATUS_FILE.write_text(json.dumps(status, indent=2))
-    line = f"{now[:19]}Z cash=${status['cash']} pos={status['positions']} open={status['open_markets']} liquid={status['liquid_markets']} armed={status['armed']} {status['note']}"
+    line = f"{now[:19]}Z cash=${status['cash']} pos={status['positions']} open={status['open_markets']} liquid={status['liquid_markets']} armed={status['armed']} exec={exec_action} {status['note']}"
     with LOG_FILE.open("a") as f:
         f.write(line + "\n")
     print(line)
