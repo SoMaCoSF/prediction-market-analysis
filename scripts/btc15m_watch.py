@@ -2,7 +2,7 @@
 """BTC-15m energy watcher + GO-gated micro-bet.
 
 Discipline:
-  - NEVER trades below CASH_FLOOR ($10.00). Currently cash=$9.35 -> blocked.
+  - NEVER trades below CASH_FLOOR ($5.00, user-set 2026-08-15). Currently cash=$9.35 -> $4.35 disposable.
   - NEVER trades a market without two-sided flow (yes_bid>0 AND yes_ask>0).
   - Live bet only when GO_BTC file present AND conditions met.
   - DRY_RUN by default (builds order, validates, does not POST).
