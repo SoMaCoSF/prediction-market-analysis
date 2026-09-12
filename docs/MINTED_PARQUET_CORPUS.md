@@ -33,3 +33,5 @@ Content samples: markets span the full Polymarket era — first shard is `will-j
 - Trades have **no `market_id`** by design → join trades→markets via `clob_token_ids` (recipe: fleet skill `turso-parquet-backfill` → `references/trades_backfill_pattern.md`; 817,683 token→market entries verified previously).
 - `timestamp` is NULL in sourced trade rows; `_fetched_at` = fetch date (2026-01-29/30 for the rows seen); file mtimes = mint/convert date (2026-07-30) — four+ months old as of this survey.
 - Fleet tie-in: this is the Polymarket-side data engine behind the fleet's Poly signal lanes (`shadow_index`, `whale_copier`) and the Turso/Supabase UUID pipeline.
+- **Consumers** (scripts referencing `minted_parquet`): `pg_trades_backfill.py` + `pg_trades_backfill_parallel.py`, `stream_mint_backfill.py`, `turso_backfill.py`, `turso_trades_backfill.py`, `server_view.py` (local viewer), `_probe_trades.py`.
+- Tooling env: `.venv311` = Python 3.11.14 + pyarrow 25.0.0 (the env this survey ran on).
