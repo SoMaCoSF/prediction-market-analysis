@@ -58,7 +58,7 @@ HOT_SERIES = ["KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXDOGE15M", "KXNF
 
 def real_vol(m: dict) -> float:
     """Return real traded volume: volume_fp is the populated field on /markets."""
-    for k in ("volume_fp", "volume_24h", "volume"):
+    for k in ("volume_fp", "volume_24h_fp", "volume_24h", "volume"):
         v = m.get(k)
         if v is None:
             continue

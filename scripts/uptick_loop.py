@@ -2,7 +2,7 @@
 """/loop UPTICK monitor — runs autonomously, never trades.
 
 Each tick it:
-  1. Scouts Kalshi PUBLIC market catalog for REAL liquidity (vol24h>0 AND two-sided spread)
+  1. Scouts Kalshi PUBLIC market catalog for REAL liquidity (vol>0 AND two-sided spread)
   2. Reads auth'd balance + open positions (read-only)
   3. Writes data/uptick_status.json + appends a compact line to data/uptick.log
   4. Prints a one-line status for cron capture
@@ -30,6 +30,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 KALSHI_HOST = os.getenv("KALSHI_HOST", "https://api.elections.kalshi.com/trade-api/v2")
 PUBLIC = "https://api.elections.kalshi.com/trade-api/v2/markets"
+EVENTS = "https://api.elections.kalshi.com/trade-api/v2/events"
 DATA = ROOT / "data"
 DATA.mkdir(exist_ok=True)
 STATUS_FILE = DATA / "uptick_status.json"
@@ -37,16 +38,16 @@ LOG_FILE = DATA / "uptick.log"
 
 FLOOR = 10.00  # cash floor — never trade below this
 
-# Series that reliably carry live two-sided books. The default /markets
-# pagination never reaches them (first pages are KXMVE shard listings), and
-# their volume only appears in `volume_fp` (volume/volume_24h read null on
-# this endpoint for every crypto/sports market).
+# Series that reliably carry live two-sided books, fetched explicitly so a
+# flaky spine can't blind the scout. Volume on /markets lives in `volume_fp`
+# (volume/volume_24h read null for every crypto/sports market); the /events
+# spine's nested markets carry `volume_24h_fp`.
 HOT_SERIES = ["KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXDOGE15M", "KXNFLGAME"]
 
 
 def real_vol(m: dict) -> float:
-    """Return real traded volume: volume_fp is the populated field on /markets."""
-    for k in ("volume_fp", "volume_24h", "volume"):
+    """Return real traded volume across the field spellings Kalshi uses."""
+    for k in ("volume_fp", "volume_24h_fp", "volume_24h", "volume"):
         v = m.get(k)
         if v is None:
             continue
@@ -90,8 +91,8 @@ def kalshi_get(path):
 
 def scout_liquidity(limit=200):
     out, cursor = [], None
-    # 1) Broad scan — default order is junk-heavy (KXMVE shards first); kept
-    #    for non-hot-series markets that may report real volume_fp.
+    # 1) Broad /markets scan — default order is junk-heavy (KXMVE shards first);
+    #    kept for non-hot-series markets that may report real volume_fp.
     while len(out) < limit:
         url = f"{PUBLIC}?status=open&limit=100"
         if cursor:
@@ -107,7 +108,29 @@ def scout_liquidity(limit=200):
         cursor = j.get("cursor")
         if not cursor:
             break
-    # 2) Explicit hot-series fetch — the reliable live pockets the pagination misses
+    # 2) Events spine — the activity-ordered source. /markets is NOT activity-
+    #    ordered (first 1000 rows carry zero two-sided quotes; verified
+    #    2026-09-13), while /events?with_nested_markets=true carries the
+    #    quoted venue (~3.4k two-sided markets, per microgrind_scan.py).
+    try:
+        ecursor = None
+        for _ in range(3):
+            eurl = f"{EVENTS}?status=open&limit=200&with_nested_markets=true"
+            if ecursor:
+                eurl += f"&cursor={ecursor}"
+            r = httpx.get(eurl, timeout=25)
+            if r.status_code != 200:
+                break
+            j = r.json()
+            for ev in j.get("events", []):
+                out.extend(ev.get("markets") or [])
+            ecursor = j.get("cursor")
+            if not ecursor:
+                break
+    except Exception:
+        pass
+    # 3) Explicit hot-series fetch — the reliable live pockets, guaranteed
+    #    even if the events spine is flaky.
     for s in HOT_SERIES:
         try:
             r = httpx.get(f"{PUBLIC}?status=open&series_ticker={s}&limit=10", timeout=15)
