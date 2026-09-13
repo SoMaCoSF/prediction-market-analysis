@@ -175,7 +175,9 @@ def main():
         status["portfolio_value"] = pv
         status["auth_ok"] = True
         pos = kalshi_get("/portfolio/positions?status=open&limit=200")
-        status["positions"] = len(pos.get("positions", []))
+        plist = pos.get("market_positions") or pos.get("event_positions") or pos.get("positions") or []
+        openp = [p for p in plist if float(p.get("position_fp") or p.get("position") or 0) != 0]
+        status["positions"] = len(openp)
     except Exception as e:
         status["note"] = f"balance read failed: {e}"
 

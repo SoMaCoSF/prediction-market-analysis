@@ -97,6 +97,16 @@ def get_cash() -> float:
 
 
 def get_open_positions() -> list:
+    """Open positions. NOTE: the response key is `market_positions` (sometimes
+    `event_positions`) — there is no `positions` key (reading it shows 0)."""
+    kid, kpath = kalshi_keys()
+    ts = str(int(time.time() * 1000))
+    sig = kalshi_sign("GET", "/portfolio/positions", ts, kpath)
+    h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
+    r = httpx.get(f"{KALSHI_HOST}/portfolio/positions", headers=h, timeout=20)
+    r.raise_for_status()
+    d = r.json()
+    return d.get("market_positions") or d.get("event_positions") or d.get("positions") or []
     kid, kpath = kalshi_keys()
     ts = str(int(time.time() * 1000))
     sig = kalshi_sign("GET", "/portfolio/positions", ts, kpath)
