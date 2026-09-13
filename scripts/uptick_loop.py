@@ -37,6 +37,25 @@ LOG_FILE = DATA / "uptick.log"
 
 FLOOR = 10.00  # cash floor — never trade below this
 
+# Series that reliably carry live two-sided books. The default /markets
+# pagination never reaches them (first pages are KXMVE shard listings), and
+# their volume only appears in `volume_fp` (volume/volume_24h read null on
+# this endpoint for every crypto/sports market).
+HOT_SERIES = ["KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXDOGE15M", "KXNFLGAME"]
+
+
+def real_vol(m: dict) -> float:
+    """Return real traded volume: volume_fp is the populated field on /markets."""
+    for k in ("volume_fp", "volume_24h", "volume"):
+        v = m.get(k)
+        if v is None:
+            continue
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            continue
+    return 0.0
+
 
 def keys():
     kid = os.getenv("KALSHI_KEY_ID")
@@ -71,6 +90,8 @@ def kalshi_get(path):
 
 def scout_liquidity(limit=200):
     out, cursor = [], None
+    # 1) Broad scan — default order is junk-heavy (KXMVE shards first); kept
+    #    for non-hot-series markets that may report real volume_fp.
     while len(out) < limit:
         url = f"{PUBLIC}?status=open&limit=100"
         if cursor:
@@ -86,23 +107,36 @@ def scout_liquidity(limit=200):
         cursor = j.get("cursor")
         if not cursor:
             break
-    liquid = []
+    # 2) Explicit hot-series fetch — the reliable live pockets the pagination misses
+    for s in HOT_SERIES:
+        try:
+            r = httpx.get(f"{PUBLIC}?status=open&series_ticker={s}&limit=10", timeout=15)
+            if r.status_code == 200:
+                out.extend(r.json().get("markets", []))
+        except Exception:
+            pass
+    liquid, seen = [], set()
     for m in out:
-        vol = float(m.get("volume_24h") or 0)
+        t = m.get("ticker")
+        if not t or t in seen:
+            continue
+        seen.add(t)
+        vol = real_vol(m)
         if vol <= 0:
             continue
-        yb, ya = float(m.get("yes_bid", 0) or 0), float(m.get("yes_ask", 0) or 0)
-        nb, na = float(m.get("no_bid", 0) or 0), float(m.get("no_ask", 0) or 0)
+        yb, ya = float(m.get("yes_bid_dollars", 0) or 0), float(m.get("yes_ask_dollars", 0) or 0)
+        nb, na = float(m.get("no_bid_dollars", 0) or 0), float(m.get("no_ask_dollars", 0) or 0)
         if (yb > 0 and ya > 0) or (nb > 0 and na > 0):
             liquid.append({
-                "ticker": m.get("ticker"),
+                "ticker": t,
                 "title": (m.get("title") or "")[:50],
                 "vol24": vol,
                 "yes_bid": yb, "yes_ask": ya,
                 "no_bid": nb, "no_ask": na,
+                "close": m.get("close_time"),
             })
     liquid.sort(key=lambda x: x["vol24"], reverse=True)
-    return len(out), liquid
+    return len(seen), liquid
 
 
 def main():

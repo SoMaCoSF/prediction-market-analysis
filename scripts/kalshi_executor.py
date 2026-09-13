@@ -42,12 +42,31 @@ LOG_FILE.parent.mkdir(exist_ok=True)
 CASH_FLOOR = 10.00
 MAX_OPEN_POSITIONS = 3
 MAX_CONTRACTS_PER_ORDER = 2
-MIN_VOLUME = 50          # 24h volume threshold
-MIN_TTL = 300            # 5 min minimum market life
+MIN_VOLUME = 50          # min real volume (volume_fp) to consider a market
+MIN_TTL = 120            # 15M books: reject only markets closing within 2 min
 SCALP_C = 5              # exit when +5c
 STOP_C = 3
 REVERSION_THRESHOLD = 15 # YES<15c buy YES; YES>85c buy NO
 MAX_ENTRY_PRICE = 100 - SCALP_C - 2
+
+# Series that reliably carry live two-sided books. The default /markets
+# pagination never reaches them (first pages are KXMVE shard listings), and
+# their volume only appears in `volume_fp` (volume/volume_24h read null on
+# this endpoint for every crypto/sports market).
+HOT_SERIES = ["KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXDOGE15M", "KXNFLGAME"]
+
+
+def real_vol(m: dict) -> float:
+    """Return real traded volume: volume_fp is the populated field on /markets."""
+    for k in ("volume_fp", "volume_24h", "volume"):
+        v = m.get(k)
+        if v is None:
+            continue
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            continue
+    return 0.0
 
 
 def log(msg: str, kind: str = "info") -> None:
@@ -101,17 +120,19 @@ def get_orderbook(ticker: str) -> dict:
 def scan_liquid_markets(limit: int = 200) -> dict:
     """Return {ticker: {yes_ask, yes_bid, volume, close}} for tradeable markets.
 
-    Uses the SAME proven pagination as uptick_loop.scout_liquidity (cap 2 batches
-    of 100, break on empty/duplicate cursor) to avoid infinite-loop hangs.
+    Fetches the default open pages (capped, no infinite-loop hangs) PLUS the
+    HOT_SERIES by series_ticker — the default pagination never reaches the
+    live crypto/NFL books. Volume comes from real_vol() (`volume_fp`); quotes
+    from *_dollars fields (the int-cent fields are absent on /markets).
     """
     kid, kpath = kalshi_keys()
     ts = str(int(time.time() * 1000))
     sig = kalshi_sign("GET", "/markets", ts, kpath)
     h = {"KALSHI-ACCESS-KEY": kid, "KALSHI-ACCESS-SIGNATURE": sig, "KALSHI-ACCESS-TIMESTAMP": ts}
-    out = {}
+    raw = []
     cursor = None
     batches = 0
-    while len(out) < limit and batches < 3:
+    while len(raw) < limit and batches < 3:
         batches += 1
         params = {"limit": 100, "status": "open"}
         if cursor:
@@ -120,25 +141,39 @@ def scan_liquid_markets(limit: int = 200) -> dict:
         if r.status_code != 200:
             break
         j = r.json()
-        for m in j.get("markets", []):
-            ticker = m.get("ticker") or ""
-            if not ticker.startswith("KX"):
-                continue
-            ya = float(m.get("yes_ask", 0) or 0) * 100
-            yb = float(m.get("yes_bid", 0) or 0) * 100
-            vol = float(m.get("volume_24h") or 0)
-            close = m.get("close_time")
-            if yb > 0 and ya > 0 and 1 <= ya <= MAX_ENTRY_PRICE and vol >= MIN_VOLUME and close:
-                try:
-                    close_ts = datetime.fromisoformat(close.replace("Z", "+00:00")).timestamp()
-                    if close_ts - time.time() < MIN_TTL:
-                        continue
-                except Exception:
-                    pass
-                out[ticker] = {"yes_ask": ya, "yes_bid": yb, "volume": vol, "close": close}
+        raw.extend(j.get("markets", []))
         cursor = j.get("cursor")
         if not cursor:
             break
+    for s in HOT_SERIES:
+        try:
+            r = httpx.get(
+                f"{KALSHI_HOST}/markets",
+                params={"limit": 10, "status": "open", "series_ticker": s},
+                headers=h,
+                timeout=15,
+            )
+            if r.status_code == 200:
+                raw.extend(r.json().get("markets", []))
+        except Exception:
+            continue
+    out = {}
+    for m in raw:
+        ticker = m.get("ticker") or ""
+        if not ticker.startswith("KX") or ticker in out:
+            continue
+        ya = float(m.get("yes_ask_dollars", 0) or 0) * 100
+        yb = float(m.get("yes_bid_dollars", 0) or 0) * 100
+        vol = real_vol(m)
+        close = m.get("close_time")
+        if yb > 0 and ya > 0 and 1 <= ya <= MAX_ENTRY_PRICE and vol >= MIN_VOLUME and close:
+            try:
+                close_ts = datetime.fromisoformat(close.replace("Z", "+00:00")).timestamp()
+                if close_ts - time.time() < MIN_TTL:
+                    continue
+            except Exception:
+                pass
+            out[ticker] = {"yes_ask": ya, "yes_bid": yb, "volume": vol, "close": close}
     return out
 
 
