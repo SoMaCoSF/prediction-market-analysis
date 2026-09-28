@@ -7,6 +7,7 @@ to validate strategy performance before live deployment.
 from __future__ import annotations
 
 import json
+import os
 import random
 import sys
 import time
@@ -55,11 +56,34 @@ def load_state():
 
 
 def save_state(state):
+    """ATOMIC write: temp file + os.replace.
+
+    The previous form was `STATE.write_text(...)`, which TRUNCATES the file
+    before it writes. A kill, crash, or full disk between the truncate and the
+    flush leaves 0 or NUL bytes on disk -- and that is not hypothetical:
+
+        data/paper_venue.json     1714 bytes, entirely NUL  (2026-08-11 09:46)
+        data/panic_fade_state.json 208 bytes, entirely NUL
+
+    Both were written this way. An estate-wide sweep of *.json found no others,
+    so this is two files from one mechanism rather than a general corruption
+    problem. `load_state()` already tolerated an unreadable file by reseeding,
+    which is why the venue silently restarted empty instead of raising -- a
+    quiet reset of paper P&L that nobody noticed for 6 weeks.
+
+    os.replace is atomic on Windows and POSIX: the destination is either the
+    old file or the new one, never a half-written one.
+    """
+    tmp = STATE.with_suffix(".json.tmp")
     try:
         STATE.parent.mkdir(parents=True, exist_ok=True)
-        STATE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        os.replace(tmp, STATE)
     except Exception:
-        pass
+        try:
+            tmp.unlink()
+        except Exception:
+            pass
 
 
 def fetch_kalshi_mids():
@@ -71,9 +95,17 @@ def fetch_kalshi_mids():
     kid, kpath = kalshi_keys()
     ts = str(int(time.time() * 1000))
 
+    last_err = None
     for series in SERIES:
+        # BARE path. kalshi_sign() itself prepends "/trade-api/v2"
+        # (mission_control.py:97), so passing a pre-prefixed path produced
+        #   /trade-api/v2/trade-api/v2/markets...
+        # which is a 404. The old blanket `except Exception: continue` swallowed
+        # that, so fetch_kalshi_mids() returned {} on EVERY call, the loop logged
+        # nothing, and the venue sat on its seed data looking alive for weeks.
+        # The status is recorded now instead of being discarded.
+        path = f"/markets?limit=1&status=open&series_ticker={series}"
         try:
-            path = f"/trade-api/v2/markets?limit=1&status=open&series_ticker={series}"
             sig = kalshi_sign("GET", path, ts, kpath)
             headers = {
                 "KALSHI-ACCESS-KEY": kid,
@@ -81,8 +113,10 @@ def fetch_kalshi_mids():
                 "KALSHI-ACCESS-TIMESTAMP": ts,
             }
             r = httpx.get(f"{KALSHI}{path}", headers=headers, timeout=15)
-            data = r.json()
-            markets = data.get("markets", [])
+            if r.status_code != 200:
+                last_err = f"HTTP {r.status_code} on {series}"
+                continue
+            markets = r.json().get("markets", [])
             if markets:
                 m = markets[0]
                 yes_bid = float(m.get("yes_bid_dollars", 0) or 0)
@@ -95,8 +129,13 @@ def fetch_kalshi_mids():
                         "no_bid": 1.0 - yes_ask,
                         "no_ask": 1.0 - yes_bid,
                     }
-        except Exception:
-            continue
+        except Exception as e:
+            last_err = f"{series}: {type(e).__name__} {str(e)[:80]}"
+
+    if not mids and last_err:
+        # Never silent. A feed that is failing must be visible, or the venue
+        # just sits there looking healthy on stale seed data.
+        log(f"warn fetch failed: {last_err}", "warn")
 
     return mids
 
